@@ -1,0 +1,295 @@
+{
+  "version": 1,
+  "name": "asl_yes",
+  "description": "ASL YES: the S hand (a fist, thumb across the front) in front of the signer's shoulder nods up and down at the wrist three times, like a head nodding; turned a little so the nod shows from the side.",
+  "fps": 30,
+  "camera": {
+    "position": [
+      0.04,
+      0.14,
+      0.72
+    ],
+    "target": [
+      0.04,
+      0.1,
+      0.0
+    ],
+    "fov": 32
+  },
+  "look": {
+    "style": "realistic",
+    "skin": "medium"
+  },
+  "keys": [
+    {
+      "t": 0,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.5,
+      "move": 0.45,
+      "hands": {
+        "right": {
+          "from": "asl_s",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.01,
+              0.0
+            ],
+            "palm_facing": [
+              0.75,
+              0,
+              0.65
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ],
+            "forearm_toward": [
+              0,
+              -1,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.76,
+      "move": 0.2,
+      "hands": {
+        "right": {
+          "from": "asl_s",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.01,
+              0.0
+            ],
+            "palm_facing": [
+              0.53,
+              -0.71,
+              0.46
+            ],
+            "fingers_toward": [
+              0.53,
+              0.71,
+              0.53
+            ],
+            "forearm_toward": [
+              0,
+              -1,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.02,
+      "move": 0.22,
+      "hands": {
+        "right": {
+          "from": "asl_s",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.01,
+              0.0
+            ],
+            "palm_facing": [
+              0.75,
+              0,
+              0.65
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ],
+            "forearm_toward": [
+              0,
+              -1,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.28,
+      "move": 0.2,
+      "hands": {
+        "right": {
+          "from": "asl_s",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.01,
+              0.0
+            ],
+            "palm_facing": [
+              0.53,
+              -0.71,
+              0.46
+            ],
+            "fingers_toward": [
+              0.53,
+              0.71,
+              0.53
+            ],
+            "forearm_toward": [
+              0,
+              -1,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.54,
+      "move": 0.22,
+      "hands": {
+        "right": {
+          "from": "asl_s",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.01,
+              0.0
+            ],
+            "palm_facing": [
+              0.75,
+              0,
+              0.65
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ],
+            "forearm_toward": [
+              0,
+              -1,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.8,
+      "move": 0.2,
+      "hands": {
+        "right": {
+          "from": "asl_s",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.01,
+              0.0
+            ],
+            "palm_facing": [
+              0.53,
+              -0.71,
+              0.46
+            ],
+            "fingers_toward": [
+              0.53,
+              0.71,
+              0.53
+            ],
+            "forearm_toward": [
+              0,
+              -1,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 2.06,
+      "move": 0.22,
+      "hands": {
+        "right": {
+          "from": "asl_s",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.01,
+              0.0
+            ],
+            "palm_facing": [
+              0.75,
+              0,
+              0.65
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ],
+            "forearm_toward": [
+              0,
+              -1,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 2.91,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "duration": 3.31
+}

@@ -110,7 +110,8 @@ its goals are added to yours). On a hand, { \"from\": \"ok\" } takes that gestur
 values for this hand (not its placement), and its goals renamed to this hand.
 
 Motion: `handkit explain clips` (keyed poses over time, checked and previewed as a whole).
-Looks: `handkit explain looks` (skin tones, toon, spiderverse, arcane, clay, motion blur).";
+Looks: `handkit explain looks` (skin tones, toon, spiderverse, arcane, clay, motion blur).
+Sign language: `handkit explain sign` (the ASL alphabet, `handkit spell`, sign clips).";
 
 pub const CLIPS: &str = "\
 Clips: motion as keyed poses. A clip file:
@@ -197,6 +198,27 @@ The fframes player takes the same as flags over the file's look: --look toon,ski
 --look-json '{..}', --motion-blur 4, and --looks \"realistic;toon;arcane\" --look-every 2 to
 cycle through looks (a demo). In Rust, handkit_fframes::look::Styler renders any look.";
 
+pub const SIGN: &str = "\
+Sign language (ASL): the manual alphabet is in the gesture library as asl_a ... asl_z (right
+hand, palm to the viewer as a signer holds it; G and H point sideways toward the signer's left,
+P and Q point down, C and O are turned so the viewer sees the opening; J and Z are their start
+shapes), plus asl_ily (I-LOVE-YOU). They read from the viewer's side: the signer's left is +X.
+  handkit spell HELLO -o hello.json   a clip that fingerspells a word (letters and spaces): the
+      hand rises from rest, holds each letter briefly, bounces and slides for a double letter,
+      traces J (the pinky hooks while the palm turns) and Z (the index draws it as the signer
+      writes it, mirrored for the viewer), pauses between words and relaxes at the end. Big turns
+      (into G, H and back) and the thumb tucking under the fingers (E, M, N, T) get a waypoint
+      and a little more time. --rate 3.5 (letters per second; 3 to 4 is natural), --hold 0.4
+      (the part of each letter held still), --look toon,skin=tan (the clip's look), --size
+      1920x1080. In Rust: handkit_core::spell::spell, or spell_keys to add a word to your keys.
+  Signs as clips (clips/asl_*.json): asl_hello (a salute from the forehead outward),
+      asl_thank_you (flat hand from the chin forward and down), asl_i_love_you, asl_yes (the S
+      hand nodding), asl_no (index and middle snapping to the thumb), asl_please (flat hand
+      circling on the chest). The rig has no head or body: these are placed where the forehead,
+      chin and chest would be (high and a little behind the hand's usual place, toward the
+      signer's midline) and each description says where. docs/asl-alphabet.png shows every
+      letter.";
+
 pub fn all() -> String {
     let mut s = String::from(CONVENTIONS);
     s.push_str("\n\nParameters (key, range in degrees, meaning):\n");
@@ -212,6 +234,9 @@ pub fn one(key: &str) -> Result<String, String> {
     }
     if key == "looks" || key == "look" {
         return Ok(LOOKS.to_string());
+    }
+    if matches!(key, "sign" | "signs" | "asl" | "spell") {
+        return Ok(SIGN.to_string());
     }
     let k = key.trim_start_matches("right.").trim_start_matches("left.");
     match params::find(k) {

@@ -1,0 +1,311 @@
+{
+  "version": 1,
+  "name": "asl_please",
+  "description": "ASL PLEASE: a flat hand, palm on the chest, rubs two clockwise circles (as the signer sees them). The rig has no body: the hand circles in front of where the chest would be, palm toward the signer, so the viewer sees its back.",
+  "fps": 30,
+  "camera": {
+    "position": [
+      0.04,
+      0.14,
+      0.72
+    ],
+    "target": [
+      0.04,
+      0.1,
+      0.0
+    ],
+    "fov": 32
+  },
+  "look": {
+    "style": "realistic",
+    "skin": "medium"
+  },
+  "keys": [
+    {
+      "t": 0,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.55,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.07,
+              0.005,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.75,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.025,
+              -0.04,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      },
+      "pass": true
+    },
+    {
+      "t": 0.95,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.07,
+              -0.085,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      },
+      "pass": true
+    },
+    {
+      "t": 1.15,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.115,
+              -0.04,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      },
+      "pass": true
+    },
+    {
+      "t": 1.35,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.07,
+              0.005,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      },
+      "pass": true
+    },
+    {
+      "t": 1.55,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.025,
+              -0.04,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      },
+      "pass": true
+    },
+    {
+      "t": 1.75,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.07,
+              -0.085,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      },
+      "pass": true
+    },
+    {
+      "t": 1.95,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.115,
+              -0.04,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      },
+      "pass": true
+    },
+    {
+      "t": 2.15,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.07,
+              0.005,
+              -0.05
+            ],
+            "palm_facing": [
+              0.0,
+              0,
+              -1
+            ],
+            "fingers_toward": [
+              0.55,
+              0.83,
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 2.9,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "duration": 3.3
+}

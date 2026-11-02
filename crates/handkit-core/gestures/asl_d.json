@@ -1,0 +1,23 @@
+{
+  "name": "asl_d",
+  "description": "ASL D: index straight up, the middle fingertip on the thumb tip with ring and pinky curled behind it in a round O; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 6,
+      "thumb": { "cmc_flex": 0.2, "cmc_abd": 62.6, "cmc_rot": 50.0, "mcp_flex": 36.1, "ip_flex": -4.3 },
+      "index": { "mcp_abd": 0, "mcp_flex": 2, "pip_flex": 4 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 75.7, "pip_flex": 53.4, "dip_flex": 16.1 },
+      "ring": { "mcp_abd": -2, "mcp_flex": 75, "pip_flex": 55, "dip_flex": 30 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 78, "pip_flex": 55, "dip_flex": 30 }
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.thumb.pad", "right.middle.tip"],
+      "vary": ["right.thumb.*", "right.middle.mcp_flex", "right.middle.pip_flex", "right.middle.dip_flex"]
+    }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

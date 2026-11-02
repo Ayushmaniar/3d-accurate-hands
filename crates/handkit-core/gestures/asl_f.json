@@ -1,0 +1,17 @@
+{
+  "name": "asl_f",
+  "description": "ASL F: thumb and index tips touching in a circle, middle, ring and pinky straight up and spread; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "thumb": { "cmc_flex": -11.7, "cmc_abd": 53.6, "cmc_rot": 51.5, "mcp_flex": 28.5, "ip_flex": -1.8 },
+      "index": { "mcp_abd": -9.5, "mcp_flex": 76.4, "pip_flex": 37.3, "dip_flex": 25.8 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 3, "pip_flex": 4 },
+      "ring": { "mcp_abd": 8, "mcp_flex": 3, "pip_flex": 4 },
+      "pinky": { "mcp_abd": 18, "mcp_flex": 4, "pip_flex": 5 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.pad", "right.index.tip"] }],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

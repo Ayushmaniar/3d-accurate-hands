@@ -1,0 +1,18 @@
+{
+  "name": "asl_j",
+  "description": "ASL J (start shape): the I hand, pinky straight up; `handkit spell` traces the J by drawing the pinky down and hooking it toward the signer while the palm turns.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 10,
+      "thumb": { "cmc_flex": 8.1, "cmc_abd": 42.7, "cmc_rot": 48.6, "mcp_flex": 45.9, "ip_flex": 25.3 },
+      "index": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 2, "mcp_flex": 2, "pip_flex": 5 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.distal", "right.middle.middle"], "vary": ["right.thumb.*"] }],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

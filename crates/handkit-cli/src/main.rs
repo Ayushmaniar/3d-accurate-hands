@@ -114,6 +114,26 @@ enum Cmd {
         #[arg(long)]
         background: Option<String>,
     },
+    /// Fingerspell a word in ASL as a clip (the asl_a ... asl_z gestures, J and Z traced).
+    Spell {
+        /// Letters and spaces, e.g. HELLO or "HI THERE".
+        text: String,
+        /// Output clip (default: print it).
+        #[arg(short, long)]
+        out: Option<PathBuf>,
+        /// Letters per second (natural: 3 to 4).
+        #[arg(long, default_value_t = 3.5)]
+        rate: f64,
+        /// The fraction of each letter's time it is held still.
+        #[arg(long, default_value_t = 0.4)]
+        hold: f64,
+        /// The clip's look, as the player's flag: realistic, toon, clay, toon,skin=tan,outline=4 ...
+        #[arg(long)]
+        look: Option<String>,
+        /// Video size, WIDTHxHEIGHT.
+        #[arg(long, default_value = "1920x1080")]
+        size: String,
+    },
     /// A quick MP4 of a clip from the three.js preview (needs node and ffmpeg).
     Preview {
         clip: PathBuf,
@@ -341,6 +361,20 @@ fn run() -> Result<()> {
                 bail!("ffmpeg failed");
             }
             emit(format!("wrote {} ({} frames; sampling {:.1} s, total {:.1} s)\n", out.display(), times.len(), sampled, start.elapsed().as_secs_f64()));
+        }
+        Cmd::Spell { text, out, rate, hold, look, size } => {
+            let (w, h) = parse_size(&size)?;
+            let look = look.map(|l| handkit_core::look::Look::parse_flag(&l)).transpose().map_err(|e| anyhow!(e))?;
+            let o = handkit_core::spell::SpellOptions { rate, hold, look, size: [w, h], ..Default::default() };
+            let clip = handkit_core::spell::spell(&text, &o).map_err(|e| anyhow!(e))?;
+            let text = handkit_core::pose::to_text(&clip);
+            match out {
+                Some(path) => {
+                    std::fs::write(&path, &text)?;
+                    emit(format!("wrote {} ({:.1} s)\n", path.display(), clip["duration"].as_f64().unwrap_or(0.0)));
+                }
+                None => emit(text),
+            }
         }
         Cmd::Gestures => {
             for (name, desc) in handkit_core::gestures::list() {

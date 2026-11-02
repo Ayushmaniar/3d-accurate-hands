@@ -1,0 +1,28 @@
+{
+  "name": "asl_n",
+  "description": "ASL N: index and middle folded down over the thumb, whose tip shows between the middle and ring fingers; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 6,
+      "thumb": { "cmc_flex": -4.5, "cmc_abd": 19.2, "cmc_rot": 29.4, "mcp_flex": 53.0, "ip_flex": 50.9 },
+      "index": { "mcp_abd": 0, "mcp_flex": 65.3, "pip_flex": 63.1, "dip_flex": 34.0 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 59.2, "pip_flex": 76.8, "dip_flex": 35.9 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.index.distal", "right.thumb.proximal"],
+      "vary": ["right.index.mcp_flex", "right.index.pip_flex", "right.index.dip_flex", "right.thumb.*"]
+    },
+    {
+      "touch": ["right.middle.distal", "right.thumb.distal"],
+      "vary": ["right.middle.mcp_flex", "right.middle.pip_flex", "right.middle.dip_flex"]
+    },
+    { "touch": ["right.thumb.tip", "right.ring.proximal"], "vary": ["right.thumb.*"] }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

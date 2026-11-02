@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "name": "asl_hello",
+  "description": "ASL HELLO: a flat B hand starts as a salute at the forehead (the rig has no head: high, a little behind and toward the signer's midline) and moves outward, away from the head and toward the signer's right.",
+  "fps": 30,
+  "camera": {
+    "position": [
+      0.04,
+      0.14,
+      0.72
+    ],
+    "target": [
+      0.04,
+      0.1,
+      0.0
+    ],
+    "fov": 32
+  },
+  "look": {
+    "style": "realistic",
+    "skin": "medium"
+  },
+  "keys": [
+    {
+      "t": 0,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.55,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "asl_b",
+          "place": {
+            "wrist": [
+              0.05,
+              0.04,
+              -0.04
+            ],
+            "palm_facing": [
+              0.15,
+              -0.15,
+              1
+            ],
+            "fingers_toward": [
+              0.45,
+              0.88,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.85,
+      "hands": {
+        "right": {
+          "from": "asl_b",
+          "place": {
+            "wrist": [
+              0.05,
+              0.04,
+              -0.04
+            ],
+            "palm_facing": [
+              0.15,
+              -0.15,
+              1
+            ],
+            "fingers_toward": [
+              0.45,
+              0.88,
+              -0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.35,
+      "move": 0.45,
+      "ease": "smooth",
+      "hands": {
+        "right": {
+          "from": "asl_b",
+          "place": {
+            "wrist": [
+              -0.1,
+              0.0,
+              0.09
+            ],
+            "palm_facing": [
+              -0.3,
+              -0.05,
+              1
+            ],
+            "fingers_toward": [
+              0.05,
+              1,
+              0.12
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.8,
+      "hands": {
+        "right": {
+          "from": "asl_b",
+          "place": {
+            "wrist": [
+              -0.1,
+              0.0,
+              0.09
+            ],
+            "palm_facing": [
+              -0.3,
+              -0.05,
+              1
+            ],
+            "fingers_toward": [
+              0.05,
+              1,
+              0.12
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 2.4,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "duration": 2.8
+}

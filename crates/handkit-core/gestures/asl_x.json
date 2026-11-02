@@ -1,0 +1,25 @@
+{
+  "name": "asl_x",
+  "description": "ASL X: the index raised and hooked at its middle joints, the other fingers curled with the thumb across them; palm turned a little to the signer's left so the hook shows.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0.55, 0, 0.85], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 10,
+      "thumb": { "cmc_flex": 8.1, "cmc_abd": 42.7, "cmc_rot": 48.6, "mcp_flex": 45.9, "ip_flex": 25.3 },
+      "index": { "mcp_abd": 0, "mcp_flex": 20, "pip_flex": 94.2, "dip_flex": 71.7 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.thumb.distal", "right.middle.middle"], "vary": ["right.thumb.*"] },
+    {
+      "touch": ["right.index.tip", "right.index.proximal"],
+      "gap_mm": 22,
+      "vary": ["right.index.pip_flex", "right.index.dip_flex"]
+    }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

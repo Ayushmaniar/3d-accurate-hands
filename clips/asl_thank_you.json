@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "name": "asl_thank_you",
+  "description": "ASL THANK-YOU: a flat hand (fingers together, thumb alongside) starts with the fingertips at the chin, palm toward the signer (the rig has no face: high and a little behind), then moves forward and down toward the viewer, ending palm up.",
+  "fps": 30,
+  "camera": {
+    "position": [
+      0.04,
+      0.14,
+      0.72
+    ],
+    "target": [
+      0.04,
+      0.1,
+      0.0
+    ],
+    "fov": 32
+  },
+  "look": {
+    "style": "realistic",
+    "skin": "medium"
+  },
+  "keys": [
+    {
+      "t": 0,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.55,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.07,
+              0.06,
+              -0.07
+            ],
+            "palm_facing": [
+              0.0,
+              -0.15,
+              -1
+            ],
+            "fingers_toward": [
+              0.25,
+              0.95,
+              -0.15
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.85,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.07,
+              0.06,
+              -0.07
+            ],
+            "palm_facing": [
+              0.0,
+              -0.15,
+              -1
+            ],
+            "fingers_toward": [
+              0.25,
+              0.95,
+              -0.15
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.4,
+      "move": 0.5,
+      "ease": "smooth",
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.02,
+              -0.03,
+              0.1
+            ],
+            "palm_facing": [
+              0.0,
+              0.8,
+              -0.55
+            ],
+            "fingers_toward": [
+              0.2,
+              0.55,
+              0.8
+            ],
+            "forearm_toward": [
+              -0.3,
+              -0.8,
+              -0.5
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.9,
+      "hands": {
+        "right": {
+          "from": "open_palm",
+          "place": {
+            "wrist": [
+              0.02,
+              -0.03,
+              0.1
+            ],
+            "palm_facing": [
+              0.0,
+              0.8,
+              -0.55
+            ],
+            "fingers_toward": [
+              0.2,
+              0.55,
+              0.8
+            ],
+            "forearm_toward": [
+              -0.3,
+              -0.8,
+              -0.5
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 2.5,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "duration": 2.9
+}

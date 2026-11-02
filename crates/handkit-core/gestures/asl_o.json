@@ -1,0 +1,33 @@
+{
+  "name": "asl_o",
+  "description": "ASL O: all the fingertips curved down to meet the thumb tip in an O, palm turned to the signer's left so the viewer sees the round opening.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [1, 0, 0.35], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 8,
+      "thumb": { "cmc_flex": -17.9, "cmc_abd": 63.4, "cmc_rot": 48.9, "mcp_flex": 47.0, "ip_flex": 17.3 },
+      "index": { "mcp_abd": 2.0, "mcp_flex": 66.7, "pip_flex": 76.8, "dip_flex": 3.0, "mcp_roll": -5.6 },
+      "middle": { "mcp_abd": -10.6, "mcp_flex": 69.5, "pip_flex": 22.7, "dip_flex": 56.7, "mcp_roll": 2.1 },
+      "ring": { "mcp_abd": 4.8, "mcp_flex": 62, "pip_flex": 60, "dip_flex": 35 },
+      "pinky": { "mcp_abd": -7.7, "mcp_flex": 65, "pip_flex": 60, "dip_flex": 35 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.thumb.pad", "right.index.tip"], "vary": ["right.thumb.*", "right.index.*"] },
+    { "touch": ["right.thumb.tip", "right.middle.tip"], "vary": ["right.middle.*"] },
+    {
+      "touch": ["right.index.proximal", "right.middle.proximal"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    },
+    {
+      "touch": ["right.middle.proximal", "right.ring.proximal"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    },
+    {
+      "touch": ["right.ring.proximal", "right.pinky.proximal"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    }
+  ],
+  "camera": { "position": [0.04, 0.11, 0.42], "target": [0.04, 0.085, 0.02], "fov": 34 }
+}

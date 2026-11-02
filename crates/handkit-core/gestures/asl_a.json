@@ -1,0 +1,23 @@
+{
+  "name": "asl_a",
+  "description": "ASL A: a fist with the thumb straight up against the side of the curled index; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 8,
+      "thumb": { "cmc_flex": -7.2, "cmc_abd": 12, "cmc_rot": 30, "mcp_flex": 35.5, "ip_flex": 10.2 },
+      "index": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.thumb.distal", "right.index.proximal"],
+      "vary": ["right.thumb.mcp_flex", "right.thumb.ip_flex", "right.thumb.cmc_flex"]
+    }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

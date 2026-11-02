@@ -1,0 +1,32 @@
+{
+  "name": "asl_b",
+  "description": "ASL B: four fingers straight up and together, the thumb folded across the palm; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "thumb": { "cmc_flex": 3.4, "cmc_abd": 17.4, "cmc_rot": 49.1, "mcp_flex": 53.0, "ip_flex": 69.3 },
+      "index": { "mcp_abd": -11.0, "mcp_flex": 2, "pip_flex": 4 },
+      "middle": { "mcp_abd": -5.3, "mcp_flex": 2, "pip_flex": 4 },
+      "ring": { "mcp_abd": -2.0, "mcp_flex": 3, "pip_flex": 5 },
+      "pinky": { "mcp_abd": -11.0, "mcp_flex": 4, "pip_flex": 6 },
+      "palm_cup": 22.2
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.index.middle", "right.middle.middle"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    },
+    {
+      "touch": ["right.middle.middle", "right.ring.middle"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    },
+    {
+      "touch": ["right.ring.middle", "right.pinky.middle"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    },
+    { "touch": ["right.thumb.tip", "right.ring.metacarpal"], "vary": ["right.thumb.*", "right.palm_cup"] }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

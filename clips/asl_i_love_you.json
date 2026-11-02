@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "name": "asl_i_love_you",
+  "description": "ASL I-LOVE-YOU: the ILY handshape (thumb, index and pinky out) held up in front of the signer's shoulder, palm to the viewer, with a small push toward them.",
+  "fps": 30,
+  "camera": {
+    "position": [
+      0.04,
+      0.14,
+      0.72
+    ],
+    "target": [
+      0.04,
+      0.1,
+      0.0
+    ],
+    "fov": 32
+  },
+  "look": {
+    "style": "realistic",
+    "skin": "medium"
+  },
+  "keys": [
+    {
+      "t": 0,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 0.55,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "asl_ily",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.01,
+              0.0
+            ],
+            "palm_facing": [
+              0.05,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.05
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.0,
+      "move": 0.3,
+      "hands": {
+        "right": {
+          "from": "asl_ily",
+          "place": {
+            "wrist": [
+              0.0,
+              0.0,
+              0.05
+            ],
+            "palm_facing": [
+              0.05,
+              0.05,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 1.9,
+      "hands": {
+        "right": {
+          "from": "asl_ily",
+          "place": {
+            "wrist": [
+              0.0,
+              0.0,
+              0.05
+            ],
+            "palm_facing": [
+              0.05,
+              0.05,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "t": 2.5,
+      "move": 0.5,
+      "hands": {
+        "right": {
+          "from": "relaxed",
+          "place": {
+            "wrist": [
+              0.0,
+              -0.1,
+              0.0
+            ],
+            "palm_facing": [
+              0.2,
+              0,
+              1
+            ],
+            "fingers_toward": [
+              0,
+              1,
+              0.1
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "duration": 2.9
+}

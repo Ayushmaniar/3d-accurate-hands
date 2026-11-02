@@ -1,0 +1,24 @@
+{
+  "name": "asl_u",
+  "description": "ASL U: index and middle straight up and together, the thumb holding ring and pinky down; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 10,
+      "thumb": { "cmc_flex": 15.8, "cmc_abd": 42.7, "cmc_rot": 48.8, "mcp_flex": 47.2, "ip_flex": 26.1 },
+      "index": { "mcp_abd": -4, "mcp_flex": 3, "pip_flex": 5 },
+      "middle": { "mcp_abd": 3, "mcp_flex": 3, "pip_flex": 5 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.thumb.distal", "right.ring.middle"], "vary": ["right.thumb.*"] },
+    {
+      "touch": ["right.index.side_ulnar", "right.middle.middle"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd"]
+    }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

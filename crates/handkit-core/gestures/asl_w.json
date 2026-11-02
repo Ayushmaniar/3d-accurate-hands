@@ -1,0 +1,21 @@
+{
+  "name": "asl_w",
+  "description": "ASL W: index, middle and ring straight up and spread, the thumb pad holding the curled pinky; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 18.5,
+      "thumb": { "cmc_flex": 25.1, "cmc_abd": 33.1, "cmc_rot": 49.1, "mcp_flex": 53.0, "ip_flex": -4.7 },
+      "index": { "mcp_abd": 1.9, "mcp_flex": 5.4, "pip_flex": 6.8, "mcp_roll": -1.2, "dip_flex": 4.5 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 4, "pip_flex": 7 },
+      "ring": { "mcp_abd": 1.6, "mcp_flex": 6.1, "pip_flex": 9.1, "mcp_roll": 1.5, "dip_flex": 6.1 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 80, "pip_flex": 85 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.thumb.pad", "right.pinky.middle"], "vary": ["right.thumb.*"] },
+    { "touch": ["right.index.tip", "right.ring.tip"], "gap_mm": 55 }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}
