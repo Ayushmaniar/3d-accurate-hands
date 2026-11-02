@@ -32,9 +32,11 @@ T = {k: fr(v) for k, v in dict(
     drop=27.10, d2=28.09, d3=29.09, d4=30.09, piano=31.10, trip=33.09, skins=35.10,
     sk2=35.61, sk3=36.11, sk4=36.61, sk5=37.09, d9=39.09, d10=40.09, d11=41.09,
     brk=43.07, gap=50.26, ily=50.6, hit=51.852,
-    hf=54.82, hf_touch=55.32, hold=56.80, four=58.80, lift=60.82, kid=61.82, bump=62.31, ship=62.82, ship_tap=63.82,
-    eng=64.80, eng2=65.31, eng3=65.82, eng4=66.32,
-    end=68.80, tag=70.82, fade=72.30, out=73.80,
+    # rock paper scissors: pumps on the beat, throws on 2.0 and 4.0 s
+    rps1=52.35, rps2=52.85, rps3=53.35, throw1=53.85, rps4=54.35, rps5=54.85, rps6=55.35, throw2=55.85,
+    hold=56.8, four=58.8, lift=60.82, kid=61.82, bump=62.31, ship=62.82, ship_tap=63.82,
+    eng=64.8, eng2=65.31, eng3=65.82, eng4=66.32,
+    end=68.8, tag=70.82, fade=72.3, out=73.8,
 ).items()}
 DUR = 73.8
 
@@ -250,7 +252,7 @@ cue(T["split2"] - 0.12, "whoosh", "whoosh_fast/sleeve", -14)
 S = T["cut3"]
 L = lambda t: t - S
 a3_dur = T["black"] - S
-p2a, p2b = "recreate this.", " arcane style."
+p2a, p2b = "recreate this.", " spider-verse style."
 tjs2, ttimes2 = typing_js("a3t", len(p2b), L(T["type2"]))
 pw, ph, py = 562, 1000, 40
 cx = (W - pw) // 2
@@ -376,32 +378,45 @@ cue(T["sk5"] + 0.62, "impact", "pro_impact/short", -9)
 for k, sid in zip(["d9", "d10", "d11"], ["swish/blade", "swish/cane", "swipe/velvet"]):
     cue(T[k], "whoosh", sid, -16)
 
-# =========================== ACT 5: sign language 43.067 -> 51.833 ======================
+# =========================== ACT 5: sign language 43.07 -> 51.85 ========================
+# sign.mp4 (showcase/sign-handkit/film.json): H A N D K I T land on the clip's 0.5 .. 6.5 s, a letter a
+# second, each held still; I-LOVE-YOU lands at the caption's time and holds through the silence
 S = T["brk"]
 L = lambda t: t - S
 a5_dur = T["hit"] - S
+LETTERS = "HANDKIT"
+land = [S + 0.5 + i for i in range(len(LETTERS))]
+cap = "".join(f'<span id="a5-c{i}" style="display:inline-block;opacity:0;">{c}</span>' for i, c in enumerate(LETTERS))
 a5_body = f"""
 <div class="full" style="background:#000;"></div>
-<div id="a5-sw" class="full">{video("a5-sign", "sign", 0, L(T["gap"]), 0.0)}</div>
-{clip("a5-ily", L(T["ily"]), T["hit"] - T["ily"], '<div id="a5-t" style="font-size:46px;font-weight:500;letter-spacing:0.005em;color:#EDEAE4;">I love you<span class="acc">.</span></div>', cls="full", style="display:flex;align-items:center;justify-content:center;")}
+<div id="a5-sw" class="full">{video("a5-sign", "sign", 0, a5_dur, 0.0)}</div>
+<div class="full" style="background:linear-gradient(to bottom,rgba(0,0,0,0) 62%,rgba(0,0,0,.72) 100%);"></div>
+<div class="full" style="display:flex;align-items:flex-end;justify-content:center;padding-bottom:86px;box-sizing:border-box;">
+  <div id="a5-cap" class="big" style="font-size:132px;letter-spacing:0.14em;margin-right:-0.14em;">{cap}</div>
+</div>
+{clip("a5-ily", L(T["ily"]) - 0.1, T["hit"] - T["ily"] + 0.1, '<div id="a5-t" class="big" style="font-size:112px;letter-spacing:-0.035em;">I love you<span class="acc">.</span></div>', cls="full", style="display:flex;align-items:flex-end;justify-content:center;padding-bottom:96px;box-sizing:border-box;")}
 """
 a5_js = f"""
 tl.fromTo("#a5-sw",{{scale:1.08,opacity:0}},{{scale:1.0,opacity:1,duration:0.7,ease:"power2.out"}},0);
-tl.to("#a5-sw",{{opacity:0,duration:0.3,ease:"power1.in"}},{L(T["gap"]) - 0.3:.4f});
-tl.fromTo("#a5-t",{{opacity:0,filter:"blur(6px)"}},{{opacity:1,filter:"blur(0px)",duration:0.5,ease:"power2.out"}},0.0001+{L(T["ily"]):.4f});
 """
+for i, t in enumerate(land):
+    a5_js += f'tl.fromTo("#a5-c{i}",{{opacity:0,y:26,color:"{ACC}"}},{{opacity:1,y:0,duration:0.18,ease:"expo.out"}},{L(t) - 2 / FPS:.4f});'
+    if i:
+        a5_js += f'tl.to("#a5-c{i - 1}",{{color:"{INK}",duration:0.15}},{L(t) - 2 / FPS:.4f});'
+a5_js += f'tl.to("#a5-cap",{{opacity:0,y:-20,duration:0.22,ease:"power2.in"}},{L(T["ily"]) - 0.32:.4f});'
+a5_js += f'tl.fromTo("#a5-t",{{opacity:0,y:24,filter:"blur(6px)"}},{{opacity:1,y:0,filter:"blur(0px)",duration:0.4,ease:"expo.out"}},{L(T["ily"]) - 0.1:.4f});'
 scenes.append(scene("a5", S, a5_dur, a5_body, a5_js))
 cue(T["brk"], "drop", "downlifter/air_fall", -16)
-for i, m in enumerate([0.45, 1.17, 2.10, 2.80, 3.50, 4.20, 4.90]):   # caption letters H A N D K I T in the clip
-    cue(S + m, "tick", ["pro_tap/glass", "pro_tap/soft"][i % 2], -15)
-cue(S + 5.98, "tick", "pro_tap/soft", -15)      # I LOVE YOU caption
-cue(T["ily"], "tick", "fit/land.light/finger_phone", -20)
+for i, t in enumerate(land):
+    cue(t, "tick", ["pro_tap/glass", "pro_tap/soft"][i % 2], -15)
+cue(T["ily"], "tick", "fit/land.light/finger_phone", -18)
 
-# =========================== ACT 6: people 51.833 -> 68.8 ===============================
+# =========================== ACT 6: people 51.85 -> 68.8 ===============================
 S = T["hit"]
 L = lambda t: t - S
 a6_dur = T["end"] - S
-ride = [("handshake", T["hit"], T["hf"], 0.85), ("high_five", T["hf"], T["hold"], 0.73 - (T["hf_touch"] - T["hf"])),
+# rock paper scissors (showcase/rock-paper-scissors): the clip's pumps land on its 0.5 s beats, throws on 2.0 and 4.0 s
+ride = [("rps", T["hit"], T["hold"], 0.0),
         ("holding_hands", T["hold"], T["four"], 0.5),
         ("hs_kid", T["kid"], T["ship"], 4.07 - (T["bump"] - T["kid"]))]
 ride_html = "".join(video(f"a6-v{i}", s, L(a), b - a, mo) for i, (s, a, b, mo) in enumerate(ride))
@@ -416,18 +431,18 @@ eng_html = f"""<div style="position:absolute;left:0;top:150px;width:1920px;displ
 <div style="font-size:124px;font-weight:760;letter-spacing:-0.035em;"><span id="a6-e0">fframes</span><span id="a6-d0" class="acc"> · </span><span id="a6-e1">three.js</span></div>
 <div style="font-size:124px;font-weight:760;letter-spacing:-0.035em;"><span id="a6-e2">Remotion</span><span id="a6-d1" class="acc"> · </span><span id="a6-e3">HyperFrames</span></div></div>
 <div id="a6-webw" class="wrap" style="left:{(W - 1500) // 2}px;top:600px;width:1500px;height:375px;border-radius:18px;">{video("a6-web", "web3", L(T["eng"]), T["end"] - T["eng"], 1.0)}</div>"""
-word = lambda id_, txt: f'<div style="position:absolute;left:96px;top:800px;overflow:hidden;padding:0 30px 22px 0;"><div id="{id_}" class="big" style="font-size:150px;text-shadow:0 6px 40px rgba(0,0,0,.45);">{txt}</div></div>'
+word = lambda id_, txt, top=800: f'<div style="position:absolute;left:96px;top:{top}px;overflow:hidden;padding:0 30px 22px 0;"><div id="{id_}" class="big" style="font-size:150px;text-shadow:0 6px 40px rgba(0,0,0,.45);">{txt}</div></div>'
 a6_body = f"""
 <div class="full" style="background:#1b1d22;"></div>
 {ride_html}
 <div id="a6-sw" class="full">{video("a6-ship", "shipit", L(T["ship"]), T["eng"] - T["ship"], ship_mo)}</div>
-{clip("a6-w1", 0, T["hf"] - T["hit"] - 0.3, word("a6-w1t", 'two people<span class="acc">.</span>'), cls="full")}
+{clip("a6-w1", 0, T["throw1"] - T["hit"] - 0.1, word("a6-w1t", 'two people<span class="acc">.</span>', top=34), cls="full")}
 {clip("a6-w2", L(T["lift"]) - 1 / FPS, T["kid"] - T["lift"] - 0.05, word("a6-w2t", 'the whole team<span class="acc">.</span>'), cls="full")}
 {clip("a6-eng", L(T["eng"]), T["end"] - T["eng"], eng_html, cls="full", style=f"background:{BG};")}
 """
 a6_js = f"""
 tl.fromTo("#a6-w1t",{{yPercent:110}},{{yPercent:0,duration:0.38,ease:"expo.out"}},0.0001);
-tl.to("#a6-w1t",{{yPercent:110,duration:0.22,ease:"power3.in"}},{T["hf"] - T["hit"] - 0.55:.4f});
+tl.to("#a6-w1t",{{yPercent:110,duration:0.2,ease:"power3.in"}},{T["throw1"] - T["hit"] - 0.32:.4f});
 tl.fromTo("#a6-w2t",{{yPercent:110}},{{yPercent:0,duration:0.3,ease:"expo.out"}},{L(T["lift"]) - 1 / FPS:.4f});
 tl.to("#a6-w2t",{{yPercent:110,duration:0.18,ease:"power3.in"}},{L(T["kid"]) - 0.25:.4f});
 tl.fromTo("#a6-sw",{{scale:1.55,transformOrigin:"50% 56%"}},{{scale:1.42,duration:{T["eng"] - T["ship"]:.3f},ease:"power2.out"}},{L(T["ship"]):.4f});
@@ -439,8 +454,11 @@ a6_js += f'tl.fromTo(["#a6-d0","#a6-d1"],{{opacity:0}},{{opacity:1,duration:0.1}
 scenes.append(scene("a6", S, a6_dur, a6_body, a6_js))
 cue(T["hit"], "sub", "sub_drop/808", -6)
 cue(T["hit"], "impact", "impact/classic", -9)
-cue(T["hf"], "whoosh", "whoosh_fast/whip", -16)
-cue(T["hf_touch"], "clap", "fit/hit/bamboo_tok", -11)
+for k in ["rps1", "rps2", "rps3", "rps4", "rps5", "rps6"]:
+    cue(T[k], "tick", "fit/land.light/finger_wood", -14)
+cue(T["throw1"], "clap", "fit/hit/bamboo_tok", -11)
+cue(T["throw2"], "hit", "cut_hit/punch", -11)
+cue(T["throw2"] + 0.25, "pop", "pro_pop_in/round", -15)
 cue(T["hold"], "whoosh", "swipe/cloth", -16)
 cue(T["four"], "whoosh", "whoosh_fast/heavy", -15)
 cue(T["lift"], "whoosh", "whoosh_big/thump", -13)
@@ -453,10 +471,15 @@ cue(T["eng"], "whoosh", "whoosh_big/thump_airy", -15)
 for i, (_, t) in enumerate(ew):
     cue(t, "pop", ["pro_pop_in/round", "pro_pop_in/airy", "pro_pop_in/deep", "pro_pop_in/knock"][i], -12)
 
-# =========================== ACT 7: wordmark 68.8 -> 73.8 ===============================
+# =========================== ACT 7: wordmark 68.8 -> 73.8 =============================
 S = T["end"]
 L = lambda t: t - S
 a7_dur = DUR - S
+REPO = "github.com/Ayushmaniar/3d-accurate-hands"
+GH_MARK = ('<svg width="40" height="40" viewBox="0 0 16 16" fill="rgba(244,242,238,.7)"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 '
+           '0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07'
+           '-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92'
+           '.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>')
 mark = "".join(f'<span class="m" id="a7-m{i}" style="display:inline-block;">{c}</span>' for i, c in enumerate("HANDKIT"))
 a7_body = f"""
 <div class="full" style="background:{BG};"></div>
@@ -464,6 +487,7 @@ a7_body = f"""
   <div style="overflow:hidden;padding:10px 24px 8px;"><div id="a7-mk" class="big" style="font-size:262px;font-weight:840;letter-spacing:-0.05em;">{mark}</div></div>
   <div id="a7-bar" style="width:1010px;height:8px;background:{ACC};border-radius:4px;margin-top:26px;"></div>
   <div id="a7-tag" style="margin-top:44px;font-size:76px;font-weight:600;letter-spacing:-0.02em;color:{INK};white-space:nowrap;">Hands, by <span class="acc">prompt.</span></div>
+  <div id="a7-gh" style="margin-top:64px;font-size:40px;font-weight:500;letter-spacing:0.005em;color:rgba(244,242,238,.7);white-space:nowrap;display:flex;align-items:center;gap:16px;">{GH_MARK}<span>{REPO}</span></div>
 </div>
 {clip("a7-fade", L(T["fade"]), DUR - T["fade"], "", cls="full", style="background:#000;")}
 """
@@ -471,6 +495,7 @@ a7_js = f"""
 tl.fromTo(".m",{{yPercent:112}},{{yPercent:0,duration:0.7,ease:"expo.out",stagger:0.045}},0.0001);
 tl.fromTo("#a7-bar",{{scaleX:0,transformOrigin:"0% 50%"}},{{scaleX:1,duration:0.4,ease:"expo.out"}},{L(T["tag"]) - 1 / FPS:.4f});
 tl.fromTo("#a7-tag",{{clipPath:"inset(0px 100% 0px 0px)",filter:"blur(6px)"}},{{clipPath:"inset(0px 0% 0px 0px)",filter:"blur(0px)",duration:0.3,ease:"expo.out"}},{L(T["tag"]) - 1 / FPS:.4f});
+tl.fromTo("#a7-gh",{{opacity:0,y:18}},{{opacity:1,y:0,duration:0.5,ease:"expo.out"}},{L(T["tag"]) + 0.4:.4f});
 tl.fromTo("#a7-fade",{{opacity:0}},{{opacity:1,duration:{DUR - T["fade"] - 0.15:.3f},ease:"power1.in"}},{L(T["fade"]):.4f});
 """
 scenes.append(scene("a7", S, a7_dur, a7_body, a7_js))
@@ -478,7 +503,7 @@ cue(T["end"], "whoosh", "whoosh_big/swell", -14)
 cue(T["tag"], "impact", "impact/deep", -8)
 
 # =========================== root ======================================================
-z = {"a1": 20, "a2": 10, "a3": 10, "a4": 10, "a5": 10, "a6": 10, "a7": 10}
+z = {"a1": 20, "a2": 10, "a3": 10, "a4": 10, "av": 10, "a5": 10, "a6": 10, "a7": 10}
 hosts = "\n".join(
     f'<div id="{s["id"]}" data-composition-id="{s["id"]}" data-composition-src="compositions/{s["id"]}.html" data-start="{s["start"]:.4f}" '
     f'data-duration="{s["dur"]:.4f}" data-track-index="{i + 1}" data-track-kind="graphics" data-width="{W}" data-height="{H}" style="z-index:{z[s["id"]]};"></div>'
