@@ -7,7 +7,7 @@ use handkit_fframes::look::{Look, Style, Styler};
 use handkit_fframes::three_d::*;
 
 fn coarse_hand() -> HandModel {
-    let mesh = handkit_mesh::generate(Side::Right, &handkit_mesh::Options { voxel: 0.004 });
+    let mesh = handkit_mesh::generate(Side::Right, &handkit_mesh::Options { voxel: 0.004, textures: 0 });
     HandModel::from_glb(&handkit_mesh::glb::to_glb(&mesh)).unwrap()
 }
 

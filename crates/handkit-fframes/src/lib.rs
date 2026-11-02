@@ -88,14 +88,26 @@ fn glb_texcoord1_x(glb: &[u8]) -> Option<Vec<f32>> {
     let bin_start = 20 + json_len + 8;
     let bin = glb.get(bin_start..bin_start + u32_at(20 + json_len)?)?;
     let accessor = &json["accessors"][json["meshes"][0]["primitives"][0]["attributes"]["TEXCOORD_1"].as_u64()? as usize];
-    if accessor["componentType"].as_u64()? != 5126 || accessor["type"].as_str()? != "VEC2" {
+    if accessor["type"].as_str()? != "VEC2" {
         return None;
     }
+    // Floats, or normalized unsigned shorts (what `handkit mesh` writes).
+    let size = match accessor["componentType"].as_u64()? {
+        5126 => 4,
+        5123 => 2,
+        _ => return None,
+    };
     let view = &json["bufferViews"][accessor["bufferView"].as_u64()? as usize];
     let offset = view["byteOffset"].as_u64().unwrap_or(0) as usize + accessor["byteOffset"].as_u64().unwrap_or(0) as usize;
-    let stride = view["byteStride"].as_u64().unwrap_or(8) as usize;
+    let stride = view["byteStride"].as_u64().unwrap_or(2 * size as u64) as usize;
     (0..accessor["count"].as_u64()? as usize)
-        .map(|i| Some(f32::from_le_bytes(bin.get(offset + i * stride..offset + i * stride + 4)?.try_into().ok()?)))
+        .map(|i| {
+            let at = offset + i * stride;
+            Some(match size {
+                4 => f32::from_le_bytes(bin.get(at..at + 4)?.try_into().ok()?),
+                _ => u16::from_le_bytes(bin.get(at..at + 2)?.try_into().ok()?) as f32 / 65535.0,
+            })
+        })
         .collect()
 }
 
