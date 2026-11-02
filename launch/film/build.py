@@ -6,6 +6,10 @@ Every time is film seconds snapped to the 30 fps frame grid; picture and sound r
 import json, os, random
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+# VARIANT=public: no third-party film footage (act 1 = Pexels gestures in B&W, act 2 = an earlier stretch in colour
+# with a before/after slider); written to ./public/ (assets shared through a junction), cues to work/cues_public.json
+PUBLIC = os.environ.get("VARIANT", "") == "public"
+OUT = os.path.join(ROOT, "public") if PUBLIC else ROOT
 FPS = 30
 W, H = 1920, 1080
 ACC = "#FF5B2E"          # the one accent colour
@@ -95,8 +99,8 @@ window.__timelines["{cid}"] = tl;
 </script>
 </template>
 """
-    os.makedirs(os.path.join(ROOT, "compositions"), exist_ok=True)
-    with open(os.path.join(ROOT, "compositions", f"{cid}.html"), "w", encoding="utf-8") as f:
+    os.makedirs(os.path.join(OUT, "compositions"), exist_ok=True)
+    with open(os.path.join(OUT, "compositions", f"{cid}.html"), "w", encoding="utf-8") as f:
         f.write(html)
     return dict(id=cid, start=start, dur=dur)
 
@@ -124,7 +128,10 @@ S = 0.0
 a1_end = T["nocam_out"] + 0.0667
 L = lambda t: t - S
 rng = random.Random(7)
-gx, gy = 240, 0
+if PUBLIC:   # 16:9 gate and split panels: the Pexels frame is never cropped
+    gx, gy, gw, gh, sw, sh, sy, A1R, A1H, sl = 160, 90, 1600, 900, 900, 506, 287, "a1p_ref", "a1p_hk", "video"
+else:
+    gx, gy, gw, gh, sw, sh, sy, A1R, A1H, sl = 240, 0, 1440, 1080, 900, 675, 202, "a1_ref", "a1_hk", "film"
 weave, flick, scr = "", "", ""
 nframes = int(T["nocam"] * FPS)
 for i in range(nframes + 1):
@@ -135,32 +142,32 @@ for i in range(nframes + 1):
     o = min(1.0, base + rng.uniform(0.0, 0.10) + (0.18 if rng.random() < 0.035 else 0))
     flick += f'tl.set("#a1-flick",{{opacity:{o:.3f}}},{t:.4f});'
     if rng.random() < 0.16:
-        scr += f'tl.set("#a1-scr",{{x:{rng.uniform(60, 1380):.0f},opacity:{rng.uniform(0.12, 0.35):.2f}}},{t:.4f});'
+        scr += f'tl.set("#a1-scr",{{x:{rng.uniform(60, gw - 60):.0f},opacity:{rng.uniform(0.12, 0.35):.2f}}},{t:.4f});'
     else:
         scr += f'tl.set("#a1-scr",{{opacity:0}},{t:.4f});'
 
 a1_body = f"""
 {clip("a1-bg", 0, T["a2"], cls="full", style="background:#000;")}
-<div id="a1-gate" class="wrap" style="left:{gx}px;top:{gy}px;width:1440px;height:1080px;border-radius:30px;">
-  {video("a1-ref", "a1_ref", 0, T["split"], 0)}
-  <div id="a1-hkw" class="wrap" style="left:0;top:0;width:1440px;height:1080px;">
-    {video("a1-hk", "a1_hk", T["wipe"], T["split"] - T["wipe"], T["wipe"])}
+<div id="a1-gate" class="wrap" style="left:{gx}px;top:{gy}px;width:{gw}px;height:{gh}px;border-radius:30px;">
+  {video("a1-ref", A1R, 0, T["split"], 0)}
+  <div id="a1-hkw" class="wrap" style="left:0;top:0;width:{gw}px;height:{gh}px;">
+    {video("a1-hk", A1H, T["wipe"], T["split"] - T["wipe"], T["wipe"])}
   </div>
-  <div id="a1-line" style="position:absolute;left:0;top:0;width:4px;height:1080px;background:{INK};opacity:0;"></div>
-  <div id="a1-scr" style="position:absolute;left:0;top:0;width:2px;height:1080px;background:#fff;opacity:0;"></div>
-  <div class="full" style="width:1440px;box-shadow:inset 0 0 160px 40px rgba(0,0,0,.85);border-radius:30px;"></div>
-  {clip("a1-l1", 0.6, T["split"] - 0.6, '<span>film</span>', cls="lbl", style="left:44px;bottom:40px;")}
+  <div id="a1-line" style="position:absolute;left:0;top:0;width:4px;height:{gh}px;background:{INK};opacity:0;"></div>
+  <div id="a1-scr" style="position:absolute;left:0;top:0;width:2px;height:{gh}px;background:#fff;opacity:0;"></div>
+  <div class="full" style="width:{gw}px;height:{gh}px;box-shadow:inset 0 0 160px 40px rgba(0,0,0,.85);border-radius:30px;"></div>
+  {clip("a1-l1", 0.6, T["split"] - 0.6, f'<span>{sl}</span>', cls="lbl", style="left:44px;bottom:40px;")}
   {clip("a1-l2", T["wipe"], T["split"] - T["wipe"], '<i></i><span>Handkit</span>', cls="lbl", style="right:44px;bottom:40px;")}
 </div>
 <div id="a1-split" class="full">
-  <div id="a1-fl" class="wrap" style="left:40px;top:202px;width:900px;height:675px;border-radius:22px;">
-    {video("a1-ref2", "a1_ref", T["split"], T["nocam"] - T["split"], T["split"])}
-    <div class="full" style="width:900px;height:675px;box-shadow:inset 0 0 110px 30px rgba(0,0,0,.8);"></div>
-    {clip("a1-l3", T["split"], T["nocam"] - T["split"], '<span>film</span>', cls="lbl", style="left:30px;bottom:26px;")}
+  <div id="a1-fl" class="wrap" style="left:40px;top:{sy}px;width:{sw}px;height:{sh}px;border-radius:22px;">
+    {video("a1-ref2", A1R, T["split"], T["nocam"] - T["split"], T["split"])}
+    <div class="full" style="width:{sw}px;height:{sh}px;box-shadow:inset 0 0 110px 30px rgba(0,0,0,.8);"></div>
+    {clip("a1-l3", T["split"], T["nocam"] - T["split"], f'<span>{sl}</span>', cls="lbl", style="left:30px;bottom:26px;")}
   </div>
-  <div id="a1-fr" class="wrap" style="left:980px;top:202px;width:900px;height:675px;border-radius:22px;">
-    {video("a1-hk2", "a1_hk", T["split"], T["nocam"] - T["split"], T["split"])}
-    <div class="full" style="width:900px;height:675px;box-shadow:inset 0 0 110px 30px rgba(0,0,0,.8);"></div>
+  <div id="a1-fr" class="wrap" style="left:980px;top:{sy}px;width:{sw}px;height:{sh}px;border-radius:22px;">
+    {video("a1-hk2", A1H, T["split"], T["nocam"] - T["split"], T["split"])}
+    <div class="full" style="width:{sw}px;height:{sh}px;box-shadow:inset 0 0 110px 30px rgba(0,0,0,.8);"></div>
     {clip("a1-l4", T["split"], T["nocam"] - T["split"], '<i></i><span>Handkit</span>', cls="lbl", style="left:30px;bottom:26px;")}
   </div>
 </div>
@@ -168,8 +175,8 @@ a1_body = f"""
 {clip("a1-word", T["nocam"], a1_end - T["nocam"], '<div id="a1-w" class="big" style="font-size:236px;">NO CAMERA.</div>', cls="full", style="display:flex;align-items:center;justify-content:center;")}
 """
 a1_js = weave + flick + scr + f"""
-tl.fromTo("#a1-hkw",{{clipPath:"inset(0px 0px 0px 1440px)"}},{{clipPath:"inset(0px 0px 0px 720px)",duration:0.55,ease:"expo.inOut"}},{T["wipe"]:.4f});
-tl.fromTo("#a1-line",{{x:1440,opacity:1}},{{x:718,opacity:1,duration:0.55,ease:"expo.inOut"}},{T["wipe"]:.4f});
+tl.fromTo("#a1-hkw",{{clipPath:"inset(0px 0px 0px {gw}px)"}},{{clipPath:"inset(0px 0px 0px {gw // 2}px)",duration:0.55,ease:"expo.inOut"}},{T["wipe"]:.4f});
+tl.fromTo("#a1-line",{{x:{gw},opacity:1}},{{x:{gw // 2 - 2},opacity:1,duration:0.55,ease:"expo.inOut"}},{T["wipe"]:.4f});
 tl.set("#a1-line",{{opacity:0}},{T["split"]:.4f});
 tl.fromTo("#a1-fl",{{x:240,scale:1.06}},{{x:0,scale:1,duration:0.5,ease:"expo.out"}},{T["split"]:.4f});
 tl.fromTo("#a1-fr",{{x:-240,scale:1.06}},{{x:0,scale:1,duration:0.5,ease:"expo.out"}},{T["split"]:.4f});
@@ -192,17 +199,18 @@ S = T["a2"]
 L = lambda t: t - S
 a2_dur = T["cut3"] - S
 p1 = "recreate this."
+A2 = "a2p" if PUBLIC else "a2"
 tjs, ttimes = typing_js("a2t", len(p1), L(T["type1"]))
 a2_body = f"""
 <div class="full" style="background:{BG};"></div>
 <div id="a2-refw" class="full">
-  {video("a2-refbw", "a2_ref_bw", 0, a2_dur, 0)}
-  <div id="a2-flood" class="full">{video("a2-ref", "a2_ref", 0, a2_dur, 0)}</div>
+  {video("a2-refbw", A2 + "_ref_bw", 0, a2_dur, 0)}
+  <div id="a2-flood" class="full">{video("a2-ref", A2 + "_ref", 0, a2_dur, 0)}</div>
 </div>
-<div id="a2-hkw" class="full">{video("a2-hk", "a2_hk", L(T["split2"]), T["cut3"] - T["split2"], L(T["split2"]))}</div>
-<div id="a2-div" style="position:absolute;left:958px;top:0;width:4px;height:1080px;background:{ACC};"></div>
+<div id="a2-hkw" class="full">{video("a2-hk", A2 + "_hk", L(T["split2"]), T["cut3"] - T["split2"], L(T["split2"]))}</div>
+<div id="a2-div" style="position:absolute;left:{0 if PUBLIC else 958}px;top:0;width:4px;height:1080px;background:{ACC};"></div>
 {clip("a2-l1", L(T["split2"]) + 0.25, T["cut3"] - T["split2"] - 0.25, '<span>video</span>', cls="lbl", style="left:48px;top:44px;")}
-{clip("a2-l2", L(T["split2"]) + 0.25, T["cut3"] - T["split2"] - 0.25, '<i></i><span>Handkit</span>', cls="lbl", style="left:1008px;top:44px;")}
+{clip("a2-l2", L(T["split2"]) + 0.25, T["cut3"] - T["split2"] - 0.25, '<i></i><span>Handkit</span>', cls="lbl", style=("right:48px;" if PUBLIC else "left:1008px;") + "top:44px;")}
 {clip("a2-pr", L(T["type1"]) - 0.25, T["split2"] - T["type1"] + 0.25,
       f'<div id="a2-pill" class="pill" style="left:0;top:0;position:relative;"><span class="dot"></span><span class="txt">{chars("a2t", p1)}</span><span id="a2-car" class="car"></span><span id="a2-go" class="go"><b></b></span></div>',
       cls="full", style="display:flex;align-items:flex-end;justify-content:center;padding-bottom:96px;box-sizing:border-box;")}
@@ -217,9 +225,17 @@ tl.fromTo("#a2-pill",{{y:40,opacity:0,scale:0.96}},{{y:0,opacity:1,scale:1,durat
 tl.fromTo("#a2-go",{{backgroundColor:"rgba(255,255,255,0.12)",scale:1}},{{backgroundColor:"{ACC}",scale:1.12,duration:0.08,ease:"power2.out"}},{L(T["send1"]):.4f});
 tl.to("#a2-go",{{scale:1,duration:0.25,ease:"power3.out"}},{L(T["send1"]) + 0.08:.4f});
 tl.to("#a2-pill",{{y:30,opacity:0,duration:0.2,ease:"power3.in"}},{L(T["split2"]) - 0.2:.4f});
-tl.fromTo("#a2-refw",{{x:0,clipPath:"inset(0px 0px 0px 0px)"}},{{x:-480,clipPath:"inset(0px 480px 0px 480px)",duration:0.55,ease:"expo.inOut"}},{L(T["split2"]) - 0.12:.4f});
+""" + (f"""
+tl.fromTo("#a2-hkw",{{clipPath:"inset(0px 0px 0px 1920px)"}},{{clipPath:"inset(0px 0px 0px 960px)",duration:0.55,ease:"expo.inOut"}},{L(T["split2"]) - 0.12:.4f});
+tl.fromTo("#a2-div",{{x:1920}},{{x:958,duration:0.55,ease:"expo.inOut"}},{L(T["split2"]) - 0.12:.4f});
+tl.to("#a2-hkw",{{clipPath:"inset(0px 0px 0px 700px)",duration:1.6,ease:"power2.inOut"}},{L(T["split2"]) + 0.6:.4f});
+tl.to("#a2-div",{{x:698,duration:1.6,ease:"power2.inOut"}},{L(T["split2"]) + 0.6:.4f});
+tl.to("#a2-hkw",{{clipPath:"inset(0px 0px 0px 1180px)",duration:1.6,ease:"power2.inOut"}},{L(T["split2"]) + 2.3:.4f});
+tl.to("#a2-div",{{x:1178,duration:1.6,ease:"power2.inOut"}},{L(T["split2"]) + 2.3:.4f});
+""" if PUBLIC else f"""tl.fromTo("#a2-refw",{{x:0,clipPath:"inset(0px 0px 0px 0px)"}},{{x:-480,clipPath:"inset(0px 480px 0px 480px)",duration:0.55,ease:"expo.inOut"}},{L(T["split2"]) - 0.12:.4f});
 tl.fromTo("#a2-hkw",{{x:1440,clipPath:"inset(0px 480px 0px 480px)"}},{{x:480,clipPath:"inset(0px 480px 0px 480px)",duration:0.55,ease:"expo.inOut"}},{L(T["split2"]) - 0.12:.4f});
 tl.fromTo("#a2-div",{{scaleY:0,opacity:1}},{{scaleY:1,duration:0.45,ease:"expo.out"}},{L(T["split2"]) + 0.2:.4f});
+""") + f"""
 tl.fromTo(["#a2-l1 span","#a2-l2 span","#a2-l2 i"],{{opacity:0,filter:"blur(6px)"}},{{opacity:1,filter:"blur(0px)",duration:0.15,stagger:0.07}},{L(T["split2"]) + 0.25:.4f});
 """
 scenes.append(scene("a2", S, a2_dur, a2_body, a2_js))
@@ -475,9 +491,9 @@ index = f"""<!doctype html>
 </body>
 </html>
 """
-with open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8") as f:
+with open(os.path.join(OUT, "index.html"), "w", encoding="utf-8") as f:
     f.write(index)
 os.makedirs(os.path.join(ROOT, "work"), exist_ok=True)
-with open(os.path.join(ROOT, "work", "cues.json"), "w") as f:
+with open(os.path.join(ROOT, "work", "cues_public.json" if PUBLIC else "cues.json"), "w") as f:
     json.dump(dict(T=T, duration=DUR, cues=sorted(CUES, key=lambda c: c["t"])), f, indent=1)
 print("scenes", [(s["id"], round(s["start"], 3), round(s["dur"], 3)) for s in scenes], "cues", len(CUES))

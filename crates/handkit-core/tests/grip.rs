@@ -242,3 +242,26 @@ fn gripped_hands_move_together_and_the_follower_trails() {
     // No frame-to-frame jump in the follower's elbow.
     assert!(de.iter().all(|d| d.abs() < 0.01), "{:?}", de.iter().cloned().fold(0.0f64, |m, d| m.max(d.abs())));
 }
+
+#[test]
+fn a_chain_of_three_people_keeps_both_holds() {
+    // Ben holds Ana with one hand and a child with the other. Each hold keeps its follower
+    // where the first key's grip put it, through every swing, even the child's, which is not
+    // quite met (an adult's hand can't wrap a child's fully).
+    let clip = demo("demo_three_in_a_row");
+    let rel = |t: f64, lead: &str, follow: &str| {
+        let s = solve_value(&clip.sample(t).unwrap().pose).unwrap();
+        let h = |id: &str| grip::hand_frame(s.hands.iter().find(|h| h.id.name() == id).unwrap());
+        h(lead).inverse() * h(follow)
+    };
+    for (lead, follow) in [("ana.right", "ben.left"), ("ben.right", "cal.left")] {
+        let first = rel(0.6, lead, follow);
+        for t in [0.9, 1.4, 2.5, 4.0] {
+            let r = rel(t, lead, follow);
+            assert!((r.translation - first.translation).length() < 0.001, "{follow} at {t}: {:?} vs {:?}", r.translation, first.translation);
+            assert!(r.matrix3.y_axis.dot(first.matrix3.y_axis) > 0.9995, "{follow} at {t}");
+        }
+    }
+    let text = check(&clip);
+    assert!(!text.contains("pop:"), "{text}");
+}

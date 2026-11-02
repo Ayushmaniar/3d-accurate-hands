@@ -62,3 +62,6 @@ launch/film/.hyperframes/
 launch/**/*.jpg
 launch/**/*.m4a
 showcase/**/work/*.png
+launch/**/.hyperframes/
+launch/film/public/assets
+launch/film/public/vendor
