@@ -187,7 +187,7 @@ fn check(clip: &Clip) -> String {
 
 #[test]
 fn the_grip_demos_pass_check() {
-    for name in ["demo_handshake", "demo_holding_hands", "demo_high_five"] {
+    for name in ["demo_handshake", "demo_holding_hands", "demo_high_five", "demo_three_in_a_row"] {
         let text = check(&demo(name));
         assert!(text.trim_end().ends_with("ok"), "{name}:\n{text}");
         assert!(text.contains("): held"), "{name}:\n{text}");
