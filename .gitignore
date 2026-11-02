@@ -31,3 +31,9 @@ starters/*/target-portrait/
 bench/motion/**/*.mp4
 bench/motion/**/*.png
 bench/motion/**/frames/
+
+# Low-res review videos for the phone
+phone/
+experiments/looks/gen/*.png
+experiments/looks/gen/*.jpg
+.claude/worktrees/

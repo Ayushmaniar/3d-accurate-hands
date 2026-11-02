@@ -1,0 +1,55 @@
+{
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "file": "ref_back.png",
+      "prompt": "Use case: photorealistic-natural. One studio photograph, portrait 1024x1536. A real adult human RIGHT HAND seen directly from its BACK (dorsal surface), fingers relaxed and slightly apart, wrist and lower forearm visible. CRITICAL handedness and anatomy: with fingertips upward and the back of the RIGHT hand facing the viewer, the THUMB MUST BE ON THE LEFT SIDE OF THE IMAGE and the little finger on the right; exactly four fingers plus one thumb, correct nail placement. Neutral grey seamless background, soft key light from upper left, sharp focus, natural light-medium skin with visible knuckle wrinkles, subtle veins and tendons, natural short clean nails. All fingertips inside frame with a small margin, lower forearm extending from bottom edge. No text, jewelry, props, watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-437f6f66-c129-4151-9370-cff14cacd492.png"
+    },
+    {
+      "file": "ref_palm.png",
+      "prompt": "Use case: photorealistic-natural. One studio photograph, portrait 1024x1536. A real adult human RIGHT HAND, PALM TOWARD THE CAMERA, fingers relaxed and slightly apart, wrist and lower forearm visible. With palm facing the viewer and fingertips upward, the right thumb is on the RIGHT side of the image and the little finger on the left. Exactly four fingers and one thumb, anatomically correct adult hand. Natural light-medium skin, clearly visible palm creases and fine papillary ridges, subtle veins and tendons, natural short clean nails. Neutral grey seamless background, soft key light from upper left, sharp focus. Whole hand including fingertips inside frame with a little margin, forearm enters bottom edge. No jewelry, text, props or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-77c5b1e5-43e4-480c-b71a-6074c22c25e1.png"
+    },
+    {
+      "file": "ref_side.png",
+      "prompt": "Use case: photorealistic-natural. One studio photograph, portrait 1024x1536. A real adult human RIGHT HAND in strict SIDE PROFILE FROM THE THUMB SIDE, fingers pointing upward in a relaxed natural curl. Wrist and lower forearm visible. The thumb and its short clean thumbnail are closest to camera and anatomically connected at the base of the palm; four fingers overlap behind it in a natural relaxed curl. Show a narrow lateral profile rather than a full palm view or full back view. Neutral grey seamless background, soft key light from upper left, sharp focus, natural light-medium skin with visible knuckle wrinkles, subtle veins and tendons, natural short clean nails. Entire hand and wrist inside frame with a little margin, forearm enters bottom. No jewelry, text, props or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-6dffae75-217c-4287-9231-38223e224342.png"
+    },
+    {
+      "file": "tile_palm.png",
+      "prompt": "Use case: photorealistic-natural. Asset: seamless repeating skin texture tile, SQUARE 1024x1024 pixels. Seamless tileable flat-lit top-down macro photograph of the skin of an adult human PALM: fine papillary friction ridges and small shallow creases, natural light-medium tone. Extreme macro surface patch only, the skin fills every pixel of the entire frame; no outer hand silhouette, no fingers or nails. Even diffuse neutral illumination with no directional shadows, no specular highlights, no vignette, no baked lighting or large brightness gradients. Fine natural detail at consistent scale. Texture must repeat seamlessly on both horizontal and vertical axes: opposing borders align naturally in ridge direction, crease continuation, color and brightness. No border, frame, objects, text or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-473bd57a-775f-41fe-adef-2356e7093414.png"
+    },
+    {
+      "file": "tile_knuckle.png",
+      "prompt": "Use case: photorealistic-natural. Asset: seamless repeating skin texture tile, SQUARE 1024x1024 pixels. Seamless tileable flat-lit top-down macro photograph of wrinkled skin over a finger knuckle on the BACK of an adult human hand: organic concentric, predominantly HORIZONTAL curved wrinkle lines, fine skin grain and pores between the folds. Natural light-medium skin tone. The close-up skin surface fills every pixel of the frame, no finger silhouette or nail. Even diffuse light, neutral exposure, no directional shadows, specular highlights, vignette, dark borders or large brightness gradients. Texture must repeat seamlessly on horizontal and vertical axes with matching color and wrinkle continuity at opposite borders. No text, objects or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-d48cb326-e2f5-4ba8-9363-98a9a572029b.png"
+    },
+    {
+      "file": "nail.png",
+      "prompt": "Use case: photorealistic-natural. One SQUARE image, 1024x1024 pixels. Flat-lit TOP-DOWN macro photograph of a SINGLE natural clean adult fingernail plate, SHORT, filling most of the frame. The nail is upright: a slim white free edge at the TOP, softly rounded corners, pink nail bed, a clear pale crescent lunula at the BOTTOM beside the proximal cuticle. Fine natural longitudinal nail texture, healthy nail, no polish. Nail plate occupies about 80 percent of the frame with just a narrow rim of light-medium skin and cuticle surrounding it. True perpendicular overhead camera, sharp focus throughout, even diffuse light without a bright specular glare or directional shadow. No other fingers, text, labels, jewelry or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-1616be4e-0e9f-49fd-b62d-5cd07b1e0154.png"
+    },
+    {
+      "file": "style_spiderverse.png",
+      "prompt": "Use case: stylized-concept. One SQUARE illustration, 1024x1024 pixels. A single anatomically clear adult human hand making an OPEN-PALM WAVE, palm facing camera, five digits relaxed and slightly spread, wrist visible and entering from bottom edge. In the style of Spider-Man: Into the Spider-Verse: bold expressive dark ink outlines, FLAT cel shading in TWO TO THREE skin-tone values, clearly visible Ben-Day halftone dots restricted to the shadow shapes, slight cyan/magenta offset color misregistration at a few ink edges, tactile comic print look. Strong graphic silhouette and convincing hand anatomy, all five fingertips inside frame with comfortable margin, hand fills most of frame. Plain light background. No costume, no Spider-Man character, no text, logo, extra hands or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-2e29b837-64ae-4b4d-bd85-8e69f473d2ab.png"
+    },
+    {
+      "file": "style_arcane.png",
+      "prompt": "Use case: stylized-concept. One SQUARE painting, 1024x1024 pixels. A single adult human hand making an OPEN-PALM WAVE, palm facing the viewer, fingers relaxed and slightly apart, exactly five anatomically convincing digits. Hand and wrist fill most of the frame with all fingertips fully visible. In the painterly style of the Netflix series Arcane: rich hand-painted directional brush-stroke textures, painterly soft cel shading, warm-cool color shifts across skin planes, crisp graphic shapes and edges alongside soft blended strokes, visibly textured paint. Warm light-medium skin highlights and muted cool shadow planes. Plain dark background. Wrist enters from bottom. No character body, costume, accessories, text, logo or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-3d1ffb43-c6a3-4a02-8a48-119d54cc3e63.png"
+    },
+    {
+      "file": "tile_arcane_skin.png",
+      "prompt": "Use case: stylized-concept. One SQUARE seamless texture tile, 1024x1024 pixels. Seamless tileable texture of HAND-PAINTED SKIN with clearly visible directional brush strokes in the painterly style of the Netflix series Arcane. Warm light-medium skin tones with subtle muted cool color shifts, broad softly interlocking painted planes with finer directional dry-brush marks layered on top. Entire frame is a continuous skin-colored painted material surface, no hand silhouette, anatomy, facial features, nails, objects or background. Flat diffuse lighting, no shading gradients, specular glare, cast shadows or vignette. Seamless repeating in BOTH directions: color, mark scale and stroke structure must continue naturally across opposing left/right and top/bottom edges. No border, seams, text or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-c9a0e8d5-f7f4-4e8e-a771-3ea925a4b4a7.png"
+    },
+    {
+      "file": "style_clay.png",
+      "prompt": "Use case: stylized-concept. One SQUARE image. A single hand making an OPEN-PALM WAVE as a claymation figure sculpted from matte plasticine, five softly rounded fingers relaxed and slightly spread, palm facing camera, wrist enters bottom edge. Entire hand with all fingertips fully visible and a little surrounding margin. Clearly tactile hand-made plasticine material: visible maker fingerprints pressed into the clay surface, small sculpting imperfections, subtle molded palm creases, soft rounded edges. Warm natural light-medium flesh-colored clay. Soft professional studio lighting, plain neutral background. Charming stop-motion claymation appearance, convincing five-digit hand anatomy. No body, extra hands, jewelry, text, logo or watermark.",
+      "source": "C:\\Users\\Rajat\\.codex\\generated_images\\01a19b12-f2e3-7361-8ee1-733dba6624d9\\exec-9ab5a365-c7e4-45d1-b352-ff8e279f0516.png"
+    }
+  ]
+}

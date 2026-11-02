@@ -1,0 +1,12 @@
+Use your image generation tool to create each image below and save it in the current directory under the given file name (PNG). Square unless a size is given. After all are saved, reply with a list of file names and pixel sizes.
+
+1. ref_back.png: studio photograph of a real adult human right hand, back of the hand toward the camera, fingers relaxed and slightly apart, wrist and lower forearm visible, neutral grey seamless background, soft key light from upper left, sharp focus, natural skin with visible knuckle wrinkles, veins and tendons subtle, natural short clean nails. Portrait 1024x1536.
+2. ref_palm.png: same kind of photo, palm toward the camera, fingers relaxed, palm creases visible. Portrait 1024x1536.
+3. ref_side.png: same kind of photo, the hand seen from the thumb side, relaxed curl. Portrait 1024x1536.
+4. tile_palm.png: seamless tileable flat-lit top-down macro photograph of the skin of a human palm: fine papillary ridges and small creases, light-medium tone, even diffuse light, no shadows, no highlights, fills the frame.
+5. tile_knuckle.png: seamless tileable flat-lit top-down macro photograph of wrinkled skin over a finger knuckle on the back of a hand (concentric horizontal wrinkle lines), light-medium tone, even diffuse light, fills the frame.
+6. nail.png: flat-lit top-down macro photograph of a single natural clean fingernail plate, short, filling most of the frame, pink nail bed with a pale lunula at the bottom and a slim white free edge at the top, even light.
+7. style_spiderverse.png: a stylized illustration of a hand making an open-palm wave in the style of "Spider-Man: Into the Spider-Verse": bold ink outlines, flat cel shading in two to three tones, Ben-Day halftone dots in the shadows, slight offset color misregistration, comic print look, plain light background.
+8. style_arcane.png: a stylized painting of a hand making an open-palm wave in the painterly style of the Netflix series "Arcane": hand-painted brush-stroke textures, painterly soft cel shading, warm-cool color shifts, crisp graphic shapes, visible paint texture, plain dark background.
+9. tile_arcane_skin.png: seamless tileable texture of hand-painted skin with visible directional brush strokes in the painterly style of the series Arcane, warm light-medium skin tones with subtle cool shifts, flat lit, fills the frame.
+10. style_clay.png: a hand making an open-palm wave as a claymation figure made of matte plasticine with fingerprints, studio lit, plain background.
