@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "demo_looks",
+  "description": "One right hand going through gestures for ten seconds, for showing the looks: play with --looks \"realistic;toon;spiderverse;arcane;clay\".",
+  "fps": 30,
+  "camera": { "position": [0.02, 0.09, 0.42], "target": [0.0, 0.075, 0.0], "fov": 34 },
+  "look": { "style": "realistic", "skin": "medium" },
+  "keys": [
+    { "t": 0, "hands": { "right": { "from": "spread_palm", "place": { "wrist": [0.0, -0.03, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] } } } },
+    { "t": 0.9, "move": 0.6, "hands": { "right": { "from": "spread_palm", "place": { "wrist": [0.01, -0.03, 0], "palm_facing": [0.5, 0, 0.85], "fingers_toward": [0.15, 1, 0] } } } },
+    { "t": 1.6, "move": 0.45, "ease": "snappy", "hands": { "right": { "from": "fist", "place": { "wrist": [0.0, -0.03, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] } } } },
+    { "t": 2.6, "move": 0.4, "ease": "snappy", "hands": { "right": { "from": "point" } } },
+    { "t": 3.6, "move": 0.5, "hands": { "right": { "from": "ok", "place": { "wrist": [0.0, -0.03, 0], "palm_facing": [0.4, 0, 0.9], "fingers_toward": [-0.1, 1, 0] } } } },
+    { "t": 4.6, "move": 0.45, "hands": { "right": { "from": "peace", "place": { "wrist": [0.0, -0.03, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] } } } },
+    { "t": 5.9, "move": 1.0, "hands": { "right": { "from": "spread_palm", "place": { "wrist": [0.0, -0.03, 0], "palm_facing": [-0.3, 0, -0.95], "fingers_toward": [0, 1, 0] } } } },
+    { "t": 7.0, "move": 0.6, "hands": { "right": { "from": "thumbs_up", "place": { "wrist": [0.0, 0.02, 0], "palm_facing": [-1, 0, 0.2], "fingers_toward": [0.1, 0.8, 0.5] } } } },
+    { "t": 8.2, "move": 0.7, "hands": { "right": { "from": "open_palm", "place": { "wrist": [0.0, -0.03, 0], "palm_facing": [0.2, 0, 1], "fingers_toward": [0, 1, 0] } } } },
+    { "t": 9.3, "move": 0.6, "hands": { "right": { "from": "spread_palm", "place": { "wrist": [0.0, -0.03, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] } } } }
+  ],
+  "duration": 10.0
+}

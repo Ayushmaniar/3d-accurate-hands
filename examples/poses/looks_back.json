@@ -1,0 +1,5 @@
+{
+  "from": "spread_palm",
+  "hands": { "right": { "place": { "fingers_toward": [0, 1, 0], "palm_facing": [0, 0, -1], "wrist": [0, 0, 0] } } },
+  "camera": { "position": [-0.03, 0.11, 0.40], "target": [0.0, 0.085, 0.0], "fov": 36 }
+}

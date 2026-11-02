@@ -276,6 +276,8 @@ pub struct Clip {
     pub camera: Option<Value>,
     /// The video's [width, height], when the clip gives it.
     pub size: Option<Value>,
+    /// How to draw the hands (`look::Look`), copied into every sampled pose.
+    pub look: Option<Value>,
     keys: Vec<Key>,
     idle: f64,
     seed: u64,
@@ -326,8 +328,8 @@ impl Clip {
     pub fn from_value(v: &Value) -> Result<Clip, String> {
         let obj = v.as_object().ok_or("a clip is a JSON object")?;
         for k in obj.keys() {
-            if !["version", "name", "description", "duration", "fps", "camera", "idle", "follow", "keys", "size"].contains(&k.as_str()) {
-                return Err(format!("unknown clip field \"{k}\" (fields: version, name, description, duration, fps, size, camera, idle, follow, keys)"));
+            if !["version", "name", "description", "duration", "fps", "camera", "idle", "follow", "keys", "size", "look"].contains(&k.as_str()) {
+                return Err(format!("unknown clip field \"{k}\" (fields: version, name, description, duration, fps, size, camera, look, idle, follow, keys)"));
             }
         }
         if let Some(ver) = num(v, "version")? {
@@ -344,6 +346,10 @@ impl Clip {
         };
         let follow = num(v, "follow")?.unwrap_or(1.0);
         let size = v.get("size").cloned();
+        let look = v.get("look").cloned();
+        if let Some(l) = &look {
+            crate::look::Look::from_value(l)?;
+        }
         if let Some(s) = &size {
             let ok = s.as_array().is_some_and(|a| a.len() == 2 && a.iter().all(|x| x.as_f64().is_some_and(|x| x > 0.0)));
             if !ok {
@@ -564,7 +570,7 @@ impl Clip {
         }
         let last = keys.last().unwrap().t;
         let duration = num(v, "duration")?.unwrap_or(last + 0.5);
-        Ok(Clip { duration, fps, camera, size, keys, idle, seed, follow, present })
+        Ok(Clip { duration, fps, camera, size, look, keys, idle, seed, follow, present })
     }
 
     pub fn frames(&self) -> usize {
@@ -702,6 +708,9 @@ impl Clip {
         }
         if let Some(s) = &self.size {
             pose["size"] = s.clone();
+        }
+        if let Some(l) = &self.look {
+            pose["look"] = l.clone();
         }
 
         // Goals: held through a transition when both keys have them, ramped in near a key's

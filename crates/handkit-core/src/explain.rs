@@ -109,7 +109,8 @@ one. \"from\": \"<name>\" at the top of a file starts from a whole gesture (keys
 its goals are added to yours). On a hand, { \"from\": \"ok\" } takes that gesture's joint
 values for this hand (not its placement), and its goals renamed to this hand.
 
-Motion: `handkit explain clips` (keyed poses over time, checked and previewed as a whole).";
+Motion: `handkit explain clips` (keyed poses over time, checked and previewed as a whole).
+Looks: `handkit explain looks` (skin tones, toon, spiderverse, arcane, clay, motion blur).";
 
 pub const CLIPS: &str = "\
 Clips: motion as keyed poses. A clip file:
@@ -170,6 +171,29 @@ fingers_toward), `handkit preview clip.json` (a quick MP4). To match a reference
 `python tools/motion/compare.py ref.mp4 out.mp4 cmp` writes cmp.sheet.png (both at the same
 times, in rows) and cmp.side.mp4 (side by side).";
 
+pub const LOOKS: &str = "\
+Looks: how renderers draw the hands. A pose or a clip may carry a top-level \"look\":
+  \"look\": { \"style\": \"toon\", \"skin\": \"tan\", \"nail\": \"#e9c4b8\", \"outline\": 3, \"motion_blur\": 4 }
+(or just \"look\": \"clay\"). Every key is optional; left out, it takes the style's default.
+  style        realistic (default: lit skin, soft key and cool rim light, screen-space
+               subsurface scattering, warm shadows), toon (three cel bands and an ink outline),
+               spiderverse (toon with halftone dots in the shadows, a thick uneven line and
+               misregistered magenta/cyan plates), arcane (painterly: soft warm/cool bands,
+               brush strokes, fine dark lines), clay (matte modelling clay, lumps, thumbprints).
+  skin         light, medium (default), tan, brown, dark, or \"#rrggbb\" (the albedo).
+  nail         a colour; default the skin, lighter and pinker. Nails come from the mesh.
+  outline      ink line width in pixels at 1080p (scales with the frame height); defaults
+               toon 3, spiderverse 4.5, arcane 1.6, realistic and clay 0 (none).
+  motion_blur  sub-frame renders averaged per frame (1 = off; 3 to 6 for fast moves).
+  shutter      shutter angle in degrees (default 180: half the frame time).
+  halftone     spiderverse dot spacing in pixels at 1080p (default 8; 0 = no dots).
+  misregister  spiderverse plate offset in pixels at 1080p (default 3; 0 = none).
+  texture      0 to 1: brush strokes (arcane), lumps and thumbprints (clay); default 1.
+  subsurface   0 to 1: how much scattered light realistic mixes in (default 0.5).
+The fframes player takes the same as flags over the file's look: --look toon,skin=tan,outline=4,
+--look-json '{..}', --motion-blur 4, and --looks \"realistic;toon;arcane\" --look-every 2 to
+cycle through looks (a demo). In Rust, handkit_fframes::look::Styler renders any look.";
+
 pub fn all() -> String {
     let mut s = String::from(CONVENTIONS);
     s.push_str("\n\nParameters (key, range in degrees, meaning):\n");
@@ -182,6 +206,9 @@ pub fn all() -> String {
 pub fn one(key: &str) -> Result<String, String> {
     if key == "clips" || key == "clip" {
         return Ok(CLIPS.to_string());
+    }
+    if key == "looks" || key == "look" {
+        return Ok(LOOKS.to_string());
     }
     let k = key.trim_start_matches("right.").trim_start_matches("left.");
     match params::find(k) {

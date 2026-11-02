@@ -31,6 +31,9 @@ pub struct PoseFile {
     pub hands: Hands,
     /// Optional perspective camera for previews: { position, target, fov }.
     pub camera: Option<Value>,
+    /// How renderers draw the hands: { style, skin, nail, outline, ... } (`look::Look`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub look: Option<Value>,
     /// The frame's [width, height] in pixels, for `place.screen` (default 16:9).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub size: Option<[f64; 2]>,
@@ -143,6 +146,9 @@ pub fn parse(text: &str) -> Result<(PoseFile, Mirrors), String> {
 pub fn parse_value(v: Value) -> Result<(PoseFile, Mirrors), String> {
     let (v, mirrors) = resolve(v)?;
     let pose: PoseFile = serde_json::from_value(v).map_err(|e| format!("pose file: {e}"))?;
+    if let Some(l) = &pose.look {
+        crate::look::Look::from_value(l)?;
+    }
     Ok((pose, mirrors))
 }
 
