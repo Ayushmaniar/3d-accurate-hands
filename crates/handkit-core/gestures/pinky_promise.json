@@ -1,0 +1,38 @@
+{
+  "name": "pinky_promise",
+  "description": "Pinky promise: two people's right pinkies hook around each other, the other fingers closed in fists; seen from below the hook.",
+  "version": 1,
+  "hands": {
+    "ana.right": {
+      "palm_cup": 3.7,
+      "thumb": { "cmc_abd": 44.9, "cmc_flex": 3.0, "cmc_rot": 48.7, "mcp_flex": 48.6, "ip_flex": 23.9 },
+      "index": { "mcp_abd": 0.0, "mcp_flex": 82.0, "pip_flex": 92.0, "dip_flex": 61.0, "mcp_roll": 0.0 },
+      "middle": { "mcp_abd": 0.0, "mcp_flex": 86.0, "pip_flex": 96.0, "dip_flex": 64.0, "mcp_roll": 0.0 },
+      "ring": { "mcp_abd": -1.1, "mcp_flex": 83.4, "pip_flex": 99.9, "dip_flex": 73.1, "mcp_roll": 0.0 },
+      "pinky": { "mcp_abd": 9.8, "mcp_flex": 7.4, "pip_flex": 10.0, "dip_flex": 4.3, "mcp_roll": 0.0 },
+      "place": {
+        "wrist": [-0.08, 0.0, 0.0],
+        "palm_facing": [0.0, 0.0, -1.0],
+        "fingers_toward": [1.0, 0.0, 0.0],
+        "forearm_toward": [-1.0, 0.0, 0.0]
+      }
+    },
+    "ben.right": {
+      "palm_cup": 3.7,
+      "thumb": { "cmc_abd": 44.9, "cmc_flex": 3.0, "cmc_rot": 48.7, "mcp_flex": 48.6, "ip_flex": 23.9 },
+      "index": { "mcp_abd": 0.0, "mcp_flex": 82.0, "pip_flex": 92.0, "dip_flex": 61.0, "mcp_roll": 0.0 },
+      "middle": { "mcp_abd": 0.0, "mcp_flex": 86.0, "pip_flex": 96.0, "dip_flex": 64.0, "mcp_roll": 0.0 },
+      "ring": { "mcp_abd": -1.1, "mcp_flex": 83.4, "pip_flex": 99.9, "dip_flex": 73.1, "mcp_roll": 0.0 },
+      "pinky": { "mcp_abd": 9.9, "mcp_flex": 10.3, "pip_flex": 10.2, "dip_flex": 5.1, "mcp_roll": 0.0 },
+      "place": {
+        "wrist": [0.1204, -0.0597, -0.0377],
+        "palm_facing": [-0.004, -0.007, 1.0],
+        "fingers_toward": [-0.859, 0.507, -0.033],
+        "forearm_toward": [0.86602, -0.50001, 0.0]
+      }
+    }
+  },
+  "people": { "ana": { "look": { "skin": "brown" } }, "ben": { "look": { "skin": "light" } } },
+  "goals": [{ "grip": ["ana.right", "ben.right"], "style": "pinky" }],
+  "camera": { "position": [0.0, -0.06, 0.3], "target": [-0.02, -0.01, 0], "fov": 40 }
+}

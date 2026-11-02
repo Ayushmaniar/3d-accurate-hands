@@ -1,0 +1,38 @@
+{
+  "name": "interlaced_hands",
+  "description": "Interlaced hands: one person's right hand and the other's left, palm to palm and hanging down, fingers alternating between each other's and closed over the backs, as when walking together.",
+  "version": 1,
+  "hands": {
+    "ana.right": {
+      "palm_cup": 0.0,
+      "thumb": { "cmc_flex": -20.4, "cmc_abd": -10.0, "cmc_rot": 1.6, "mcp_flex": 43.4, "ip_flex": 71.4 },
+      "index": { "mcp_flex": 8.0, "pip_flex": 12.1, "dip_flex": 85.0, "mcp_abd": 14.1, "mcp_roll": -0.5 },
+      "middle": { "mcp_flex": 43.4, "pip_flex": 86.7, "dip_flex": 65.7, "mcp_abd": -1.5, "mcp_roll": -3.2 },
+      "ring": { "mcp_flex": 6.9, "pip_flex": 11.0, "dip_flex": 85.0, "mcp_abd": 17.7, "mcp_roll": 0.6 },
+      "pinky": { "mcp_flex": 9.4, "pip_flex": 13.2, "dip_flex": 72.5, "mcp_abd": 34.8, "mcp_roll": -2.1 },
+      "place": {
+        "wrist": [-0.013, 0.0, 0.0],
+        "palm_facing": [1.0, 0.0, 0.0],
+        "fingers_toward": [0.0, -1.0, 0.0],
+        "forearm_toward": [-0.6, 1.0, 0.0]
+      }
+    },
+    "ben.left": {
+      "palm_cup": 0.0,
+      "thumb": { "cmc_flex": -13.4, "cmc_abd": -4.2, "cmc_rot": 1.1, "mcp_flex": 14.5, "ip_flex": 20.4 },
+      "index": { "mcp_flex": 50.7, "pip_flex": 71.5, "dip_flex": 54.0, "mcp_abd": 23.5, "mcp_roll": 3.1 },
+      "middle": { "mcp_flex": 5.5, "pip_flex": 10.7, "dip_flex": 7.6, "mcp_abd": 9.9, "mcp_roll": 0.5 },
+      "ring": { "mcp_flex": 3.9, "pip_flex": 8.8, "dip_flex": 6.0, "mcp_abd": 10.3, "mcp_roll": -0.5 },
+      "pinky": { "mcp_flex": 3.1, "pip_flex": 9.3, "dip_flex": 5.9, "mcp_abd": 22.9, "mcp_roll": 0.3 },
+      "place": {
+        "wrist": [0.0221, 0.0386, 0.0022],
+        "palm_facing": [-1.003, 0.005, -0.017],
+        "fingers_toward": [0.036, -0.978, 0.033],
+        "forearm_toward": [0.5145, 0.85749, 0.0]
+      }
+    }
+  },
+  "people": { "ana": { "look": { "skin": "brown" } }, "ben": { "look": { "skin": "light" } } },
+  "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }],
+  "camera": { "position": [0.25, -0.1, 0.35], "target": [0, -0.06, 0], "fov": 35 }
+}

@@ -99,6 +99,22 @@ the hand.
   { \"aim\": \"right.index\", \"at\": [x, y, z] }   the finger's line (knuckle through tip) passes
       through the point, within 1 deg. The point is in world space, so an aim belongs to its
       placement: a hand-level \"from\" leaves a gesture's aims behind.
+  { \"grip\": [a, b], \"style\": s }   two people's hands hold each other; a and b are whole hands
+      (\"ana.right\"), a the leader, b the follower. Styles: handshake (two right or two left
+      hands, palms together, thumbs over the backs, fingers wrapped round), interlaced (a right
+      and a left side by side, fingers alternating, closed over the backs), cupped (right with
+      left: holding hands side by side, fingers crossing and closed over the other's back; two
+      rights: a palm up cradles the other's fingers), high_five (palms flat, fingers up and
+      spread), fist_bump (fists knuckles to knuckles), pinky (two rights, pinkies hooked).
+      Unless the grip already holds, `solve` gives both hands the style's open shape, places
+      the follower on the leader where the style puts it (only the follower placed: the
+      leader moves to it; neither: the leader goes to a default spot near the origin), slides
+      it in until the hands touch, then closes each gripping digit until it meets the other
+      hand (or its own) and stops; the solver then tidies what is left. The result is plain
+      joint values and placements, free to edit. It holds when every closing digit's last
+      segment is within 1 mm of the other hand (`query` lists each tip's gap in mm), the
+      hands touch, and nothing overlaps more than 2 mm. A grip takes no touch or aim; its
+      vary defaults to the closing digits and the follower's place.
   \"vary\": [...] on a goal chooses what may change (default: every joint of each digit a touch
       names, plus palm_cup for ring and pinky and the wrist for palm sites; for aim, the wrist
       and that finger's knuckle). Patterns: right.thumb.* (one digit), right.index.pip_flex
@@ -114,7 +130,8 @@ the hand.
 Gestures: `handkit gestures` lists a library of finished poses; `handkit gesture <name>` prints
 one. \"from\": \"<name>\" at the top of a file starts from a whole gesture (keys you write win;
 its goals are added to yours). On a hand, { \"from\": \"ok\" } takes that gesture's joint
-values for this hand (not its placement), and its goals renamed to this hand.
+values for this hand (not its placement), and its goals renamed to this hand. handshake, holding_hands, interlaced_hands, high_five_pair,
+fist_bump_pair and pinky_promise are two people's (ana's and ben's) hands held by a grip.
 
 Motion: `handkit explain clips` (keyed poses over time, checked and previewed as a whole).
 Looks: `handkit explain looks` (skin tones, toon, spiderverse, arcane, clay, motion blur).";
@@ -171,6 +188,18 @@ held goal joins (a touch between two hands) are not pushed apart. \"collide\": f
 this off: clip-wide at the top, on a key (from its start on), or on one hand of a key. `check`
 reports any overlap left with the keys either side; a deep keyed overlap is pushed far, so
 route a big crossing yourself (a lifted waypoint, fingers opened first).
+
+Grips in clips: keys in a row writing the same grip (hands and style) hold it. Only the leader
+needs keying (the follower's place in later keys is ignored): the follower's hand rides on the
+leader's, and its forearm follows through a critically damped spring (3 Hz, a few frames
+behind), so a handshake pumped by one arm reads as led. In the first key with the grip the
+hands arrive 0.3 s early and open, the gripping fingers closing over the last 0.3 s; the
+follower blends onto the leader as it arrives. In the first key without it the fingers open
+over 0.25 s, then the hands part. The pair does not collide with itself from the grip's
+approach until it has parted. A grip in the first key holds from the start. Come in through a
+pass waypoint a few cm short of the grip, palms facing and thumbs lifted toward their own
+palms (open_palm with thumb cmc_abd 40, cmc_flex -25), so the thumbs pass each other; leave
+the same way. high_five and fist_bump close no fingers: the hands simply meet at t.
 
 Commands: `handkit check clip.json` (held goals, penetrations, joint speeds, pops, fingertips
 leaving the camera's view, elbows in view; fix everything it reports; penetrations and pops

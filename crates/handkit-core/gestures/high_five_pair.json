@@ -1,0 +1,38 @@
+{
+  "name": "high_five_pair",
+  "description": "Two-person high five: two people's right hands meet palm to palm at head height, fingers up and spread, forearms rising from either side.",
+  "version": 1,
+  "hands": {
+    "ana.right": {
+      "palm_cup": 0.0,
+      "thumb": { "cmc_flex": -15.0, "cmc_abd": -5.0, "cmc_rot": 0.0, "mcp_flex": 0.0, "ip_flex": 3.0 },
+      "index": { "mcp_flex": -6.0, "pip_flex": 4.0, "dip_flex": 2.0, "mcp_abd": 10.0, "mcp_roll": 0.0 },
+      "middle": { "mcp_flex": -6.0, "pip_flex": 4.0, "dip_flex": 2.0, "mcp_abd": 0.0, "mcp_roll": 0.0 },
+      "ring": { "mcp_flex": -6.0, "pip_flex": 4.0, "dip_flex": 2.0, "mcp_abd": 8.0, "mcp_roll": 0.0 },
+      "pinky": { "mcp_flex": -6.0, "pip_flex": 4.0, "dip_flex": 2.0, "mcp_abd": 15.0, "mcp_roll": 0.0 },
+      "place": {
+        "wrist": [-0.013, 0.0, 0.0],
+        "palm_facing": [1.0, 0.0, 0.0],
+        "fingers_toward": [0.0, 1.0, 0.0],
+        "forearm_toward": [-0.5, -1.0, 0.0]
+      }
+    },
+    "ben.right": {
+      "palm_cup": 0.0,
+      "thumb": { "cmc_flex": -15.0, "cmc_abd": -5.0, "cmc_rot": 0.0, "mcp_flex": 0.0, "ip_flex": 3.0 },
+      "index": { "mcp_flex": -6.0, "pip_flex": 4.0, "dip_flex": 2.0, "mcp_abd": 10.0, "mcp_roll": 0.0 },
+      "middle": { "mcp_flex": -6.0, "pip_flex": 4.0, "dip_flex": 2.0, "mcp_abd": 0.0, "mcp_roll": 0.0 },
+      "ring": { "mcp_flex": -6.0, "pip_flex": 4.0, "dip_flex": 2.0, "mcp_abd": 8.0, "mcp_roll": 0.0 },
+      "pinky": { "mcp_flex": -6.0, "pip_flex": 4.0, "dip_flex": 2.0, "mcp_abd": 15.0, "mcp_roll": 0.0 },
+      "place": {
+        "wrist": [0.02078, 0.0, 0.0],
+        "palm_facing": [-1.0, 0.0, 0.0],
+        "fingers_toward": [0.0, 1.0, 0.0],
+        "forearm_toward": [0.44721, -0.89443, 0.0]
+      }
+    }
+  },
+  "people": { "ana": { "look": { "skin": "brown" } }, "ben": { "look": { "skin": "light" } } },
+  "goals": [{ "grip": ["ana.right", "ben.right"], "style": "high_five" }],
+  "camera": { "position": [0.2, 0.12, 0.45], "target": [0, 0.08, 0], "fov": 35 }
+}

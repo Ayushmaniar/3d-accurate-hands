@@ -93,6 +93,15 @@ impl Solved {
 /// The residual components of one goal (meters) and its status. A touch asks for the surfaces
 /// to meet (or to stay `gap_mm` apart) and, for each named site, for the contact to land there.
 pub fn evaluate(goal: &Goal, s: &Solved) -> Result<(Vec<f64>, GoalStatus), String> {
+    if goal.grip.is_some() {
+        if goal.touch.is_some() || goal.aim.is_some() {
+            return Err("a grip is its own goal: write { \"grip\": [a, b], \"style\": .. } without touch or aim".into());
+        }
+        return crate::grip::evaluate(goal, s);
+    }
+    if goal.style.is_some() {
+        return Err("\"style\" goes with \"grip\": [a, b]".into());
+    }
     match (&goal.touch, &goal.aim) {
         (Some([a, b]), None) => {
             let want = goal.gap_mm.unwrap_or(0.0) / 1000.0;
@@ -154,7 +163,7 @@ pub fn evaluate(goal: &Goal, s: &Solved) -> Result<(Vec<f64>, GoalStatus), Strin
             let mm = deepest * 1000.0;
             Ok((Vec::new(), GoalStatus { label: format!("clear {}", goal.vary.join(", ")), value: (mm * 10.0).round() / 10.0, unit: "mm", met: mm >= -CLEAR_TOL_MM, note: String::new() }))
         }
-        _ => Err("each goal needs either \"touch\": [a, b], \"aim\": \"<hand>.<digit>\" with \"at\", or only \"vary\" (keep those parts from passing through anything)".into()),
+        _ => Err("each goal needs either \"touch\": [a, b], \"aim\": \"<hand>.<digit>\" with \"at\", \"grip\": [a, b] with \"style\", or only \"vary\" (keep those parts from passing through anything)".into()),
     }
 }
 

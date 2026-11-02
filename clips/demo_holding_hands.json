@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "name": "holding hands",
+  "description": "Ana and Ben walk side by side, fingers interlaced; their joined hands swing gently forward and back with each step, Ana's arm leading and Ben's trailing.",
+  "fps": 30,
+  "duration": 5.4,
+  "size": [1920, 1080],
+  "camera": { "position": [0.44, -0.12, 0.2], "target": [0.0, -0.085, 0.0], "fov": 30 },
+  "people": { "ana": { "look": { "skin": "dark" } }, "ben": { "look": { "skin": "light" } } },
+  "keys": [
+    {
+      "t": 0,
+      "hands": {
+        "ana.right": { "place": { "wrist": [-0.013, 0.0, 0.0], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, 0], "forearm_toward": [-0.6, 1, 0] } },
+        "ben.left": {}
+      },
+      "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }]
+    },
+    { "t": 0.6, "pass": true, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.016, 0.085], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, -0.26], "forearm_toward": [-0.6, 1, 0.17] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] },
+    { "t": 1.15, "pass": true, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.016, -0.085], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, 0.26], "forearm_toward": [-0.6, 1, -0.17] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] },
+    { "t": 1.7, "pass": true, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.016, 0.085], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, -0.26], "forearm_toward": [-0.6, 1, 0.17] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] },
+    { "t": 2.25, "pass": true, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.016, -0.085], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, 0.26], "forearm_toward": [-0.6, 1, -0.17] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] },
+    { "t": 2.8, "pass": true, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.016, 0.085], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, -0.26], "forearm_toward": [-0.6, 1, 0.17] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] },
+    { "t": 3.35, "pass": true, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.016, -0.085], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, 0.26], "forearm_toward": [-0.6, 1, -0.17] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] },
+    { "t": 3.9, "pass": true, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.016, 0.085], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, -0.26], "forearm_toward": [-0.6, 1, 0.17] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] },
+    { "t": 4.45, "pass": true, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.016, -0.085], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, 0.26], "forearm_toward": [-0.6, 1, -0.17] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] },
+    { "t": 5.0, "hands": { "ana.right": { "place": { "wrist": [-0.013, 0.0, 0.0], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, 0], "forearm_toward": [-0.6, 1, 0] } } }, "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }] }
+  ]
+}

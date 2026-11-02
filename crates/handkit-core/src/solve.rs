@@ -81,6 +81,14 @@ pub fn solve_goals_with(raw: &Value, round: bool) -> Result<(Value, SolveReport)
 /// `solve_goals_with`; `own_hand` keeps only each hand's own parts apart, not one hand from
 /// the other.
 pub fn solve_goals_in(raw: &Value, round: bool, own_hand: bool) -> Result<(Value, SolveReport), String> {
+    // A grip that does not hold starts from the style's placement and shape.
+    let prepared;
+    let raw = if raw.get("goals").is_some_and(|g| g.to_string().contains("\"grip\"")) {
+        prepared = crate::grip::prepare(raw)?;
+        &prepared
+    } else {
+        raw
+    };
     let (resolved, _) = resolve(raw.clone())?;
     let first = solve_value(raw)?;
     if first.pose.goals.is_empty() {
@@ -357,6 +365,10 @@ fn set_value(v: &mut Value, path: &[Value], x: Value) {
 fn collect_params(raw: &Value, resolved: &Value, solved: &Solved, work: &mut Value) -> Result<Vec<Param>, String> {
     let mut patterns: Vec<String> = Vec::new();
     for g in &solved.pose.goals {
+        if g.grip.is_some() && g.vary.is_empty() {
+            patterns.extend(crate::grip::vary(g)?);
+            continue;
+        }
         if !g.vary.is_empty() {
             patterns.extend(g.vary.iter().cloned());
             continue;

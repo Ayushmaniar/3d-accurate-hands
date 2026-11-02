@@ -1,0 +1,38 @@
+{
+  "name": "handshake",
+  "description": "Handshake: two people's right hands clasp palm to palm, thumbs crossing over the backs, fingers wrapped around each other's hand; seen from above the thumbs.",
+  "version": 1,
+  "hands": {
+    "ana.right": {
+      "palm_cup": 6.0,
+      "thumb": { "cmc_flex": -10.3, "cmc_abd": 2.7, "cmc_rot": 12.2, "mcp_flex": 11.9, "ip_flex": 5.9 },
+      "index": { "mcp_flex": 3.5, "pip_flex": 7.7, "dip_flex": 4.8, "mcp_abd": -0.1, "mcp_roll": 0.0 },
+      "middle": { "mcp_flex": 6.8, "pip_flex": 12.2, "dip_flex": 72.2, "mcp_abd": -3.4, "mcp_roll": -1.6 },
+      "ring": { "mcp_flex": 9.1, "pip_flex": 27.9, "dip_flex": 83.2, "mcp_abd": 3.4, "mcp_roll": -2.4 },
+      "pinky": { "mcp_flex": 5.0, "pip_flex": 29.9, "dip_flex": 53.6, "mcp_abd": 1.1, "mcp_roll": -1.9 },
+      "place": {
+        "wrist": [-0.075, 0.0, 0.0],
+        "palm_facing": [0.0, 0.0, -1.0],
+        "fingers_toward": [1.0, -0.4, 0.0],
+        "forearm_toward": [-1.0, 0.0, 0.25]
+      }
+    },
+    "ben.right": {
+      "palm_cup": 6.0,
+      "thumb": { "cmc_flex": -18.0, "cmc_abd": 4.6, "cmc_rot": 10.4, "mcp_flex": 9.5, "ip_flex": 5.0 },
+      "index": { "mcp_flex": 4.8, "pip_flex": 12.2, "dip_flex": 38.8, "mcp_abd": -3.1, "mcp_roll": -0.9 },
+      "middle": { "mcp_flex": 12.9, "pip_flex": 54.4, "dip_flex": 80.3, "mcp_abd": -3.8, "mcp_roll": -2.7 },
+      "ring": { "mcp_flex": 16.8, "pip_flex": 78.6, "dip_flex": 59.5, "mcp_abd": 2.3, "mcp_roll": -2.5 },
+      "pinky": { "mcp_flex": 31.4, "pip_flex": 66.7, "dip_flex": 73.3, "mcp_abd": 0.9, "mcp_roll": -1.9 },
+      "place": {
+        "wrist": [0.089, -0.0156, -0.0313],
+        "palm_facing": [0.006, -0.025, 0.999],
+        "fingers_toward": [-0.964, -0.3, -0.002],
+        "forearm_toward": [0.92156, 0.30316, -0.24251]
+      }
+    }
+  },
+  "people": { "ana": { "look": { "skin": "brown" } }, "ben": { "look": { "skin": "light" } } },
+  "goals": [{ "grip": ["ana.right", "ben.right"], "style": "handshake" }],
+  "camera": { "position": [0.05, 0.12, 0.42], "target": [0, 0, 0], "fov": 35 }
+}

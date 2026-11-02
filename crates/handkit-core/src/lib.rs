@@ -7,6 +7,7 @@ pub mod collide;
 pub mod explain;
 pub mod gestures;
 pub mod goals;
+pub mod grip;
 pub mod look;
 pub mod params;
 pub mod pose;

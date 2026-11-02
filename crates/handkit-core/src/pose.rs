@@ -168,7 +168,8 @@ pub struct PoseFile {
     pub description: Option<String>,
 }
 
-/// One goal: `touch` two sites or segments, or `aim` a finger (e.g. "right.index") `at` a point.
+/// One goal: `touch` two sites or segments, `aim` a finger (e.g. "right.index") `at` a point, or
+/// `grip` two hands in a `style`.
 /// `vary` lists what the solver may change (see `handkit explain`); left out, it picks the joints
 /// of the digits involved.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -182,6 +183,11 @@ pub struct Goal {
     pub aim: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub at: Option<[f64; 3]>,
+    /// Two hands holding each other: [leader, follower] (see `grip`), with `style`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub grip: Option<[String; 2]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub style: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub vary: Vec<String>,
 }
