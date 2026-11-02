@@ -518,6 +518,14 @@ pub fn hand_field(h: &HandGeom) -> Field {
         group: 1,
         k: 0.008,
     });
+    // The wrist bones under the thumb's base (scaphoid and trapezium), filling the seam where
+    // the forearm, the palm's edge and the thumb meet, which otherwise shows as a pit.
+    prims.push(Prim {
+        shape: ellipsoid(hw(0.0195, 0.003, -0.0005), [hv(DVec3::X), hv(DVec3::Y), hv(DVec3::Z)], dvec3(0.0095, 0.013, 0.0095)),
+        bone: hand,
+        group: 1,
+        k: 0.008,
+    });
     // ...and its bulk runs along the palm side of the thumb's metacarpal, moving with it.
     {
         let bi = bone(h, "thumb_cmc");
@@ -547,6 +555,15 @@ pub fn hand_field(h: &HandGeom) -> Field {
         let a = hw(0.029, 0.060, -0.002);
         let b = t.frame.transform_point3(dvec3(0.0, 0.1 * t.len, 0.0));
         prims.push(Prim { shape: Shape::RoundCone { a, b, ra: 0.0085, rb: 0.0062 }, bone: hand, group: 1, k: 0.008 });
+        // Its belly fills the back of the web between the two metacarpals, which would
+        // otherwise sink into a pit where the thumb's base meets the palm's edge.
+        let axis = dvec3(0.25, 1.0, 0.0).normalize();
+        prims.push(Prim {
+            shape: ellipsoid(hw(0.036, 0.052, -0.004), [hv(DVec3::Z.cross(axis)), hv(axis), hv(DVec3::Z)], dvec3(0.007, 0.016, 0.0065)),
+            bone: hand,
+            group: 1,
+            k: 0.008,
+        });
     }
     groups.push(0.006);
 
