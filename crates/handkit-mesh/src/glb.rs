@@ -71,9 +71,12 @@ pub fn to_glb(mesh: &HandMesh) -> Vec<u8> {
     if mesh.maps.is_none() {
         attributes["COLOR_0"] = json!(b.accessor(&bytes(&mesh.colors), Some(ARRAY_BUFFER), FLOAT, n, "VEC3", json!({})));
     }
-    // The nail mask rides in a standard slot, TEXCOORD_1.x, so every glTF loader accepts it.
-    let nail: Vec<[u16; 2]> = mesh.nail.iter().map(|x| [unorm16(*x), 0]).collect();
-    attributes["TEXCOORD_1"] = json!(b.accessor(&bytes(&nail), Some(ARRAY_BUFFER), USHORT, n, "VEC2", json!({ "normalized": true })));
+    // Without maps, the nail mask rides in a standard slot, TEXCOORD_1.x, so every glTF loader
+    // accepts it (with them, it is the mask map's G).
+    if mesh.maps.is_none() {
+        let nail: Vec<[u16; 2]> = mesh.nail.iter().map(|x| [unorm16(*x), 0]).collect();
+        attributes["TEXCOORD_1"] = json!(b.accessor(&bytes(&nail), Some(ARRAY_BUFFER), USHORT, n, "VEC2", json!({ "normalized": true })));
+    }
     let joints: Vec<[u8; 4]> = mesh.joints.iter().map(|j| j.map(|x| x as u8)).collect();
     attributes["JOINTS_0"] = json!(b.accessor(&bytes(&joints), Some(ARRAY_BUFFER), UBYTE, n, "VEC4", json!({})));
     // Weights as bytes that still add up to exactly 255.
@@ -155,7 +158,7 @@ pub fn to_glb(mesh: &HandMesh) -> Vec<u8> {
     let mut material = json!({ "name": "skin", "pbrMetallicRoughness": { "baseColorFactor": [1.0, 1.0, 1.0, 1.0], "metallicFactor": 0.0, "roughnessFactor": 0.55 } });
     let mut images = Vec::new();
     if let Some(m) = &mesh.maps {
-        for (data, mime, name) in [(&m.albedo, "image/jpeg", "skin_color"), (&m.normal, "image/png", "skin_normal"), (&m.orm, "image/png", "skin_orm"), (&m.masks, "image/png", "skin_masks")] {
+        for (data, mime, name) in [(&m.albedo, "image/jpeg", "skin_color"), (&m.normal, "image/jpeg", "skin_normal"), (&m.orm, "image/jpeg", "skin_orm"), (&m.masks, "image/jpeg", "skin_masks")] {
             let view = b.push(data, None);
             images.push(json!({ "name": name, "bufferView": view, "mimeType": mime }));
         }
@@ -170,7 +173,7 @@ pub fn to_glb(mesh: &HandMesh) -> Vec<u8> {
             },
             "normalTexture": { "index": 1, "scale": 1.0 },
             "occlusionTexture": { "index": 2, "strength": 1.0 },
-            "extras": { "handkit": { "masks": { "index": 3 }, "masksChannels": "R redness, G nail, B cavity, A fine variation (0.5 neutral)" } }
+            "extras": { "handkit": { "masks": { "index": 3 }, "masksChannels": "R redness, G nail, B cavity; the palm skin mask is B of the metallic-roughness texture", "bakedTone": crate::skin::BAKED_TONE } }
         });
     }
     let textures: Vec<Value> = (0..images.len()).map(|i| json!({ "sampler": 0, "source": i })).collect();

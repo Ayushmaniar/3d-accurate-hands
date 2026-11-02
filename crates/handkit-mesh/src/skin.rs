@@ -11,15 +11,79 @@
 //! curves), hairs on the forearm, and the nails (a photo of a nail plate mapped onto each
 //! plate: pink bed, pale lunula, white free edge).
 //!
-//! The mask map (R redness, G nail, B cavity / crease, A fine variation, 0.5 neutral) carries
-//! no skin tone, so a look can build the base colour for any tone much as `Anatomy::shade`
-//! does: `c = mix(tone, red_tint, 0.6 R) * mix(1, (0.74, 0.62, 0.6), B) * (1 + 0.3 (A - 0.5))`
-//! (linear RGB; red_tint is about sRGB (0.80, 0.45, 0.38)), then the nails where G is 1.
+//! The mask map (R redness, G nail, B cavity / crease) and the palm mask (the occlusion /
+//! roughness map's B) carry no skin tone. The
+//! colour map is [`tone_base`] of [`BAKED_TONE`] times the fine detail (pores, mottling, veins,
+//! hairs, the nail photo), so a look rebuilds the colour map for any tone, texel by texel, as
+//! `baked * tone_base(tone) / tone_base(BAKED_TONE)` ([`tone_albedo`]): every tone keeps its
+//! redness, creases, nails and palm (lighter on darker skin, as in real hands).
 
 use glam::{DAffine3, DVec2, DVec3, dvec2, dvec3};
 use handkit_core::rig::{Digit, HandGeom, Seg};
 
 use crate::sdf::{Field, NailPlate};
+
+/// The skin tone the baked colour map shows (sRGB): `medium`.
+pub const BAKED_TONE: [u8; 3] = [0xd8, 0xa6, 0x8a];
+
+/// sRGB bytes to linear RGB.
+pub fn linear(c: [u8; 3]) -> [f32; 3] {
+    c.map(|v| srgb_to_linear(v as f64 / 255.0) as f32)
+}
+
+fn lum(c: [f32; 3]) -> f32 {
+    0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+}
+
+fn mixf(a: [f32; 3], b: [f32; 3], t: f32) -> [f32; 3] {
+    std::array::from_fn(|i| a[i] + (b[i] - a[i]) * t)
+}
+
+fn mulf(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+    std::array::from_fn(|i| a[i] * b[i])
+}
+
+/// How dark a tone is: 0 for light and medium skin, about 0.6 for brown, 1 for the darkest.
+fn darkness(tone: [f32; 3]) -> f32 {
+    smoothstep(0.30, 0.04, lum(tone) as f64) as f32
+}
+
+/// A tone's nail colour (linear): the skin lighter and pinker; on darker skin the nail bed
+/// stays much lighter than the skin around it.
+pub fn nail_color(tone: [f32; 3]) -> [f32; 3] {
+    mixf(mulf(tone, [1.02, 0.9, 0.92]), linear([0xe0, 0xb8, 0xaa]), 0.42 + 0.18 * darkness(tone))
+}
+
+/// The skin's colour at a texel for a tone (linear RGB, no fine detail), from the mask map's
+/// channels `m` = (redness, nail, cavity, palm), 0..1: the back of the hand a little darker and
+/// less pink than `tone`, the palm pinker (and on darker skin much lighter), redder where R is
+/// high, darker in creases, `nail` where G is 1.
+pub fn tone_base(tone: [f32; 3], nail: [f32; 3], m: [f32; 4]) -> [f32; 3] {
+    let dark = darkness(tone);
+    let back = mulf(tone, [0.92, 0.95, 0.94]);
+    let pink = mulf(tone, [0.95, 0.95, 1.07]);
+    let pale = mixf(tone, linear([0xd6, 0x9e, 0x8a]), 0.55);
+    let palm = mixf(pink, pale, 0.8 * dark);
+    let skin = mixf(back, palm, m[3]);
+    // Lit, dark skin reads more saturated than its albedo: take a little out.
+    let skin = mixf(skin, [lum(skin); 3], 0.2 * dark);
+    let skin = mixf(skin, mulf(skin, [1.0, 0.62, 0.68]), 0.35 * m[0] * (1.0 - 0.35 * dark));
+    let skin = mulf(skin, mixf([1.0; 3], [0.78, 0.68, 0.66], m[2]));
+    mixf(skin, nail, m[1])
+}
+
+/// The colour map for another tone, texel by texel: `baked` (linear) times
+/// `tone_base(tone) / tone_base(BAKED_TONE)` at masks `m`.
+pub fn tone_albedo(baked: [f32; 3], m: [f32; 4], tone: [f32; 3], nail: [f32; 3]) -> [f32; 3] {
+    let from = baked_base(m);
+    let to = tone_base(tone, nail, m);
+    std::array::from_fn(|i| (baked[i] * to[i] / from[i].max(1e-4)).min(1.0))
+}
+
+fn baked_base(m: [f32; 4]) -> [f32; 3] {
+    let t = linear(BAKED_TONE);
+    tone_base(t, nail_color(t), m)
+}
 
 /// The encoded maps, ready for a glTF or for files.
 #[derive(Clone)]
@@ -28,12 +92,14 @@ pub struct SkinMaps {
     pub size: u32,
     /// Base colour, sRGB, JPEG.
     pub albedo: Vec<u8>,
-    /// Tangent-space normals (glTF convention: +Y toward the top of the image, i.e. -V), PNG.
+    /// Tangent-space normals (glTF convention: +Y toward the top of the image, i.e. -V), JPEG
+    /// at high quality without chroma subsampling.
     pub normal: Vec<u8>,
-    /// R ambient occlusion, G roughness, B metalness (0), PNG: glTF's occlusion and
-    /// metallic-roughness textures in one image.
+    /// R ambient occlusion, G roughness, B palm skin (where glTF reads metalness, which the
+    /// material's metallicFactor 0 turns off), JPEG: glTF's occlusion and metallic-roughness
+    /// textures in one image.
     pub orm: Vec<u8>,
-    /// R redness, G nail, B cavity, A fine variation; linear, PNG.
+    /// R redness, G nail, B cavity; linear, JPEG.
     pub masks: Vec<u8>,
     /// Bake statistics: texels covered by the charts and texels covered twice.
     pub covered: f64,
@@ -216,7 +282,7 @@ impl Vein {
             lo = lo.min(*p);
             hi = hi.max(*p);
         }
-        Vein { pts, width, lo: lo - DVec2::splat(3.0 * width), hi: hi + DVec2::splat(3.0 * width) }
+        Vein { pts, width, lo: lo - DVec2::splat(5.0 * width), hi: hi + DVec2::splat(5.0 * width) }
     }
 
     fn at(&self, p: DVec2) -> f64 {
@@ -224,7 +290,8 @@ impl Vein {
             return 0.0;
         }
         let d = self.pts.windows(2).map(|w| seg_dist2(p, w[0], w[1])).fold(f64::INFINITY, f64::min);
-        (-(d / self.width).powi(2)).exp()
+        // A soft, wide profile: a vein shows as a gentle swell under the skin, not a cord.
+        (-(d / (1.7 * self.width)).powi(2)).exp()
     }
 }
 
@@ -454,8 +521,8 @@ impl<'a> Anatomy<'a> {
             }
         }
         h -= 0.03e-3 * self.crease_line(p);
-        let (vein, _) = self.veins(q, a.palmar);
-        h += 0.26e-3 * vein;
+        let (back_vein, wrist_vein) = self.veins(q, a.palmar);
+        h += 0.11e-3 * back_vein + 0.05e-3 * wrist_vein;
         let (nm, s, t) = self.nail_at(p);
         if nm > 0.0 {
             let col = ((s * 0.5 + 0.5) * (self.ridges.len() - 1) as f64).clamp(0.0, (self.ridges.len() - 1) as f64);
@@ -499,47 +566,45 @@ impl<'a> Anatomy<'a> {
         let tip: f64 = self.tips.iter().map(|(c, s)| (-((p - *c).length() / s).powi(2)).exp()).fold(0.0, f64::max);
         let pad: f64 = self.pads.iter().map(|(c, r)| (-((q - *c) / *r).length_squared()).exp()).fold(0.0, f64::max) * palmar * (1.0 - a.digit);
         let crease = self.crease_line(p);
-        let cavity = (crease + (a.crease / 0.00025).clamp(0.0, 1.0) * 0.4 + groove * 0.6).min(1.0).max((1.0 - a.ao) * 0.5);
+        let cavity = (crease + (a.crease / 0.0004).clamp(0.0, 1.0) * 0.9 + groove * 0.6).min(1.0).max((1.0 - a.ao) * 0.35);
         let mottle = fbm(p / 0.006);
         let red_noise = fbm(p / 0.011 + 5.0);
         let redness = (0.8 * knuckle_red + 0.75 * tip * (0.6 + 0.4 * palmar) + 0.4 * pad + 0.15 * palm_w * a.digit + 0.12 * palm_w + 0.35 * crease + 0.3 * (red_noise - 0.5))
             .clamp(0.0, 1.0);
 
-        // The base colour (a medium-light tone): a warmer, more yellow back and a pinker palm.
-        let skin_back = lin(0.79, 0.59, 0.45);
-        let skin_palm = lin(0.86, 0.62, 0.52);
-        let red_tint = lin(0.80, 0.45, 0.38);
-        let mut c = mix3(skin_back, skin_palm, palm_w);
+        // The base colour of the baked tone (redness, creases, palm and nails from the masks),
+        // then the fine detail, which every tone keeps (`tone_albedo`).
+        let (nm, s, t) = self.nail_at(p);
+        let masks = [redness, nm, cavity, palm_w];
+        let base = DVec3::from_array(baked_base(masks.map(|v| v as f32)).map(f64::from));
         // The back of the forearm is a little darker, its inner side a little lighter.
-        c *= 1.0 - 0.07 * forearm * dorsal + 0.03 * forearm * palmar;
-        c = mix3(c, red_tint, 0.6 * redness);
-        // Creases and wrinkle grooves: darker and a little redder.
-        c = c * mix3(DVec3::ONE, dvec3(0.74, 0.62, 0.6), cavity);
+        let mut detail = DVec3::splat(1.0 - 0.07 * forearm * dorsal + 0.03 * forearm * palmar);
         // The tiles' fine variation, mostly in lightness.
         let lr = ratio.dot(dvec3(0.2126, 0.7152, 0.0722));
-        let detail = DVec3::splat(lr) + (ratio - DVec3::splat(lr)) * 0.35;
-        let detail = DVec3::ONE + (detail - DVec3::ONE) * 0.8;
-        c *= detail;
-        let fine = (0.5 + 1.6 * (lr - 1.0) + 0.5 * (mottle - 0.5)).clamp(0.0, 1.0);
-        c *= 1.0 + 0.14 * (mottle - 0.5);
+        let tiles = DVec3::splat(lr) + (ratio - DVec3::splat(lr)) * 0.35;
+        detail *= DVec3::ONE + (tiles - DVec3::ONE) * 0.8;
+        detail *= 1.0 + 0.14 * (mottle - 0.5);
+        // Veins: a slight blue-green shift where they run under thin skin.
         let (vein_back, vein_wrist) = self.veins(q, a.palmar);
-        let vein = (vein_back * 0.45 + vein_wrist * 0.5).min(1.0);
-        c = c * mix3(DVec3::ONE, dvec3(0.86, 0.9, 1.02), vein);
+        let vein = (vein_back * 0.6 + vein_wrist * 0.7).min(1.0);
+        detail *= mix3(DVec3::ONE, dvec3(0.93, 0.975, 1.0), vein);
         // Fine dark hairs on the forearm, lying toward the elbow.
         let hair = self.hair(p, q.y, a.palmar);
-        c = mix3(c, lin(0.2, 0.14, 0.1), 0.55 * hair);
+        detail = mix3(detail, lin(0.2, 0.14, 0.1) / base.max(DVec3::splat(1e-3)), 0.55 * hair);
+        let mut c = base * detail;
 
-        // Nails.
-        let (nm, s, t) = self.nail_at(p);
+        // Nails: the photo of a plate over the nail colour.
         let mut rough = 0.55 * dorsal + 0.62 * palmar + 0.05 * palm_w * a.digit + 0.08 * crease + 0.06 * wrinkle + 0.06 * (mottle - 0.5);
         if nm > 0.0 {
             let photo = self.nail.at(s * 0.5 + 0.5, 1.0 - t, false);
-            let plate = DVec3::from_slice(&photo[..3]) * 0.9;
-            c = mix3(c, plate, nm);
+            // The photo's variation around its mean colour, over the tone's nail colour (the
+            // base there).
+            let plate = DVec3::from_slice(&photo[..3]) / dvec3(0.56, 0.33, 0.3) * 0.9;
+            c = base * mix3(detail, plate, nm);
             rough = rough * (1.0 - nm) + 0.3 * nm;
         }
         let ao = a.ao * (1.0 - 0.3 * crease) * (1.0 - 0.25 * groove);
-        (c, rough.clamp(0.2, 0.9), ao, [redness, nm, cavity, fine])
+        (c, rough.clamp(0.2, 0.9), ao, masks)
     }
 }
 
@@ -636,7 +701,7 @@ pub fn bake(geom: &HandGeom, field: &Field, s: &Surface, size: u32, gutter: u32,
                 let i = y * n + x;
                 let t = tri[i];
                 if t == u32::MAX {
-                    return ([200, 160, 140], [128, 128, 255], [1.0, 0.5], [0.0, 0.0, 0.0, 0.5]);
+                    return ([200, 160, 140], [128, 128, 255], [1.0, 0.5], [0.0, 0.0, 0.0, 0.0]);
                 }
                 let t = t as usize;
                 let [l1, l2] = bary[i].map(|v| v as f64);
@@ -695,26 +760,25 @@ pub fn bake(geom: &HandGeom, field: &Field, s: &Surface, size: u32, gutter: u32,
     // Occlusion, roughness and masks at half size (2x2 averages).
     let h = n / 2;
     let mut orm = Vec::with_capacity(h * h * 3);
-    let mut masks = Vec::with_capacity(h * h * 4);
+    let mut masks = Vec::with_capacity(h * h * 3);
     for y in 0..h {
         for x in 0..h {
             let px = [(0, 0), (1, 0), (0, 1), (1, 1)].map(|(dx, dy)| &shaded[2 * y + dy][2 * x + dx]);
             let avg = |f: &dyn Fn(&([u8; 3], [u8; 3], [f32; 2], [f32; 4])) -> f32| px.iter().map(|p| f(p)).sum::<f32>() / 4.0;
             let to8 = |v: f32| (v * 255.0).round().clamp(0.0, 255.0) as u8;
-            orm.extend_from_slice(&[to8(avg(&|p| p.2[0])), to8(avg(&|p| p.2[1])), 0]);
-            for k in 0..4 {
-                // (The fine variation in 64 steps: plenty for a tint, and it packs smaller.)
-                let v = to8(avg(&|p| p.3[k]));
-                masks.push(if k == 3 { (v & !3) | 2 } else { v });
+            // B is the palm mask: glTF reads metalness there, times metallicFactor 0.
+            orm.extend_from_slice(&[to8(avg(&|p| p.2[0])), to8(avg(&|p| p.2[1])), to8(avg(&|p| p.3[3]))]);
+            for k in 0..3 {
+                masks.push(to8(avg(&|p| p.3[k])));
             }
         }
     }
     SkinMaps {
         size,
         albedo: encode_jpeg(&albedo, size, 90),
-        normal: encode_png(&normal, size, 3),
-        orm: encode_png(&orm, size / 2, 3),
-        masks: encode_png(&masks, size / 2, 4),
+        normal: encode_jpeg(&normal, size, 93),
+        orm: encode_jpeg(&orm, size / 2, 92),
+        masks: encode_jpeg(&masks, size / 2, 92),
         covered,
         overlap,
     }
@@ -724,14 +788,5 @@ fn encode_jpeg(rgb: &[u8], size: u32, quality: u8) -> Vec<u8> {
     use image::ImageEncoder;
     let mut out = Vec::new();
     image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, quality).write_image(rgb, size, size, image::ExtendedColorType::Rgb8).expect("jpeg");
-    out
-}
-
-fn encode_png(px: &[u8], size: u32, channels: u8) -> Vec<u8> {
-    use image::ImageEncoder;
-    use image::codecs::png::{CompressionType, FilterType, PngEncoder};
-    let mut out = Vec::new();
-    let kind = if channels == 4 { image::ExtendedColorType::Rgba8 } else { image::ExtendedColorType::Rgb8 };
-    PngEncoder::new_with_quality(&mut out, CompressionType::Default, FilterType::Adaptive).write_image(px, size, size, kind).expect("png");
     out
 }

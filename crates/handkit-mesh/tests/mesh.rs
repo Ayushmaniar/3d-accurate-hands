@@ -97,3 +97,67 @@ fn glb_names_the_joints_and_targets() {
     assert_eq!(mesh["primitives"][0]["targets"].as_array().unwrap().len(), handkit_core::rig::CORRECTIVES.len());
     assert_eq!(mesh["extras"]["targetNames"][0], "index_mcp_flex");
 }
+
+/// Triangles that turn over when the hand is posed (linear blend skinning plus the corrective
+/// shapes, as renderers draw it), counting only those off the palm side, which a fist hides.
+fn turned_over_outside(m: &handkit_mesh::HandMesh, pose: &str) -> usize {
+    use glam::DVec3;
+    let text = std::fs::read_to_string(format!("{}/../handkit-core/gestures/{pose}.json", env!("CARGO_MANIFEST_DIR"))).unwrap();
+    let solved = handkit_core::solve(&text).unwrap();
+    let h = solved.hands.iter().find(|h| h.side == Side::Right).unwrap();
+    let skin: Vec<_> = h.bones.iter().zip(&m.skeleton.bones).map(|(p, b)| p.frame * b.frame.inverse()).collect();
+    let v = |p: [f32; 3]| DVec3::new(p[0] as f64, p[1] as f64, p[2] as f64);
+    let rest: Vec<DVec3> = m.positions.iter().map(|p| v(*p)).collect();
+    let mut bind = rest.clone();
+    for (t, w) in m.targets.iter().zip(h.corrective_weights()) {
+        for (i, d) in t {
+            bind[*i as usize] += v(*d) * w;
+        }
+    }
+    let posed: Vec<DVec3> = (0..bind.len())
+        .map(|i| (0..4).map(|k| skin[m.joints[i][k] as usize].transform_point3(bind[i]) * m.weights[i][k] as f64).sum())
+        .collect();
+    let palmar = m.skeleton.bones.iter().find(|b| b.name == "hand").unwrap().frame.transform_vector3(DVec3::Z).normalize();
+    let normal = |ps: &[DVec3], t: &[u32]| (ps[t[1] as usize] - ps[t[0] as usize]).cross(ps[t[2] as usize] - ps[t[0] as usize]);
+    m.indices
+        .chunks(3)
+        .filter(|t| {
+            let a = normal(&rest, t);
+            let a_posed = skin[m.joints[t[0] as usize][0] as usize].transform_vector3(a);
+            a_posed.dot(normal(&posed, t)) < 0.0 && a.normalize().dot(palmar) < 0.3
+        })
+        .count()
+}
+
+#[test]
+fn a_fist_and_a_point_keep_the_knuckles_and_webs_closed() {
+    // At full resolution, where the cracks showed: fingers that come together and bend must not
+    // turn the skin of the webs and knuckles between them over.
+    let m = generate(Side::Right, &Options { voxel: 0.0012, textures: 0 });
+    for (pose, before) in [("fist", 119), ("point", 103)] {
+        let n = turned_over_outside(&m, pose);
+        assert!(n < 30, "{pose}: {n} triangles turn over off the palm side (were {before} before the weights were smoothed)");
+    }
+}
+
+#[test]
+fn skin_tones_keep_their_detail() {
+    use handkit_mesh::skin::{BAKED_TONE, linear, nail_color, tone_albedo, tone_base};
+    let baked = linear(BAKED_TONE);
+    // The baked tone rebuilds to itself.
+    let m = [0.4, 0.0, 0.3, 0.5];
+    let out = tone_albedo([0.3, 0.2, 0.15], m, baked, nail_color(baked));
+    assert!(out.iter().zip([0.3, 0.2, 0.15]).all(|(a, b)| (a - b).abs() < 1e-5), "{out:?}");
+    // Darker skin: the palm and the nail bed stay much lighter than the back of the hand.
+    let lum = |c: [f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    for (name, rgb, ratio) in [("medium", [0xd8, 0xa6, 0x8a], 1.0), ("dark", [0x5e, 0x3e, 0x30], 2.0)] {
+        let t = linear(rgb);
+        let base = |m: [f32; 4]| tone_base(t, nail_color(t), m);
+        let (back, palm, nail) = (base([0.0; 4]), base([0.0, 0.0, 0.0, 1.0]), base([0.0, 1.0, 0.0, 0.0]));
+        assert!(lum(palm) >= lum(back) * ratio * 0.99, "{name}: palm {palm:?} back {back:?}");
+        assert!(lum(nail) > lum(back) * ratio, "{name}: nail {nail:?}");
+        // Redness and creases still show.
+        let (red, crease) = (base([1.0, 0.0, 0.0, 0.0]), base([0.0, 0.0, 1.0, 0.0]));
+        assert!(red[0] / red[1] > back[0] / back[1] * 1.05 && lum(crease) < lum(back) * 0.8, "{name}");
+    }
+}

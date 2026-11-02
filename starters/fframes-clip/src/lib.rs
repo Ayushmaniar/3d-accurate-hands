@@ -9,7 +9,7 @@ use fframes::{AudioMap, Color, Duration, FFramesContext, Frame, Svgr, Video, inc
 use handkit_core::clip::Clip;
 use handkit_core::pose::Side;
 use handkit_fframes::HandModel;
-use handkit_fframes::look::{Look, Style, Styler};
+use handkit_fframes::look::{Look, Style, Styler, TONES};
 use handkit_fframes::three_d::*;
 
 include_media_dir!(pub struct FframesClipMedia, "media");
@@ -44,6 +44,8 @@ pub struct LookArgs {
 struct Dressed {
     styler: Styler,
     hands: Vec<HandModel>,
+    /// Its name in the looks demo: the style and the skin tone, e.g. "toon · tan".
+    label: String,
 }
 
 pub struct FframesClipVideo<'a> {
@@ -138,9 +140,14 @@ impl<'a> FframesClipVideo<'a> {
         let looks = looks(&clip, look_args)?
             .into_iter()
             .map(|look| {
+                let tone = TONES.iter().find(|(_, rgb)| *rgb == look.skin).map_or_else(
+                    || format!("#{:02x}{:02x}{:02x}", look.skin[0], look.skin[1], look.skin[2]),
+                    |(name, _)| name.to_string(),
+                );
+                let label = format!("{} · {tone}", look.style.name());
                 let mut styler = Styler::new(look, WIDTH as u32, HEIGHT as u32);
                 let hands = models.iter().map(|m| styler.dress(m)).collect();
-                Dressed { styler, hands }
+                Dressed { styler, hands, label }
             })
             .collect();
         let look_every = look_args.looks.is_some().then_some(look_args.look_every.max(0.1));
@@ -206,10 +213,11 @@ impl Video for FframesClipVideo<'_> {
         let t = frame.seconds() as f64;
         let hands = self.hands_image(t);
         let (w, h) = (WIDTH as f32, HEIGHT as f32);
-        let style = self.dressed(t).styler.look.style;
+        let dressed = self.dressed(t);
+        let style = dressed.styler.look.style;
         // Cycling looks: each on its own backdrop, its name in the corner.
         let (background, label) = match self.look_every {
-            Some(_) => (backdrop(style), Some(style.name())),
+            Some(_) => (backdrop(style), Some(dressed.label.as_str())),
             None => (self.background.as_str(), None),
         };
         let ink = if matches!(style, Style::Arcane | Style::Realistic) { "#f4efe6" } else { "#1d1b1a" };

@@ -1,14 +1,19 @@
 //! Looks: how the hands are drawn (`"look"` in a pose or clip, see `handkit_core::look`).
 //!
-//! A [`Styler`] dresses the hand models for a look (skin and nail colours from the mesh's
-//! per-vertex nail mask, lumps for clay), lights the scene relative to the camera, renders the
-//! passes a look needs on the CPU and post-processes them:
+//! A [`Styler`] dresses the hand models for a look, lights the scene relative to the camera,
+//! renders the passes a look needs on the CPU and post-processes them:
 //!
-//! - realistic and clay: one lit colour pass, then screen-space subsurface scattering and warm
-//!   shadows (realistic) or fingerprints and grain (clay);
-//! - toon, spiderverse, arcane: a normals pass (`Material::normals`) and a data pass (nail
-//!   mask, object-space noise and depth through fog), shaded in screen space: cel bands from
-//!   N·L, ink lines from alpha, normal and depth edges, halftone, brush strokes.
+//! - realistic: the baked skin maps (normal, roughness, occlusion) and a colour map for the
+//!   look's skin tone, rebuilt from the tone-free masks (`surface`), one lit colour pass, then
+//!   screen-space subsurface scattering and warm shadows;
+//! - clay: one lit colour pass of matte clay with lumps and fingerprints in a normal map;
+//! - toon, spiderverse, arcane: a normals pass (`Material::normals`, with arcane's brush
+//!   strokes in a normal map) and a data pass (nails, creases, palm or brush colour from a map
+//!   in the atlas, and depth through fog), shaded in screen space: cel bands from N·L, ink
+//!   lines from alpha, normal and depth edges and the main creases, halftone.
+//!
+//! Everything textured is in the hand's UV atlas, so it moves with the skin; only spiderverse's
+//! halftone dots stay on the screen, as print does.
 //!
 //! ```rust,ignore
 //! let mut styler = Styler::new(Look::from_value(&look_json)?, 1920, 1080);
@@ -19,14 +24,15 @@
 
 mod img;
 mod shade;
+mod surface;
 
 pub use handkit_core::look::{Look, Style, TONES};
 
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use fframes_three_d::{
-    Background, Camera, Environment, Fog, Geometry, Light, Material, Node, NodeId, Pixels, Renderer, Rgb, Scene, Shading, Shadow, ToneMapping,
-    Vec2, Vec3, Vec4,
+    Background, Camera, Environment, Fog, Geometry, Light, Material, Node, NodeId, Pixels, Renderer, Rgb, Scene, Shading, Shadow, Texture,
+    ToneMapping, Vec2, Vec3, Vec4,
 };
 
 use crate::HandModel;
@@ -40,18 +46,24 @@ pub struct Styler {
     pub height: u32,
     color: Renderer,
     flat: Renderer,
-    /// The dressed hands: (colour geometry, data geometry).
-    dressed: Vec<(Arc<Geometry>, Arc<Geometry>)>,
+    /// The dressed hands.
+    dressed: Vec<Dressed>,
+}
+
+/// What the flat passes draw for a dressed hand.
+struct Dressed {
+    /// The geometry of the colour pass, which identifies the hand in a scene.
+    color: Arc<Geometry>,
+    /// The data pass: its geometry (vertex colours without a data map) and data map.
+    data: Arc<Geometry>,
+    data_map: Option<Arc<Texture>>,
+    /// The normals pass' normal map (arcane's strokes).
+    normal_map: Option<Arc<Texture>>,
 }
 
 /// Fog runs from near to this fraction of the data pass's depth range, so the colour channels
 /// it fades stay readable.
 const FOG_SPAN: f32 = 0.6;
-
-fn brush() -> Option<&'static img::Tile> {
-    static TILE: OnceLock<Option<img::Tile>> = OnceLock::new();
-    TILE.get_or_init(|| img::Tile::decode(include_bytes!("../../assets/brush_tile.jpg"), 512)).as_ref()
-}
 
 impl Styler {
     pub fn new(look: Look, width: u32, height: u32) -> Self {
@@ -67,53 +79,78 @@ impl Styler {
         matches!(self.look.style, Style::Toon | Style::Spiderverse | Style::Arcane)
     }
 
-    /// A copy of `model` dressed for the look: skin and nail colours per vertex, the look's
-    /// material, lumpy normals for clay. Add the dressed model to the scenes you render.
+    /// A copy of `model` dressed for the look: its material, the colour map of the skin tone
+    /// (realistic), the maps of the stylized passes and clay. Textures are built once per hand
+    /// and look and shared. Add the dressed model to the scenes you render.
     pub fn dress(&mut self, model: &HandModel) -> HandModel {
         let mut out = model.clone();
         let Some(id) = out.mesh() else { return out };
+        let style = self.look.style;
         let mesh = out.model.scene[id].mesh_mut().unwrap();
+        let loaded = mesh.material.clone();
         let skin = img::srgb(self.look.skin);
-        let nail = img::srgb(self.look.nail_color());
-        let nail_weight = if self.look.style == Style::Clay { 0.3 } else { 1.0 };
+        let nail_rgb = self.look.nail.unwrap_or_else(|| match style {
+            // Realistic nails follow the tone's own nail colour (lighter on darker skin).
+            Style::Realistic => handkit_mesh::skin::nail_color(handkit_mesh::skin::linear(self.look.skin)).map(|c| (img::linear_to_srgb(c) * 255.0).round() as u8),
+            _ => self.look.nail_color(),
+        });
+        let nail = img::srgb(nail_rgb);
         let mask = |i: usize| model.nail.get(i).copied().unwrap_or(0.0);
         let mut g = (*mesh.geometry).clone();
-        // Clay is the skin's colour as a matte, slightly more saturated body.
-        // Lit skin reads more saturated than its albedo: realistic takes a little out, toward pink.
-        let body = match self.look.style {
-            Style::Clay => skin * Vec3::new(1.04, 0.93, 0.8),
-            Style::Realistic => {
-                // Darker tones take more out: lit, they turn orange.
-                let lum = skin.dot(Vec3::new(0.2126, 0.7152, 0.0722));
-                skin.lerp(Vec3::splat(lum), (0.18 + 0.25 * (1.0 - lum / 0.6)).clamp(0.18, 0.43)) * Vec3::new(1.02, 0.97, 1.0)
+        let textured = |kind| surface::texture(model, kind);
+        mesh.material = match style {
+            Style::Realistic => match textured(surface::Kind::Tone(self.look.skin, nail_rgb)) {
+                Some(map) => {
+                    g.colors.clear();
+                    let mut m = Material::standard(Rgb::WHITE).roughness(1.0).clearcoat(0.1).map(map);
+                    m.normal_map = loaded.normal_map.clone();
+                    m.metal_rough_map = loaded.metal_rough_map.clone();
+                    m.ao_map = loaded.ao_map.clone();
+                    m
+                }
+                None => {
+                    // No baked maps: the tone per vertex, a little desaturated (lit skin reads
+                    // more saturated than its albedo, darker tones the most).
+                    let lum = skin.dot(Vec3::new(0.2126, 0.7152, 0.0722));
+                    let body = skin.lerp(Vec3::splat(lum), (0.18 + 0.25 * (1.0 - lum / 0.6)).clamp(0.18, 0.43)) * Vec3::new(1.02, 0.97, 1.0);
+                    g.colors = (0..g.positions.len()).map(|i| body.lerp(nail, mask(i)).extend(1.0)).collect();
+                    Material::standard(Rgb::WHITE).roughness(0.52).clearcoat(0.12)
+                }
+            },
+            Style::Clay => {
+                // The skin's colour as a matte, slightly more saturated body; nails barely show.
+                let body = skin * Vec3::new(1.04, 0.93, 0.8);
+                g.colors = (0..g.positions.len()).map(|i| body.lerp(nail, mask(i) * 0.3).extend(1.0)).collect();
+                let mut m = Material::standard(Rgb::WHITE).roughness(0.9).env_intensity(0.7);
+                match textured(surface::Kind::ClayNormal) {
+                    Some(map) => m.normal_map = Some(map),
+                    None => lumpy_normals(&mut g, 0.32),
+                }
+                m.normal_scale = self.look.texture.unwrap_or(1.0) as f32;
+                m
             }
-            _ => skin,
-        };
-        g.colors = (0..g.positions.len()).map(|i| body.lerp(nail, mask(i) * nail_weight).extend(1.0)).collect();
-        if self.look.style == Style::Clay {
-            let amount = 0.32 * self.look.texture.unwrap_or(1.0) as f32;
-            for (n, p) in g.normals.iter_mut().zip(&g.positions) {
-                let q = *p * 65.0;
-                let e = 0.05;
-                let grad = Vec3::new(
-                    img::fbm3(q + Vec3::X * e) - img::fbm3(q - Vec3::X * e),
-                    img::fbm3(q + Vec3::Y * e) - img::fbm3(q - Vec3::Y * e),
-                    img::fbm3(q + Vec3::Z * e) - img::fbm3(q - Vec3::Z * e),
-                ) / (2.0 * e);
-                let tangential = grad - *n * n.dot(grad);
-                *n = (*n - tangential * amount).normalize_or(*n);
-            }
-        }
-        let mut d = (*mesh.geometry).clone();
-        d.colors = (0..d.positions.len()).map(|i| Vec4::new(mask(i), img::fbm3(d.positions[i] * 70.0), 0.0, 1.0)).collect();
-        let g = Arc::new(g);
-        mesh.geometry = Arc::clone(&g);
-        mesh.material = match self.look.style {
-            Style::Clay => Material::standard(Rgb::WHITE).roughness(0.9).env_intensity(0.7),
-            _ => Material::standard(Rgb::WHITE).roughness(0.52).clearcoat(0.12),
+            _ => Material::standard(Rgb::WHITE).roughness(0.52),
         };
         mesh.material.clearcoat_roughness = 0.45;
-        self.dressed.push((g, Arc::new(d)));
+        let (data_map, normal_map) = match style {
+            Style::Toon | Style::Spiderverse => (textured(surface::Kind::Data), None),
+            Style::Arcane => (textured(surface::Kind::ArcaneData), textured(surface::Kind::ArcaneNormal)),
+            _ => (None, None),
+        };
+        let mut d = (*mesh.geometry).clone();
+        // Without a data map, the data rides in vertex colours: R nails, G object noise.
+        d.colors = match data_map {
+            Some(_) => Vec::new(),
+            None => (0..d.positions.len())
+                .map(|i| {
+                    let g = if style == Style::Arcane { img::fbm3(d.positions[i] * 70.0) } else { 0.0 };
+                    Vec4::new(surface::pack_nail(mask(i)), g, 0.0, 1.0)
+                })
+                .collect(),
+        };
+        let g = Arc::new(g);
+        mesh.geometry = Arc::clone(&g);
+        self.dressed.push(Dressed { color: g, data: Arc::new(d), data_map, normal_map });
         out
     }
 
@@ -197,11 +234,13 @@ impl Styler {
                 alpha,
                 color: Vec::new(),
                 normal,
-                nail: drgb.iter().map(|c| (c.x / fade(c)).clamp(0.0, 1.0)).collect(),
-                noise: drgb.iter().map(|c| (c.y / fade(c)).clamp(0.0, 1.0)).collect(),
+                nail: Vec::new(),
+                cavity: Vec::new(),
+                detail: drgb.iter().map(|c| (c.y / fade(c)).clamp(0.0, 1.0)).collect(),
                 depth: drgb.iter().map(|c| near + c.z * (fog_far - near)).collect(),
-                brush: brush(),
             };
+            let (nail, cavity): (Vec<f32>, Vec<f32>) = drgb.iter().map(|c| surface::unpack((c.x / fade(c)).clamp(0.0, 1.0))).unzip();
+            let inputs = shade::Inputs { nail, cavity, ..inputs };
             Some(shade::stylized(&inputs))
         } else {
             let px = self.color_pass(scene, camera);
@@ -217,9 +256,9 @@ impl Styler {
                 color,
                 normal: Vec::new(),
                 nail: Vec::new(),
-                noise: Vec::new(),
+                cavity: Vec::new(),
+                detail: Vec::new(),
                 depth: Vec::new(),
-                brush: None,
             };
             Some(match look.style {
                 Style::Clay => shade::clay(&inputs),
@@ -251,15 +290,15 @@ impl Styler {
             }
             _ => {
                 scene.environment = Environment::studio().intensity(0.6).rotated(azimuth);
-                scene.add(Node::light(Light::hemisphere(Rgb::hex(0xfff1e6), Rgb::hex(0x4a3c36), 0.85)));
-                scene.add(Node::light(Light::sun(Rgb::hex(0xffe4cc), 2.4, dir(-0.5, 0.7, 0.6)).with_shadow(soft)));
-                scene.add(Node::light(Light::directional(Rgb::hex(0xd2e2ff), 1.6, dir(0.8, 0.35, -0.55))));
+                scene.add(Node::light(Light::hemisphere(Rgb::hex(0xffffff), Rgb::hex(0x505055), 1.0)));
+                scene.add(Node::light(Light::sun(Rgb::hex(0xfff6ee), 2.6, dir(-0.5, 0.7, 0.6)).with_shadow(soft)));
+                scene.add(Node::light(Light::directional(Rgb::hex(0xe8f0ff), 1.2, dir(0.8, 0.35, -0.55))));
             }
         }
     }
 
-    /// The normals pass, or with `fog` the data pass: unlit vertex colours (R nail mask, G
-    /// object-space noise) fading to blue with the distance from the camera.
+    /// The normals pass, or with `fog` the data pass: the data map (or vertex colours) unlit,
+    /// fading to blue with the distance from the camera.
     fn flat_pass(&self, scene: &Scene, camera: &Camera, fog: Option<(f32, f32)>) -> Pixels {
         let mut s = scene.clone();
         s.background = Background::Transparent;
@@ -280,15 +319,24 @@ impl Styler {
                 continue;
             }
             mesh.cast_shadow = false;
-            mesh.material = match fog {
-                None => Material::normals(),
-                Some(_) => match self.dressed.iter().find(|(c, _)| Arc::ptr_eq(c, &mesh.geometry)) {
-                    Some((_, data)) => {
-                        mesh.geometry = Arc::clone(data);
-                        Material::unlit(Rgb::WHITE)
+            let dressed = self.dressed.iter().find(|d| Arc::ptr_eq(&d.color, &mesh.geometry));
+            mesh.material = match (fog, dressed) {
+                (None, Some(d)) => {
+                    let mut m = Material::normals();
+                    m.normal_map = d.normal_map.clone();
+                    m.normal_scale = self.look.texture.unwrap_or(1.0) as f32;
+                    m
+                }
+                (None, None) => Material::normals(),
+                (Some(_), Some(d)) => {
+                    mesh.geometry = Arc::clone(&d.data);
+                    let m = Material::unlit(Rgb::WHITE);
+                    match &d.data_map {
+                        Some(map) => m.map(Arc::clone(map)),
+                        None => m,
                     }
-                    None => Material::unlit(Rgb::BLACK),
-                },
+                }
+                (Some(_), None) => Material::unlit(Rgb::BLACK),
             };
         }
         self.flat.render_pixels(&s, camera)
@@ -317,4 +365,19 @@ fn depth_range(scene: &Scene, camera: &Camera) -> (f32, f32) {
         (lo, hi) = (d - 0.3, d + 0.3);
     }
     ((lo - 0.06).max(camera.near), hi + 0.06)
+}
+
+/// Lumpy normals from object-space noise, for clay on a hand without UVs.
+fn lumpy_normals(g: &mut Geometry, amount: f32) {
+    for (n, p) in g.normals.iter_mut().zip(&g.positions) {
+        let q = *p * 65.0;
+        let e = 0.05;
+        let grad = Vec3::new(
+            img::fbm3(q + Vec3::X * e) - img::fbm3(q - Vec3::X * e),
+            img::fbm3(q + Vec3::Y * e) - img::fbm3(q - Vec3::Y * e),
+            img::fbm3(q + Vec3::Z * e) - img::fbm3(q - Vec3::Z * e),
+        ) / (2.0 * e);
+        let tangential = grad - *n * n.dot(grad);
+        *n = (*n - tangential * amount).normalize_or(*n);
+    }
 }

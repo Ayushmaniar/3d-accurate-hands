@@ -1,5 +1,5 @@
 //! Image building blocks for the looks: decoding the renderer's pixels, blurs, a distance
-//! transform for ink lines, deterministic noise and the brush tile.
+//! transform for ink lines and deterministic noise.
 
 use std::sync::OnceLock;
 
@@ -288,41 +288,6 @@ pub fn noise3(p: Vec3) -> f32 {
 /// Two octaves of [`noise3`].
 pub fn fbm3(p: Vec3) -> f32 {
     (noise3(p) * 0.65 + noise3(p * 2.03 + Vec3::splat(17.3)) * 0.35).clamp(0.0, 1.0)
-}
-
-/// A wrapping colour tile sampled bilinearly, in linear RGB.
-pub struct Tile {
-    pub size: usize,
-    pub rgb: Vec<Vec3>,
-    pub mean: Vec3,
-}
-
-impl Tile {
-    pub fn decode(bytes: &[u8], size: usize) -> Option<Tile> {
-        let tex = fframes_three_d::Texture::decode(bytes).ok()?;
-        let rgb: Vec<Vec3> = (0..size * size)
-            .map(|i| {
-                let (x, y) = (i % size, i / size);
-                let uv = fframes_three_d::Vec2::new((x as f32 + 0.5) / size as f32, (y as f32 + 0.5) / size as f32);
-                tex.sample(uv).truncate()
-            })
-            .collect();
-        let mean = rgb.iter().copied().sum::<Vec3>() / rgb.len() as f32;
-        Some(Tile { size, rgb, mean })
-    }
-
-    /// The colour at `u`, `v` in tiles (it repeats).
-    pub fn sample(&self, u: f32, v: f32) -> Vec3 {
-        let n = self.size as f32;
-        let (x, y) = (u.rem_euclid(1.0) * n - 0.5, v.rem_euclid(1.0) * n - 0.5);
-        let (xi, yi) = (x.floor(), y.floor());
-        let (fx, fy) = (x - xi, y - yi);
-        let s = self.size as i32;
-        let at = |dx: i32, dy: i32| self.rgb[((yi as i32 + dy).rem_euclid(s) * s + (xi as i32 + dx).rem_euclid(s)) as usize];
-        let a = at(0, 0).lerp(at(1, 0), fx);
-        let b = at(0, 1).lerp(at(1, 1), fx);
-        a.lerp(b, fy)
-    }
 }
 
 #[cfg(test)]

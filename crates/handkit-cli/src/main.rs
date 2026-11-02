@@ -57,8 +57,8 @@ enum Cmd {
         /// Side of the baked skin colour and normal maps (0 for none: vertex colors instead).
         #[arg(long, default_value_t = 2048)]
         textures: u32,
-        /// Also write the skin maps as files to this folder (skin_color.jpg, skin_normal.png,
-        /// skin_orm.png, skin_masks.png), e.g. assets/skin.
+        /// Also write the skin maps as files to this folder (skin_color.jpg, skin_normal.jpg,
+        /// skin_orm.jpg, skin_masks.jpg), e.g. assets/skin.
         #[arg(long)]
         skin_dir: Option<PathBuf>,
     },
@@ -370,7 +370,7 @@ fn run() -> Result<()> {
             std::fs::write(&out, &glb)?;
             if let (Some(dir), Some(maps)) = (&skin_dir, &mesh.maps) {
                 std::fs::create_dir_all(dir)?;
-                for (name, data) in [("skin_color.jpg", &maps.albedo), ("skin_normal.png", &maps.normal), ("skin_orm.png", &maps.orm), ("skin_masks.png", &maps.masks)] {
+                for (name, data) in [("skin_color.jpg", &maps.albedo), ("skin_normal.jpg", &maps.normal), ("skin_orm.jpg", &maps.orm), ("skin_masks.jpg", &maps.masks)] {
                     std::fs::write(dir.join(name), data)?;
                 }
             }

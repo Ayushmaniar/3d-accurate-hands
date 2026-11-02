@@ -108,6 +108,7 @@ pub fn generate(side: Side, opts: &Options) -> HandMesh {
         (j4, w4)
     });
     let (joints, weights): (Vec<_>, Vec<_>) = skin.into_iter().unzip();
+    let (joints, weights) = smooth_weights(&joints, &weights, &indices, &right);
     let nail: Vec<f32> = par_map(&positions, |p| field.nail_mask(*p) as f32);
     let targets = correctives(&right, &positions);
 
@@ -208,6 +209,68 @@ pub fn generate(side: Side, opts: &Options) -> HandMesh {
         uvs: atlas.uvs,
         maps,
     }
+}
+
+/// Diffuses the skin weights over the mesh, so no edge joins two vertices that move very
+/// differently: hard switches (between two fingers at a web, between the palm and a finger
+/// at a knuckle) turn triangles over when the fingers bend.
+fn smooth_weights(joints: &[[u16; 4]], weights: &[[f32; 4]], indices: &[u32], h: &HandGeom) -> (Vec<[u16; 4]>, Vec<[f32; 4]>) {
+    // About 5 mm of diffusion: enough to join the fingers' webs, not to soften the joints.
+    let iterations = 30;
+    let bones = h.bones.len();
+    // The finger joints past the knuckles keep their own (sharper) blends.
+    let distal: Vec<bool> = h.bones.iter().map(|b| b.name.ends_with("_pip") || b.name.ends_with("_dip") || b.name.ends_with("_ip")).collect();
+    let n = joints.len();
+    let locked: Vec<bool> = (0..n).map(|v| (0..4).any(|k| weights[v][k] > 0.02 && distal[joints[v][k] as usize])).collect();
+    let mut dense = vec![0f32; n * bones];
+    for v in 0..n {
+        for k in 0..4 {
+            dense[v * bones + joints[v][k] as usize] += weights[v][k];
+        }
+    }
+    let mut nbrs: Vec<Vec<u32>> = vec![Vec::new(); n];
+    for t in indices.chunks(3) {
+        for (a, b) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
+            if !nbrs[a as usize].contains(&b) {
+                nbrs[a as usize].push(b);
+            }
+            if !nbrs[b as usize].contains(&a) {
+                nbrs[b as usize].push(a);
+            }
+        }
+    }
+    for _ in 0..iterations {
+        let next: Vec<f32> = (0..n * bones)
+            .map(|i| {
+                let (v, b) = (i / bones, i % bones);
+                let nb = &nbrs[v];
+                if nb.is_empty() || locked[v] {
+                    return dense[i];
+                }
+                let avg = nb.iter().map(|u| dense[*u as usize * bones + b]).sum::<f32>() / nb.len() as f32;
+                0.5 * dense[i] + 0.5 * avg
+            })
+            .collect();
+        dense = next;
+    }
+    let mut js = Vec::with_capacity(n);
+    let mut ws = Vec::with_capacity(n);
+    for v in 0..n {
+        let row = &dense[v * bones..(v + 1) * bones];
+        let mut order: Vec<usize> = (0..bones).collect();
+        order.sort_by(|a, b| row[*b].total_cmp(&row[*a]));
+        let top: Vec<usize> = order.into_iter().take(4).filter(|b| row[*b] > 0.01).collect();
+        let sum: f32 = top.iter().map(|b| row[*b]).sum();
+        let mut j4 = [0u16; 4];
+        let mut w4 = [0f32; 4];
+        for (k, b) in top.iter().enumerate() {
+            j4[k] = *b as u16;
+            w4[k] = row[*b] / sum;
+        }
+        js.push(j4);
+        ws.push(w4);
+    }
+    (js, ws)
 }
 
 /// Ambient occlusion from the shape: how much of the space around a point, along its normal
