@@ -1,0 +1,35 @@
+{
+  "name": "hand_viper_open",
+  "description": "Hand viper (snake head) striking: the hand_viper clasp with the snout lifted and the thumbs dropped, so the mouth opens wide; seen from the side the head points to the right.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0.0493, 0.0062, -0.0272], "palm_facing": [0.1261, -0.0588, 0.9903], "fingers_toward": [0.4226, 0.9063, 0.0] },
+      "twist": 0,
+      "wrist_flex": -10.8,
+      "wrist_dev": 4.3,
+      "palm_cup": 0,
+      "thumb": { "cmc_flex": 10.2, "cmc_abd": 11.2, "cmc_rot": 51.5, "mcp_flex": -14.9, "ip_flex": -19.3 },
+      "index": { "mcp_abd": 17.0, "mcp_roll": 17.2, "mcp_flex": 12.2, "pip_flex": 69.7, "dip_flex": 53.3 },
+      "middle": { "mcp_abd": -1.9, "mcp_roll": -7.1, "mcp_flex": 31.4, "pip_flex": 83.5, "dip_flex": 11.4 },
+      "ring": { "mcp_abd": 20.0, "mcp_roll": -8.6, "mcp_flex": 22.4, "pip_flex": 83.6, "dip_flex": 19.1 },
+      "pinky": { "mcp_abd": 35.0, "mcp_roll": -8.9, "mcp_flex": 29.0, "pip_flex": 68.5, "dip_flex": 16.9 }
+    },
+    "left": {
+      "place": { "wrist": [0.0599, 0.0013, 0.0157], "palm_facing": [0.1261, -0.0588, -0.9903], "fingers_toward": [0.4226, 0.9063, 0.0] },
+      "twist": 0,
+      "wrist_flex": -10.8,
+      "wrist_dev": 4.3,
+      "palm_cup": 0,
+      "thumb": { "cmc_flex": -14.2, "cmc_abd": 2.2, "cmc_rot": 20.7, "mcp_flex": 13.8, "ip_flex": 8.7 },
+      "index": { "mcp_abd": 25.0, "mcp_roll": 7.0, "mcp_flex": -10.8, "pip_flex": 52.1, "dip_flex": 67.3 },
+      "middle": { "mcp_abd": 9.3, "mcp_roll": -7.3, "mcp_flex": 28.8, "pip_flex": 76.8, "dip_flex": 12.7 },
+      "ring": { "mcp_abd": 11.6, "mcp_roll": -7.1, "mcp_flex": 15.5, "pip_flex": 77.1, "dip_flex": 19.6 },
+      "pinky": { "mcp_abd": 26.0, "mcp_roll": -5.6, "mcp_flex": 4.4, "pip_flex": 68.4, "dip_flex": 10.0 }
+    }
+  },
+  "goals": [
+    { "vary": ["right.index.*", "left.index.*", "right.thumb.*", "left.thumb.*"] }
+  ],
+  "camera": { "position": [0.27, 0.085, 0.3], "target": [0.06, 0.07, 0.0], "fov": 30 }
+}

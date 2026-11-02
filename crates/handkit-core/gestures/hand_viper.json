@@ -1,0 +1,35 @@
+{
+  "name": "hand_viper",
+  "description": "Hand viper (snake head), jaw shut: the hands clasped with middle, ring and little fingers interlaced over each other's backs, the index fingers curled forward over the front, one on the other (the snout), and both thumbs forward underneath (the lower jaw), the index tips resting on them; forearms up from below. Seen from the side the head points to the right.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [-0.0041, 0.0024, -0.0272], "palm_facing": [0.1261, -0.0588, 0.9903], "fingers_toward": [0.4226, 0.9063, 0.0] },
+      "twist": 0,
+      "wrist_flex": -10.8,
+      "wrist_dev": 4.3,
+      "palm_cup": 0,
+      "thumb": { "cmc_flex": 13.7, "cmc_abd": 12.3, "cmc_rot": 51.5, "mcp_flex": -10.9, "ip_flex": -9.0 },
+      "index": { "mcp_abd": 13.3, "mcp_roll": 16.3, "mcp_flex": 19.4, "pip_flex": 96.7, "dip_flex": 63.6 },
+      "middle": { "mcp_abd": -2.0, "mcp_roll": -6.9, "mcp_flex": 30.2, "pip_flex": 83.7, "dip_flex": 11.3 },
+      "ring": { "mcp_abd": 19.9, "mcp_roll": -8.6, "mcp_flex": 20.1, "pip_flex": 85.1, "dip_flex": 19.0 },
+      "pinky": { "mcp_abd": 35.0, "mcp_roll": -8.9, "mcp_flex": 28.8, "pip_flex": 68.9, "dip_flex": 16.8 }
+    },
+    "left": {
+      "place": { "wrist": [0.0065, -0.0026, 0.0157], "palm_facing": [0.1261, -0.0588, -0.9903], "fingers_toward": [0.4226, 0.9063, 0.0] },
+      "twist": 0,
+      "wrist_flex": -10.8,
+      "wrist_dev": 4.3,
+      "palm_cup": 0,
+      "thumb": { "cmc_flex": -8.1, "cmc_abd": 2.2, "cmc_rot": 20.0, "mcp_flex": 21.6, "ip_flex": 19.5 },
+      "index": { "mcp_abd": 25.0, "mcp_roll": 9.9, "mcp_flex": 9.7, "pip_flex": 86.2, "dip_flex": 70.0 },
+      "middle": { "mcp_abd": 9.3, "mcp_roll": -7.3, "mcp_flex": 29.2, "pip_flex": 76.6, "dip_flex": 12.6 },
+      "ring": { "mcp_abd": 11.5, "mcp_roll": -7.1, "mcp_flex": 13.7, "pip_flex": 78.8, "dip_flex": 19.5 },
+      "pinky": { "mcp_abd": 25.9, "mcp_roll": -5.6, "mcp_flex": 2.9, "pip_flex": 71.5, "dip_flex": 9.9 }
+    }
+  },
+  "goals": [
+    { "vary": ["right.index.*", "left.index.*", "right.thumb.*", "left.thumb.*"] }
+  ],
+  "camera": { "position": [0.27, 0.085, 0.3], "target": [0.06, 0.07, 0.0], "fov": 30 }
+}
