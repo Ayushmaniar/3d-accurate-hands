@@ -33,9 +33,16 @@ handkit solve pose.json
 handkit render pose.json --mesh
 handkit check clips/demo_basics.json
 handkit sheet clips/demo_basics.json -n 12 --mesh
+handkit track clips/demo_basics.json --site right.index.tip   # where the fingertip is on screen, per frame
 ```
 
 `render` needs node and a Playwright Chromium (found under `%LOCALAPPDATA%/ms-playwright`, or set `HANDKIT_CHROME`); run `npm install` in `tools/preview` once. `--mesh` draws the skinned hand, generating `assets/hand_R.glb` and `hand_L.glb` on first use (a few seconds each; `handkit mesh` writes them anywhere). With `HANDKIT_STUDIO=1` it renders portrait frames under studio light, for comparing with photos: `docs/m5-shape.png` puts the hand beside the reference photos in `experiments/looks/gen/`.
+
+### Where the forearm ends
+
+![Bare, fading and sleeved arms, realistic and toon](docs/m6-arm.png)
+
+The rig stops at the elbow. With the elbow in view, a look's `"arm": "fade"` fades the forearm out toward it, and `"arm": {"sleeve": "#2c3d66", "length": 0.09}` puts a rolled-up sleeve over it (in every style; per person in `people.<name>.look`); `handkit check` then lists the elbow as information. `clips/demo_arms.json` shows both.
 
 ### Sign language
 

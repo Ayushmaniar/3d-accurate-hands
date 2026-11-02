@@ -100,7 +100,11 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
     // overlap, when and between which parts, and every pair of parts.
     let mut cross: std::collections::BTreeMap<(usize, String), HandsOverlap> = Default::default();
     let mut out_of_view: std::collections::BTreeMap<String, (Vec<bool>, f64)> = Default::default();
+    // An elbow in view: a problem for a bare arm, information for one that fades or is sleeved.
     let mut arm_end = vec![false; frames.len()];
+    let mut arm_end_hidden = vec![false; frames.len()];
+    let base_look = clip.look.as_ref().and_then(|l| crate::look::Look::from_value(l).ok()).unwrap_or_default();
+    let hides_end: Vec<bool> = clip.hands().iter().map(|id| base_look.for_person(clip.people.as_ref(), &id.person).arm.hides_end()).collect();
     let mut site_tracks: std::collections::BTreeMap<String, Vec<DVec3>> = Default::default();
     for (i, (_, f)) in frames.iter().enumerate() {
         let mut pose = f.pose.clone();
@@ -149,13 +153,17 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
             }
         }
         if let Some(cam) = pose.get("camera") {
-            // The rig ends at the elbow: the forearm's rounded end must stay out of the frame.
-            for side in &names {
+            // The rig ends at the elbow: a bare forearm's rounded end must stay out of the frame.
+            for (side, hidden) in names.iter().zip(&hides_end) {
                 let Some(e) = pose.get("hands").and_then(|h| h.get(side)).and_then(|h| h.pointer("/place/elbow")).and_then(Value::as_array) else { continue };
                 let e = DVec3::new(e[0].as_f64().unwrap_or(0.0), e[1].as_f64().unwrap_or(0.0), e[2].as_f64().unwrap_or(0.0));
                 if let Some((x, y)) = project(cam, aspect, e) {
                     if x.abs() < 1.0 && y.abs() < 1.0 {
-                        arm_end[i] = true;
+                        if *hidden {
+                            arm_end_hidden[i] = true;
+                        } else {
+                            arm_end[i] = true;
+                        }
                     }
                 }
             }
@@ -298,7 +306,10 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
         }
         if arm_end.iter().any(|x| *x) {
             problems += 1;
-            lines.push(format!("framing: an elbow (where the forearm ends) is in view in {}; move it out of frame", ranges(&times, &arm_end)));
+            lines.push(format!("framing: an elbow (where the forearm ends) is in view in {}; move it out of frame, or give the look an \"arm\" (fade or a sleeve)", ranges(&times, &arm_end)));
+        }
+        if arm_end_hidden.iter().any(|x| *x) {
+            lines.push(format!("framing: an elbow is in view in {} (fine: its arm fades or is sleeved)", ranges(&times, &arm_end_hidden)));
         }
     } else {
         lines.push("framing: no camera (add \"camera\" to the clip to check framing)".into());

@@ -477,6 +477,18 @@ impl View {
         let (x, y) = (2.0 * screen[0] - 1.0, 1.0 - 2.0 * screen[1]);
         self.pos + (self.f + self.r * (x * aspect / self.k) + self.u * (y / self.k)) * depth
     }
+
+    /// The inverse of `unproject`: a point's place on screen (fractions of the frame, as
+    /// `place.screen`; none behind the camera) and its depth (meters along the view).
+    pub fn project(&self, aspect: f64, p: DVec3) -> (Option<[f64; 2]>, f64) {
+        let d = p - self.pos;
+        let depth = d.dot(self.f);
+        if depth <= 1e-6 {
+            return (None, depth);
+        }
+        let (x, y) = (d.dot(self.r) / depth * self.k / aspect, d.dot(self.u) / depth * self.k);
+        (Some([(x + 1.0) / 2.0, (1.0 - y) / 2.0]), depth)
+    }
 }
 
 /// The frame aspect of a pose or clip: its "size" (width / height), default 16:9.

@@ -303,3 +303,64 @@ fn check_reports_joints_held_at_a_limit() {
     assert!(line.ends_with("in 0.40-1.60 s"), "{line}");
     assert_eq!(report.problems, 0, "{}", report.text());
 }
+
+#[test]
+fn an_elbow_in_view_is_fine_when_the_arm_fades_or_is_sleeved() {
+    // The whole forearm in view, the elbow at the origin.
+    let clip = |look: &str, people: &str| {
+        Clip::parse(&format!(
+            r#"{{"version": 1, "idle": 0, "duration": 0.5, "camera": {{"position": [0, 0.16, 1.2], "target": [0, 0.16, 0], "fov": 35}}, {look} {people}
+                "keys": [{{"t": 0, "hands": {{"ana.right": {{"place": {{"elbow": [0, 0, 0]}}}}}}}}]}}"#
+        ))
+        .unwrap()
+    };
+    let report = |c: &Clip| check(c);
+    let bare = report(&clip("", ""));
+    assert!(bare.lines.iter().any(|l| l.contains("is in view") && l.contains("move it out of frame")), "{}", bare.text());
+    assert_eq!(bare.problems, 1, "{}", bare.text());
+    for (look, people) in [
+        (r#""look": {"arm": "fade"},"#, ""),
+        (r#""look": "toon","#, r##""people": {"ana": {"look": {"arm": {"sleeve": "#30406a", "length": 0.1}}}},"##),
+    ] {
+        let r = report(&clip(look, people));
+        assert_eq!(r.problems, 0, "{}", r.text());
+        assert!(r.lines.iter().any(|l| l.contains("is in view") && l.contains("fine: its arm fades or is sleeved")), "{}", r.text());
+    }
+}
+
+#[test]
+fn a_site_is_tracked_on_screen() {
+    let clip = demo();
+    let t = 1.3;
+    let frame = clip.sample(t).unwrap();
+    let at = frame.sites_on_screen(&["right.index.tip", "right.palm_center", "right.index.distal"]).unwrap();
+    assert_eq!(at[0], clip.site_on_screen(t, "right.index.tip").unwrap());
+    // Back through the camera: the same point.
+    let view = handkit_core::pose::View::of(&frame.pose["camera"]).unwrap();
+    for s in &at {
+        let p = view.unproject(clip.aspect(), s.screen.unwrap(), s.depth.unwrap());
+        assert!(p.distance(s.world) < 1e-9, "{s:?}");
+    }
+    // A camera looking straight at the fingertip, in a portrait frame: the middle of the frame;
+    // a point to its right and above it lands right of and above the middle.
+    let tip = at[0].world;
+    let mut v: Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../clips/demo_basics.json")).unwrap()).unwrap();
+    v["camera"] = serde_json::json!({ "position": [tip.x, tip.y, tip.z + 0.5], "target": [tip.x, tip.y, tip.z], "fov": 30 });
+    v["size"] = serde_json::json!([1080, 1920]);
+    let centred = Clip::from_value(&v).unwrap().site_on_screen(t, "right.index.tip").unwrap();
+    let [x, y] = centred.screen.unwrap();
+    assert!((x - 0.5).abs() < 1e-5 && (y - 0.5).abs() < 1e-5 && (centred.depth.unwrap() - 0.5).abs() < 1e-5, "{centred:?}");
+    let view = handkit_core::pose::View::of(&v["camera"]).unwrap();
+    let (s, _) = view.project(1080.0 / 1920.0, tip + glam::DVec3::new(0.01, 0.01, 0.0));
+    let [x, y] = s.unwrap();
+    // 1 cm at 0.5 m with a 30 degree vertical field of view, in fractions of the frame.
+    let k = 1.0 / (15f64.to_radians().tan());
+    assert!((x - (0.5 + 0.5 * 0.02 * k / (1080.0 / 1920.0))).abs() < 1e-9 && (y - (0.5 - 0.5 * 0.02 * k)).abs() < 1e-9, "{x} {y}");
+    // JSON as the CLI and WASM print it; null on screen without a camera.
+    let j = at[0].json();
+    assert!(j["screen"].is_array() && j["depth"].is_number() && j["world"].as_array().unwrap().len() == 3, "{j}");
+    v.as_object_mut().unwrap().remove("camera");
+    let none = Clip::from_value(&v).unwrap().site_on_screen(t, "right.index.tip").unwrap();
+    assert!(none.screen.is_none() && none.json()["depth"].is_null());
+    assert!(clip.site_on_screen(t, "right.index.tipp").unwrap_err().contains("unknown site"));
+}

@@ -4,7 +4,7 @@ use fframes_three_d::{Vec2, Vec3};
 use rayon::prelude::*;
 
 use super::img::{self, Layer, Rect, smoothstep};
-use super::{Look, Style};
+use super::{Look, Paint, Style};
 
 pub(crate) struct Inputs<'a> {
     pub look: &'a Look,
@@ -28,8 +28,8 @@ pub(crate) struct Inputs<'a> {
     pub detail: Vec<f32>,
     /// Distance from the camera in meters.
     pub depth: Vec<f32>,
-    /// The skin and nail colours (sRGB) of the hands' people; none: the look's.
-    pub tones: &'a [([u8; 3], [u8; 3])],
+    /// The colours of the hands' people and sleeves; none: the look's.
+    pub tones: &'a [Paint],
     /// Each pixel's index in `tones` (stylized looks with more than one tone; else all 0).
     pub tone: Vec<u8>,
 }
@@ -109,6 +109,11 @@ impl Palette {
         }
     }
 
+    /// Cloth in toon and spiderverse: the colour itself, darker and lighter.
+    fn cloth(c: Vec3) -> Palette {
+        Palette { deep: c * 0.4, shadow: c * 0.6, mid: c, light: (c * 1.25 + Vec3::splat(0.03)).min(Vec3::ONE) }
+    }
+
     /// Warm lights, cool violet shadows.
     fn arcane(c: Vec3) -> Palette {
         let l = luminance(c);
@@ -122,7 +127,8 @@ impl Palette {
     }
 }
 
-/// A person's colours in a stylized look: the cel palettes of skin and nails, and the palm.
+/// A person's colours in a stylized look: the cel palettes of skin and nails, and the palm (a
+/// sleeve's: its cloth's palette, no palm).
 struct Tone {
     ps: Palette,
     pn: Palette,
@@ -133,8 +139,13 @@ struct Tone {
 }
 
 impl Tone {
-    fn new(style: Style, skin_rgb: [u8; 3], nail_rgb: [u8; 3]) -> Tone {
+    fn new(style: Style, paint: &Paint) -> Tone {
+        let Paint { skin: skin_rgb, nail: nail_rgb, cloth } = *paint;
         let (skin, nail) = (img::srgb(skin_rgb), img::srgb(nail_rgb));
+        if cloth {
+            let p = || if style == Style::Arcane { Palette::arcane(skin) } else { Palette::cloth(skin) };
+            return Tone { ps: p(), pn: p(), palm_ratio: Vec3::ONE, skin };
+        }
         let (ps, pn) = match style {
             Style::Arcane => (Palette::arcane(skin), Palette::arcane(nail)),
             _ => (Palette::toon(skin), Palette::toon(nail)),
@@ -155,9 +166,9 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
     let (sil_d, int_d) = edges(inp);
     let int_d = int_d.unwrap();
     let style = look.style;
-    let own = [(look.skin, look.nail_color())];
+    let own = [Paint { skin: look.skin, nail: look.nail_color(), cloth: false }];
     let tones = if inp.tones.is_empty() { &own[..] } else { inp.tones };
-    let tones: Vec<Tone> = tones.iter().map(|(s, n)| Tone::new(style, *s, *n)).collect();
+    let tones: Vec<Tone> = tones.iter().map(|p| Tone::new(style, p)).collect();
     let tone_at = |i: usize| &tones[inp.tone.get(i).map_or(0, |t| *t as usize).min(tones.len() - 1)];
     // Crease ink: the main creases only (palm lines, finger joints), thin.
     let crease_ink = match style {

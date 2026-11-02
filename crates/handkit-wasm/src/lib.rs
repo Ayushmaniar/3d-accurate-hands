@@ -41,7 +41,8 @@ pub fn gesture(name: &str) -> Result<String, JsError> {
 /// A `look` (an object or a bare style name, see `handkit explain looks`) checked and with
 /// every default filled in: `{"style": "toon", "skin": [r, g, b], "nail": [r, g, b],
 /// "nail_given": false, "outline": 3, "motion_blur": 1, "shutter": 180, "halftone": 8,
-/// "misregister": 3, "texture": 1, "subsurface": 0.35}` (colours sRGB bytes). `"null"` is the
+/// "misregister": 3, "texture": 1, "subsurface": 0.35, "arm": "bare"}` (colours sRGB bytes;
+/// arm is "bare", "fade" or `{"sleeve": [r, g, b], "length": 0.08}`). `"null"` is the
 /// default look. `HandkitLook` in `@handkit/three` draws it.
 #[wasm_bindgen]
 pub fn look(value: &str) -> Result<String, JsError> {
@@ -63,6 +64,7 @@ fn look_json(l: &handkit_core::look::Look) -> serde_json::Value {
         "misregister": l.misregister.unwrap_or(3.0),
         "texture": l.texture.unwrap_or(1.0),
         "subsurface": l.subsurface.unwrap_or(0.35),
+        "arm": l.arm.to_value(),
     })
 }
 
@@ -116,7 +118,7 @@ impl Clip {
     }
 
     /// Each hand's look by hand name, as JSON: the clip's `look` (see `look`) in the colours of
-    /// the hand's person (`people.<person>.look` sets their skin and nail; the style is the
+    /// the hand's person (`people.<person>.look` sets their skin, nail and arm; the style is the
     /// clip's): `{"right": {..}, "ana.right": {"style": .., "skin": [r, g, b], ..}}`.
     pub fn looks(&self) -> Result<String, JsError> {
         let base = match &self.0.look {
@@ -133,6 +135,15 @@ impl Clip {
     /// The pose file at `t` seconds, as JSON text.
     pub fn sample(&self, t: f64) -> Result<String, JsError> {
         Ok(self.0.sample(t).map_err(|e| JsError::new(&e))?.pose.to_string())
+    }
+
+    /// Where a site (`right.index.tip`, `ana.left.palm_center`) is at `t`, as JSON:
+    /// `{"screen": [x, y], "depth": d, "world": [x, y, z]}`, screen in fractions of the frame
+    /// (x from the left, y from the top, as `place.screen`) through the clip's camera and size,
+    /// depth in meters along the view (both null without a camera).
+    pub fn site(&self, t: f64, name: &str) -> Result<String, JsError> {
+        let s = self.0.site_on_screen(t, name).map_err(|e| JsError::new(&e))?;
+        Ok(s.json().to_string())
     }
 
     /// Joint transforms and corrective weights at `t`, for `handRig` (see `bones`).
@@ -170,6 +181,17 @@ mod tests {
         let clip = Clip::new(include_str!("../../../clips/demo_basics.json")).ok().unwrap();
         assert_eq!(json(clip.camera())["fov"], 35);
         assert_eq!(json(clip.look().ok().unwrap())["style"], "realistic");
+    }
+
+    #[test]
+    fn clips_give_where_a_site_is() {
+        let clip = Clip::new(include_str!("../../../clips/demo_basics.json")).ok().unwrap();
+        let s = json(clip.site(1.0, "right.index.tip").ok().unwrap());
+        let screen = s["screen"].as_array().unwrap();
+        assert!(screen.iter().all(|x| (0.0..=1.0).contains(&x.as_f64().unwrap())), "{s}");
+        assert!(s["depth"].as_f64().unwrap() > 0.1 && s["world"].as_array().unwrap().len() == 3, "{s}");
+        let l = json(look(r##"{"arm": {"sleeve": "#203040"}}"##).ok().unwrap());
+        assert_eq!(l["arm"], serde_json::json!({ "sleeve": [0x20, 0x30, 0x40], "length": 0.08 }));
     }
 
     #[test]

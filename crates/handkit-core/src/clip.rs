@@ -386,6 +386,54 @@ pub struct Frame {
     pub goals: Vec<Value>,
 }
 
+/// Where a site is in a frame: in the world, and through the clip's camera on screen.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SiteOnScreen {
+    pub world: DVec3,
+    /// Fractions of the frame, x from the left and y from the top (as `place.screen`); none
+    /// without a camera, or behind it.
+    pub screen: Option<[f64; 2]>,
+    /// Meters from the camera along its view; none without a camera.
+    pub depth: Option<f64>,
+}
+
+impl SiteOnScreen {
+    /// `{"screen": [x, y], "depth": d, "world": [x, y, z]}`, null where there is none.
+    pub fn json(&self) -> Value {
+        let r = |x: f64| (x * 1e5).round() / 1e5 + 0.0;
+        json!({
+            "screen": self.screen.map(|s| [r(s[0]), r(s[1])]),
+            "depth": self.depth.map(r),
+            "world": [r(self.world.x), r(self.world.y), r(self.world.z)],
+        })
+    }
+}
+
+impl Frame {
+    /// Where sites (`right.index.tip`, `ana.left.palm_center`; a segment gives its middle) are
+    /// in this frame, with the frame's camera and size.
+    pub fn sites_on_screen(&self, names: &[&str]) -> Result<Vec<SiteOnScreen>, String> {
+        let solved = crate::solve_value(&self.pose)?;
+        let view = self.pose.get("camera").and_then(pose::View::of);
+        let aspect = pose::aspect(&self.pose);
+        names
+            .iter()
+            .map(|name| {
+                let target = solved.target(name)?;
+                let world = target.site.map_or((target.a + target.b) / 2.0, |s| s.1);
+                let (screen, depth) = match &view {
+                    Some(v) => {
+                        let (s, d) = v.project(aspect, world);
+                        (s, Some(d))
+                    }
+                    None => (None, None),
+                };
+                Ok(SiteOnScreen { world, screen, depth })
+            })
+            .collect()
+    }
+}
+
 fn num(v: &Value, k: &str) -> Result<Option<f64>, String> {
     match v.get(k) {
         None | Some(Value::Null) => Ok(None),
@@ -747,6 +795,13 @@ impl Clip {
     /// The frame's width / height (from "size", default 16:9).
     pub fn aspect(&self) -> f64 {
         pose::aspect(&json!({ "size": self.size }))
+    }
+
+    /// Where a site is at `t` seconds: its world position, and its point on screen and depth
+    /// through the clip's camera, e.g. to make a UI behind the hand react to a fingertip. For
+    /// several sites at once, `sample(t)?.sites_on_screen(..)`.
+    pub fn site_on_screen(&self, t: f64, name: &str) -> Result<SiteOnScreen, String> {
+        Ok(self.sample(t)?.sites_on_screen(&[name])?[0])
     }
 
     /// The index of the last key at or before `t` (0 before the first).

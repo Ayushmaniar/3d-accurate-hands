@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "name": "arms",
+  "description": "Where the forearm ends: four people raise a hand with the elbow in view, left to right a bare arm (its rounded end shows), a fading arm, and rolled-up sleeves in navy and rust. `handkit check` reports only the bare elbow.",
+  "fps": 30,
+  "duration": 2.0,
+  "size": [1920, 1080],
+  "camera": { "position": [0, 0.19, 1.0], "target": [0, 0.19, 0], "fov": 35 },
+  "people": {
+    "ann": { "look": { "skin": "light" } },
+    "bea": { "look": { "skin": "tan", "arm": "fade" } },
+    "cal": { "look": { "skin": "medium", "arm": { "sleeve": "#2c3d66", "length": 0.09 } } },
+    "dev": { "look": { "skin": "brown", "arm": { "sleeve": "#b0532e", "length": 0.12 } } }
+  },
+  "keys": [
+    {
+      "t": 0,
+      "hands": {
+        "ann.right": { "from": "relaxed", "place": { "elbow": [-0.36, 0.0, 0.0], "forearm_rotation_deg": [-8, 0, 6] } },
+        "bea.right": { "from": "relaxed", "place": { "elbow": [-0.12, 0.0, 0.0], "forearm_rotation_deg": [-8, 0, 6] } },
+        "cal.right": { "from": "relaxed", "place": { "elbow": [0.12, 0.0, 0.0], "forearm_rotation_deg": [-8, 0, 6] } },
+        "dev.right": { "from": "relaxed", "place": { "elbow": [0.36, 0.0, 0.0], "forearm_rotation_deg": [-8, 0, 6] } }
+      }
+    },
+    {
+      "t": 1.5,
+      "hands": {
+        "ann.right": { "from": "open_palm" },
+        "bea.right": { "from": "open_palm" },
+        "cal.right": { "from": "open_palm" },
+        "dev.right": { "from": "open_palm" }
+      }
+    }
+  ]
+}

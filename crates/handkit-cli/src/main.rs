@@ -94,6 +94,18 @@ enum Cmd {
     /// Motion problems over a whole clip: held goals coming apart, penetrations mid-move, joints
     /// moving too fast, pops, fingertips leaving the camera's view.
     Check { clip: PathBuf },
+    /// Where sites are on screen over a clip, per frame, as JSON: t, and per site `screen`
+    /// [x, y] (fractions of the frame, as place.screen, through the clip's camera), `depth`
+    /// (meters along the view) and `world` [x, y, z].
+    Track {
+        clip: PathBuf,
+        /// A site (right.index.tip, ana.left.palm_center, ...); repeat for more.
+        #[arg(long = "site", required = true)]
+        sites: Vec<String>,
+        /// Frames per second (default: the clip's).
+        #[arg(long)]
+        fps: Option<f64>,
+    },
     /// A contact sheet of a clip: frames at evenly spaced times in one labelled PNG.
     Sheet {
         clip: PathBuf,
@@ -314,6 +326,24 @@ fn run() -> Result<()> {
             let frames = sample_frames(&c, &times)?;
             let report = handkit_core::check::analyze(&c, &frames, c.aspect()).map_err(|e| anyhow!(e))?;
             emit(report.text());
+        }
+        Cmd::Track { clip, sites, fps } => {
+            let c = load_clip(&clip)?;
+            let fps = fps.unwrap_or(c.fps);
+            if !(fps > 0.0 && fps.is_finite()) {
+                bail!("--fps is a positive number");
+            }
+            let n = (c.duration * fps).round().max(1.0) as usize;
+            let times: Vec<f64> = (0..n).map(|i| i as f64 / fps).collect();
+            let names: Vec<&str> = sites.iter().map(String::as_str).collect();
+            // One frame per line, in a JSON array.
+            let mut lines = Vec::with_capacity(n);
+            for (t, f) in sample_frames(&c, &times)? {
+                let at = f.sites_on_screen(&names).map_err(|e| anyhow!(e))?;
+                let by_name: serde_json::Map<String, serde_json::Value> = names.iter().zip(&at).map(|(n, s)| (n.to_string(), s.json())).collect();
+                lines.push(serde_json::to_string(&serde_json::json!({ "t": (t * 1e5).round() / 1e5, "sites": by_name }))?);
+            }
+            emit(format!("[\n{}\n]\n", lines.join(",\n")));
         }
         Cmd::Sheet { clip, out, n, at, size, mesh, background } => {
             let c = load_clip(&clip)?;

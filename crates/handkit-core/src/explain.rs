@@ -210,7 +210,7 @@ palms (open_palm with thumb cmc_abd 40, cmc_flex -25), so the thumbs pass each o
 the same way. high_five and fist_bump close no fingers: the hands simply meet at t.
 
 Commands: `handkit check clip.json` (held goals, penetrations, joint speeds, pops, fingertips
-leaving the camera's view, elbows in view; fix everything it reports; penetrations and pops
+leaving the camera's view, bare elbows in view; fix everything it reports; penetrations and pops
 name the keys either side; \"at limit\" lines, joints held within 1 deg of a limit for over
 0.3 s, are information: the pose asks a joint for more than it has), `handkit sheet clip.json
 -n 12 --mesh` (a contact sheet at the clip's aspect; --at 1.2,1.3,1.4 for chosen times,
@@ -218,7 +218,15 @@ name the keys either side; \"at limit\" lines, joints held within 1 deg of a lim
 file at a time, to query or render; --wrist writes its placement as wrist, palm_facing and
 fingers_toward), `handkit preview clip.json` (a quick MP4). To match a reference video:
 `python tools/motion/compare.py ref.mp4 out.mp4 cmp` writes cmp.sheet.png (both at the same
-times, in rows) and cmp.side.mp4 (side by side).";
+times, in rows) and cmp.side.mp4 (side by side).
+
+Where a site is on screen (e.g. a button behind the hand that reacts to a fingertip):
+`handkit track clip.json --site right.index.tip [--site left.thumb.tip ...] [--fps 60]` prints
+a JSON array, one frame per line: { \"t\", \"sites\": { \"<site>\": { \"screen\": [x, y], \"depth\",
+\"world\": [x, y, z] } } }. screen is in fractions of the frame as place.screen (x 0 left to 1
+right, y 0 top to 1 bottom) through the clip's camera and size, depth is meters along the
+view (both null without a camera); fps defaults to the clip's. The same one call at a time:
+clip.site(t, name) in the WASM build (JSON text), Clip::site_on_screen(t, name) in Rust.";
 
 pub const LOOKS: &str = "\
 Looks: how renderers draw the hands. A pose or a clip may carry a top-level \"look\":
@@ -242,10 +250,19 @@ Looks: how renderers draw the hands. A pose or a clip may carry a top-level \"lo
   misregister  spiderverse plate offset in pixels at 1080p (default 3; 0 = none).
   texture      0 to 1: brush strokes (arcane), lumps and fingerprints (clay); default 1.
   subsurface   0 to 1: how much scattered light realistic mixes in (default 0.35).
+  arm          where the forearm ends (the rig stops at the elbow): \"bare\" (default: skin to
+               a rounded end), \"fade\" (the forearm fades to transparent over its last 30%
+               toward the elbow, ink and motion blur included), or { \"sleeve\": \"#rrggbb\",
+               \"length\": 0.08 } (a rolled-up cloth sleeve, matte with soft folds and a rolled
+               cuff, over the forearm from the elbow for length meters, 0.02 to 0.2; past the
+               elbow it fades out as if it went on up the arm). With the elbow in view, use
+               fade or a sleeve: `check` then lists it as information, not a problem.
+               clips/demo_arms.json shows all three (docs/m6-arm.png).
 The fframes player takes the same as flags over the file's look: --look toon,skin=tan,outline=4,
 --look-json '{..}', --motion-blur 4, and --looks \"realistic;toon;arcane\" --look-every 2 to
-cycle through looks (a demo). Each person's \"look\" (see \"people\") sets their skin and
-nail colours; the style is the file's. In Rust, handkit_fframes::look::Styler renders any look.";
+cycle through looks (a demo). Each person's \"look\" (see \"people\") sets their skin, nail
+colours and arm; the style is the file's. In Rust, handkit_fframes::look::Styler renders any
+look (Styler::dress_as for a person's).";
 
 pub const SIGN: &str = "\
 Sign language (ASL): the manual alphabet is in the gesture library as asl_a ... asl_z (right

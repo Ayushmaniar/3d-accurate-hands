@@ -14,7 +14,8 @@
 // current target (the canvas by default), transparent where nothing is drawn, as
 // premultiplied sRGB. Textures that stay on the skin (tone colour map, crease lines, arcane
 // brush strokes, clay lumps and fingerprints) are baked once per hand on the GPU in the
-// hand's UV atlas, with the same functions fframes uses.
+// hand's UV atlas, with the same functions fframes uses. The look's `arm` (fade, or a sleeve
+// added under the forearm bone) is drawn as in fframes: an opacity pass multiplies the layer.
 import * as THREE from 'three';
 import { look as resolveLookJson } from './core.js';
 import * as G from './look-glsl.js';
@@ -228,6 +229,121 @@ function bakeGeometry(geometry) {
   return g;
 }
 
+// ---- the forearm's end (crates/handkit-fframes/src/look/arm.rs) ----------------------------
+/** img.rs's integer hash, value noise and fbm, bit for bit. */
+function hash3(x, y, z) {
+  let h = (Math.imul(x, 0x8da6b343) ^ Math.imul(y, 0xd8163841) ^ Math.imul(z, 0xcb1ab31f)) >>> 0;
+  h = (h ^ (h >>> 13)) >>> 0;
+  h = Math.imul(h, 0x5bd1e995) >>> 0;
+  h = (h ^ (h >>> 15)) >>> 0;
+  return (h & 0x00ffffff) / 16777216;
+}
+function noise3(x, y, z) {
+  const [xi, yi, zi] = [Math.floor(x), Math.floor(y), Math.floor(z)];
+  const f = (t) => t * t * (3 - 2 * t);
+  const [fx, fy, fz] = [f(x - xi), f(y - yi), f(z - zi)];
+  const c = (dx, dy, dz) => hash3(xi + dx, yi + dy, zi + dz);
+  const l = (a, b, t) => a + (b - a) * t;
+  return l(l(l(c(0, 0, 0), c(1, 0, 0), fx), l(c(0, 1, 0), c(1, 1, 0), fx), fy), l(l(c(0, 0, 1), c(1, 0, 1), fx), l(c(0, 1, 1), c(1, 1, 1), fx), fy), fz);
+}
+const fbm3 = (x, y, z) => Math.min(Math.max(noise3(x, y, z) * 0.65 + noise3(x * 2.03 + 17.3, y * 2.03 + 17.3, z * 2.03 + 17.3) * 0.35, 0), 1);
+
+/** A hand's forearm in its bind pose: its bone, mesh space to the forearm's frame (elbow at the
+ * origin, forearm along +y) and the elbow-to-wrist length. */
+function forearmOf(mesh) {
+  const sk = mesh.skeleton;
+  const i = sk?.bones.findIndex((b) => /^forearm_[RL]$/.test(b.name)) ?? -1;
+  const j = sk?.bones.findIndex((b) => /^hand_[RL]$/.test(b.name)) ?? -1;
+  if (i < 0 || j < 0) return null;
+  const toLocal = sk.boneInverses[i].clone().multiply(mesh.bindMatrix);
+  const wrist = new THREE.Vector3().applyMatrix4(sk.boneInverses[j].clone().invert()).applyMatrix4(sk.boneInverses[i]);
+  return { bone: sk.bones[i], toLocal, len: wrist.length() };
+}
+
+/** A fading arm's opacity at each vertex: 0 at the elbow, 1 from 30% of the way to the wrist. */
+function armFade(mesh, f) {
+  const pos = mesh.geometry.attributes.position;
+  const out = new Float32Array(pos.count);
+  const q = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) out[i] = ss(0.01, 0.3 * f.len, q.fromBufferAttribute(pos, i).applyMatrix4(f.toLocal).y);
+  return out;
+}
+
+/** A rolled-up sleeve over the forearm `f` of `mesh`, in the forearm's frame (arm.rs `sleeve`):
+ * a slightly bulging tube with soft folds, closed past the elbow (where it fades out), `length`
+ * meters toward the wrist, ending in a rolled cuff tucked into the arm. */
+function sleeveGeometry(mesh, f, length) {
+  const [THICK, BULGE, ROLL, CUFF, AROUND, STEP] = [0.0035, 0.0035, 0.0055, 0.022, 72, 0.008];
+  length = Math.min(Math.max(length, 0.02), f.len - 0.04);
+  const n = Math.floor(f.len / STEP) + 1;
+  const lo = Array.from({ length: n }, () => [Infinity, Infinity]);
+  const hi = Array.from({ length: n }, () => [-Infinity, -Infinity]);
+  const pos = mesh.geometry.attributes.position;
+  const q = new THREE.Vector3();
+  let end = 0;
+  for (let i = 0; i < pos.count; i++) {
+    q.fromBufferAttribute(pos, i).applyMatrix4(f.toLocal);
+    end = Math.min(end, q.y);
+    if (q.y < 0 || q.y >= f.len - 0.03) continue;
+    const k = Math.floor(q.y / STEP);
+    lo[k] = [Math.min(lo[k][0], q.x), Math.min(lo[k][1], q.z)];
+    hi[k] = [Math.max(hi[k][0], q.x), Math.max(hi[k][1], q.z)];
+  }
+  const slices = [];
+  for (let k = 0; k < n; k++) if (Number.isFinite(lo[k][0])) slices.push([(k + 0.5) * STEP, [(lo[k][0] + hi[k][0]) / 2, (lo[k][1] + hi[k][1]) / 2], [(hi[k][0] - lo[k][0]) / 2, (hi[k][1] - lo[k][1]) / 2]]);
+  const section = (y) => {
+    if (!slices.length) return [[0, 0], [0.035, 0.035]];
+    const k = slices.findIndex((s) => s[0] > y);
+    if (k === 0) return [slices[0][1], slices[0][2]];
+    if (k < 0) return [slices.at(-1)[1], slices.at(-1)[2]];
+    const [a, b] = [slices[k - 1], slices[k]];
+    const t = (y - a[0]) / (b[0] - a[0]);
+    return [mix(a[1], b[1], t), mix(a[2], b[2], t)];
+  };
+  // Rings (y, how far out): a short dome past the skin's end, the tube, the cuff tucked under.
+  const tubeEnd = end - 0.008;
+  const rings = [];
+  for (let i = 1; i <= 8; i++) rings.push([tubeEnd - 0.012 * Math.cos((i / 8) * Math.PI / 2), Math.sin((i / 8) * Math.PI / 2)]);
+  const steps = Math.ceil((length - tubeEnd) / 0.0015);
+  for (let i = 1; i <= steps; i++) rings.push([tubeEnd + ((length - tubeEnd) * i) / steps, 1]);
+  rings.push([length + 0.001, -1]);
+  const cuff = Math.min(CUFF, length * 0.45);
+  const c0 = section(0)[0];
+  const p = [c0[0], tubeEnd - 0.012, c0[1]];
+  for (const [y, k] of rings) {
+    const [c, a] = section(Math.max(y, 0));
+    const tube = Math.min(Math.max(y / (length - cuff), 0), 1);
+    const u = Math.min(Math.max((y - (length - cuff)) / cuff, 0), 1);
+    const roll = ROLL * Math.sqrt(Math.max(1 - (2 * u - 1) ** 2, 0));
+    for (let j = 0; j < AROUND; j++) {
+      const t = (j / AROUND) * 2 * Math.PI;
+      let r;
+      if (k < 0) r = [a[0] - 0.003, a[1] - 0.003];
+      else {
+        const folds = (fbm3(Math.cos(t) * 1.8, y * 50, Math.sin(t) * 1.8) - 0.5) * 0.008 * (1 - u);
+        const off = THICK + BULGE * Math.sin(Math.PI * tube) + folds + roll;
+        r = [(a[0] + off) * k, (a[1] + off) * k];
+      }
+      p.push(c[0] + r[0] * Math.cos(t), y, c[1] + r[1] * Math.sin(t));
+    }
+  }
+  const index = [];
+  const ring = (i, j) => 1 + i * AROUND + (j % AROUND);
+  for (let j = 0; j < AROUND; j++) index.push(0, ring(0, j), ring(0, j + 1));
+  for (let i = 0; i < rings.length - 1; i++) {
+    for (let j = 0; j < AROUND; j++) index.push(ring(i, j), ring(i + 1, j), ring(i, j + 1), ring(i, j + 1), ring(i + 1, j), ring(i + 1, j + 1));
+  }
+  const g = new THREE.BufferGeometry();
+  const count = p.length / 3;
+  g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(count * 2), 2));
+  // Past the elbow the sleeve fades out, as if it went on up the arm.
+  g.setAttribute('handkitFade', new THREE.Float32BufferAttribute(Float32Array.from({ length: count }, (_, i) => ss(end, 0.012, p[i * 3 + 1])), 1));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  return g;
+}
+
 /** One dressed hand: its mesh, loaded maps and the look textures baked so far. */
 class Dressed {
   constructor(mesh, maps, colors) {
@@ -238,6 +354,9 @@ class Dressed {
     this.baked = new Map();
     this.bake = null; // UV-space geometry, built on first bake
     this.materials = {};
+    this.arm = null; // the arm it is dressed with (JSON), its sleeve mesh and its materials
+    this.sleeve = null;
+    this.sleeveMaterials = {};
   }
 }
 
@@ -256,6 +375,13 @@ export class HandkitLook {
     this.pmrem = new THREE.PMREMGenerator(renderer);
     this.backdrop = null;
     this.lights = new THREE.Group();
+    // What the flat passes draw for anything that is not a hand.
+    this.generic = {
+      normals: new THREE.MeshNormalMaterial(),
+      data: new THREE.ShaderMaterial({ vertexShader: G.DATA_PASS_VS, fragmentShader: G.DATA_PASS_FS, uniforms: { map: { value: null }, hasMap: { value: 0 } } }),
+      tone: new THREE.MeshBasicMaterial({ color: 0x000000 }),
+      fade: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+    };
     this.setLook(look);
   }
 
@@ -265,6 +391,46 @@ export class HandkitLook {
     for (const h of this.hands) h.materials = {};
   }
 
+  /** How a hand's forearm ends: its own look's arm when that gives one, else the look's. */
+  armOf(d) {
+    return (d.ownArm ? d.colors.arm : this.look.arm) ?? 'bare';
+  }
+
+  /** Puts on (or takes off) the hand's sleeve and its fade, for its current arm. */
+  syncArm(d) {
+    const arm = this.armOf(d);
+    const key = JSON.stringify(arm);
+    if (d.arm === key) return;
+    d.arm = key;
+    d.materials = {};
+    if (d.sleeve) {
+      d.sleeve.removeFromParent();
+      d.sleeve.geometry.dispose();
+      Object.values(d.sleeveMaterials).forEach((m) => m.dispose());
+      [d.sleeve, d.sleeveMaterials] = [null, {}];
+    }
+    const f = forearmOf(d.mesh);
+    if (!f) return;
+    if (arm === 'fade') d.mesh.geometry.setAttribute('handkitFade', new THREE.BufferAttribute(armFade(d.mesh, f), 1));
+    if (arm?.sleeve) {
+      const color = new THREE.Color().setRGB(...linear(arm.sleeve), THREE.LinearSRGBColorSpace);
+      d.sleeve = new THREE.Mesh(sleeveGeometry(d.mesh, f, arm.length), new THREE.MeshStandardMaterial({ color, roughness: 1, metalness: 0, envMapIntensity: 0.6 }));
+      d.sleeve.name = 'sleeve';
+      d.sleeve.frustumCulled = false;
+      d.sleeveColor = arm.sleeve;
+      f.bone.add(d.sleeve);
+    }
+  }
+
+  /** A sleeve's material for a pass: matte cloth, unlit cloth colour (tone), its opacity (fade). */
+  sleeveMaterial(d, pass) {
+    const m = d.sleeveMaterials;
+    if (pass === 'color') return (m.color ??= d.sleeve.material);
+    if (pass === 'tone') return (m.tone ??= new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(...linear(d.sleeveColor), THREE.LinearSRGBColorSpace) }));
+    if (pass === 'fade') return (m.fade ??= new THREE.ShaderMaterial({ vertexShader: G.FADE_PASS_VS, fragmentShader: G.FADE_PASS_FS }));
+    return this.generic[pass];
+  }
+
   /** A solid colour behind the hands (`'#767879'`, a THREE.Color or null for transparent). */
   setBackdrop(color) {
     this.backdrop = color == null ? null : new THREE.Color(color);
@@ -272,8 +438,9 @@ export class HandkitLook {
 
   /**
    * Prepares a loaded hand (the GLTFLoader result, or its scene for a hand without maps).
-   * `colors`, optional: a look (e.g. a person's, `Clip.looks()[hand]`) whose skin and nail this
-   * hand wears instead of the look's; its style is ignored. Every style shows it.
+   * `colors`, optional: a look (e.g. a person's, `Clip.looks()[hand]`) whose skin and nail (and
+   * arm, when it gives one) this hand wears instead of the look's; its style is ignored. Every
+   * style shows it. A sleeve (`arm`) is added as a child of the forearm bone when it renders.
    */
   async dress(gltf, colors = null) {
     const root = gltf.scene ?? gltf;
@@ -290,6 +457,7 @@ export class HandkitLook {
       if (color && masks && orm && mesh.geometry.attributes.uv) maps = { color, masks, orm };
     }
     const d = new Dressed(mesh, maps, colors ? resolveLook(colors) : null);
+    d.ownArm = !!colors && typeof colors === 'object' && colors.arm != null;
     this.hands.push(d);
     return d;
   }
@@ -395,16 +563,20 @@ export class HandkitLook {
   }
   realisticNailLinear(d) { return linear(this.realisticNail(d)); }
 
-  /** The distinct colours of the dressed hands in `scene`, and each hand's index among them. */
+  /** The distinct colours of the dressed hands (and sleeves) in `scene`, and each hand's index
+   * among them. */
   tones(scene) {
     const list = [];
     const index = new Map();
+    const add = (c) => {
+      let i = list.findIndex((t) => t.skin.join() === c.skin.join() && t.nail.join() === c.nail.join() && !!t.cloth === !!c.cloth);
+      if (i < 0) { i = list.length; list.push(c); }
+      return i;
+    };
     for (const d of this.hands) {
       if (!this.inScene(scene, d.mesh)) continue;
-      const c = this.colorsOf(d);
-      let i = list.findIndex((t) => t.skin.join() === c.skin.join() && t.nail.join() === c.nail.join());
-      if (i < 0) { i = list.length; list.push(c); }
-      index.set(d, i);
+      index.set(d, add(this.colorsOf(d)));
+      if (d.sleeve) add({ skin: d.sleeveColor, nail: d.sleeveColor, cloth: true });
     }
     if (!list.length) list.push(this.colorsOf(null));
     return { list: list.slice(0, MAX_TONES), index };
@@ -468,6 +640,10 @@ export class HandkitLook {
       // Which tone a pixel shows, for scenes of several people (the hand's skin, unlit).
       out.tone = new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(skin[0], skin[1], skin[2], THREE.LinearSRGBColorSpace) });
     }
+    // Each vertex's opacity for a fading arm; opaque otherwise.
+    out.fade = this.armOf(d) === 'fade' && d.mesh.geometry.attributes.handkitFade
+      ? new THREE.ShaderMaterial({ vertexShader: G.FADE_PASS_VS, fragmentShader: G.FADE_PASS_FS })
+      : new THREE.MeshBasicMaterial({ color: 0xffffff });
     d.materials = out;
     return out;
   }
@@ -558,20 +734,21 @@ export class HandkitLook {
     return false;
   }
 
-  /** Swaps every mesh's material for the pass ('color', 'normals', 'data', 'tone'); returns an undo. */
+  /** Swaps every mesh's material for the pass ('color', 'normals', 'data', 'tone', 'fade');
+   * returns an undo. */
   swap(scene, pass) {
     const saved = [];
-    const generic = this.generic ??= {
-      normals: new THREE.MeshNormalMaterial(),
-      data: new THREE.ShaderMaterial({ vertexShader: G.DATA_PASS_VS, fragmentShader: G.DATA_PASS_FS, uniforms: { map: { value: null }, hasMap: { value: 0 } } }),
-      tone: new THREE.MeshBasicMaterial({ color: 0x000000 }),
-    };
+    const generic = this.generic;
     scene.traverse((o) => {
       if (!o.isMesh) return;
       const d = this.hands.find((h) => h.mesh === o);
+      const sleeveOf = this.hands.find((h) => h.sleeve === o);
       saved.push([o, o.material, o.visible, o.castShadow, o.receiveShadow]);
       if (d) {
         o.material = this.materials(d)[pass];
+        o.castShadow = o.receiveShadow = pass === 'color';
+      } else if (sleeveOf) {
+        o.material = this.sleeveMaterial(sleeveOf, pass);
         o.castShadow = o.receiveShadow = pass === 'color';
       } else if (pass !== 'color') {
         const m = Array.isArray(o.material) ? o.material[0] : o.material;
@@ -603,6 +780,8 @@ export class HandkitLook {
     const L = this.look;
     const [W, H] = [T.w, T.h];
     const scale = H / 1080;
+    const shown = this.hands.filter((d) => this.inScene(scene, d.mesh));
+    shown.forEach((d) => this.syncArm(d));
     scene.updateMatrixWorld();
     camera.updateMatrixWorld();
     const frame = this.handsFrame(scene);
@@ -639,14 +818,16 @@ export class HandkitLook {
       if (tones.length > 1) this.renderScene(scene, camera, 'tone', T.tone);
       const pad = (a) => Array.from({ length: MAX_TONES }, (_, i) => vec3(a[Math.min(i, a.length - 1)]));
       const skins = tones.map((c) => linear(c.skin));
-      const palms = skins.map((t) => {
+      const palms = skins.map((t, k) => {
+        if (tones[k].cloth) return [1, 1, 1];
         const back = toneBase(t, t, [0, 0, 0, 0]), palm = toneBase(t, t, [0, 0, 0, 1]);
         return palm.map((p, i) => p / Math.max(back[i], 1e-4));
       });
+      const cloths = Array.from({ length: MAX_TONES }, (_, i) => (tones[Math.min(i, tones.length - 1)].cloth ? 1 : 0));
       const inks = skins.map((skin) => (this.style === 3 ? mul(skin, [0.09, 0.045, 0.045]) : this.style === 1 ? [0.02, 0.012, 0.01] : [0.004, 0.004, 0.004]));
       this.quad.run(r, G.STYLED_FS, {
         ...u, lines: tex(T.lines), toneMap: tex(T.tone), toneCount: tones.length,
-        skins: pad(skins), nails: pad(tones.map((c) => linear(c.nail))), palms: pad(palms), inks: pad(inks),
+        skins: pad(skins), nails: pad(tones.map((c) => linear(c.nail))), palms: pad(palms), inks: pad(inks), cloths,
       }, T.layer);
     } else {
       // Lit looks: the colour pass under the look's lights and studio, tone mapped.
@@ -691,6 +872,15 @@ export class HandkitLook {
         r.setRenderTarget(T.lines); r.setClearColor(0x000000, 0); r.clear(true, false, false);
       }
       this.quad.run(r, G.LIT_FS, { src: tex(T.a), sssR: tex(T.c), sssG: tex(T.e), sssB: tex(T.f), lines: tex(T.lines), mixAmount: L.subsurface, realistic: realistic ? 1 : 0 }, T.layer);
+    }
+    // A fading arm or a sleeve's end: the layer times each pixel's opacity (look/mod.rs).
+    if (shown.some((d) => this.armOf(d) !== 'bare')) {
+      this.renderScene(scene, camera, 'fade', T.data);
+      const sigma = (Math.ceil((L.outline * 0.8 + L.misregister + 6) * scale) + 2) * 0.5;
+      this.quad.run(r, G.BLUR_FS, { src: tex(T.data), dir: new THREE.Vector2(1, 0), sigma, packed: 0 }, T.b);
+      this.quad.run(r, G.BLUR_FS, { src: tex(T.b), dir: new THREE.Vector2(0, 1), sigma, packed: 0 }, T.c);
+      this.quad.run(r, G.FADE_FS, { layer: tex(T.layer), opacity: tex(T.data), around: tex(T.c) }, T.lines);
+      return T.lines;
     }
     return T.layer;
   }
@@ -749,7 +939,13 @@ export class HandkitLook {
       Object.values(d.materials).forEach((m) => m.dispose?.());
       d.bake?.geometry.dispose(); d.bakeMat?.dispose();
       d.mesh.material = d.loaded;
+      if (d.sleeve) {
+        d.sleeve.removeFromParent();
+        d.sleeve.geometry.dispose();
+        Object.values(d.sleeveMaterials).forEach((m) => m.dispose());
+      }
     }
+    Object.values(this.generic).forEach((m) => m.dispose());
   }
 }
 

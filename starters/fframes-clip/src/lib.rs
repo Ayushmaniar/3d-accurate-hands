@@ -147,9 +147,9 @@ impl<'a> FframesClipVideo<'a> {
                     .iter()
                     .map(|id| {
                         let model = &models[sides.iter().position(|s| *s == id.side).unwrap()];
-                        // Each person in their own skin and nails (`people.<person>.look`).
+                        // Each person in their own skin, nails and arm (`people.<person>.look`).
                         let own = styler.look.for_person(clip.people.as_ref(), &id.person);
-                        (id.clone(), styler.dress_in(model, own.skin, own.nail))
+                        (id.clone(), styler.dress_as(model, &own))
                     })
                     .collect();
                 Dressed { styler, hands, label }
