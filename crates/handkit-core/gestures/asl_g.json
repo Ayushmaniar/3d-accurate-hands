@@ -1,0 +1,23 @@
+{
+  "name": "asl_g",
+  "description": "ASL G: index pointing sideways (to the signer's left, the viewer's right) with the thumb straight above it, other fingers curled; palm toward the signer, back of the hand to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": {
+        "wrist": [0, 0, 0],
+        "palm_facing": [0, 0.35, -0.95],
+        "fingers_toward": [1, 0, 0],
+        "forearm_toward": [-0.85, -0.45, -0.2]
+      },
+      "palm_cup": 8,
+      "thumb": { "cmc_flex": 21.3, "cmc_abd": 2.9, "cmc_rot": 16.0, "mcp_flex": -1.1, "ip_flex": -0.2 },
+      "index": { "mcp_abd": 0, "mcp_flex": 2, "pip_flex": 6 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.pad", "right.index.proximal"], "gap_mm": 22, "vary": ["right.thumb.*"] }],
+  "camera": { "position": [0.09, 0.1, 0.44], "target": [0.09, 0.02, 0.0], "fov": 34 }
+}

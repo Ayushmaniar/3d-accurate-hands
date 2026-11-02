@@ -1,0 +1,21 @@
+{
+  "name": "asl_r",
+  "description": "ASL R: index and middle raised and crossed (the middle behind the index), the thumb holding ring and pinky down; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 8,
+      "thumb": { "cmc_flex": 15.8, "cmc_abd": 42.7, "cmc_rot": 48.8, "mcp_flex": 47.2, "ip_flex": 26.1 },
+      "index": { "mcp_abd": -9.8, "mcp_flex": 16.6, "pip_flex": 14.7, "dip_flex": 17 },
+      "middle": { "mcp_abd": 11.1, "mcp_flex": -12.6, "pip_flex": 47.2, "dip_flex": 26.3 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.middle.pad", "right.index.middle"], "vary": ["right.middle.*", "right.index.*"] },
+    { "touch": ["right.thumb.distal", "right.ring.middle"], "vary": ["right.thumb.*"] }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "asl_s",
+  "description": "ASL S: a fist with the thumb across the front of the index and middle fingers; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 10,
+      "thumb": { "cmc_flex": 2.8, "cmc_abd": 44.1, "cmc_rot": 48.8, "mcp_flex": 48.7, "ip_flex": 24 },
+      "index": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.thumb.distal", "right.middle.middle"], "vary": ["right.thumb.*"] },
+    { "touch": ["right.thumb.proximal", "right.index.middle"], "vary": ["right.thumb.*"] }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "asl_k",
+  "description": "ASL K: index straight up, middle angled forward, the thumb tip touching the base of the middle finger between them, ring and pinky curled; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 8,
+      "thumb": { "cmc_flex": -2.7, "cmc_abd": 14.0, "cmc_rot": 48.9, "mcp_flex": 44.7, "ip_flex": 48.5 },
+      "index": { "mcp_abd": 6, "mcp_flex": 2, "pip_flex": 4 },
+      "middle": { "mcp_abd": -6, "mcp_flex": 45, "pip_flex": 5 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.tip", "right.middle.proximal"], "vary": ["right.thumb.*"] }],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

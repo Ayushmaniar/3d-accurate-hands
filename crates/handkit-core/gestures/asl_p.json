@@ -1,0 +1,23 @@
+{
+  "name": "asl_p",
+  "description": "ASL P: the K hand turned down: index pointing forward and down, middle pointing down, the thumb tip at the base of the middle finger; palm toward the floor, the forearm coming in level from the signer's right (the viewer's left).",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": {
+        "wrist": [0, 0, 0],
+        "palm_facing": [0.5, -0.8, 0],
+        "fingers_toward": [0.6, -0.5, 0.5],
+        "forearm_toward": [-0.85, 0.25, -0.45]
+      },
+      "palm_cup": 8,
+      "thumb": { "cmc_flex": -2.7, "cmc_abd": 14.0, "cmc_rot": 48.9, "mcp_flex": 44.7, "ip_flex": 48.5 },
+      "index": { "mcp_abd": 6, "mcp_flex": 2, "pip_flex": 4 },
+      "middle": { "mcp_abd": -6, "mcp_flex": 45, "pip_flex": 5 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.tip", "right.middle.proximal"], "vary": ["right.thumb.*"] }],
+  "camera": { "position": [0.09, 0.0, 0.45], "target": [0.08, -0.07, 0.03], "fov": 34 }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "asl_c",
+  "description": "ASL C: fingers together and curved over the thumb in a C, palm turned to the signer's left so the viewer sees the C open to the right.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [1, 0, 0.35], "fingers_toward": [0, 1, 0] },
+      "thumb": { "cmc_flex": 0, "cmc_abd": 43.1, "cmc_rot": 35, "mcp_flex": 14.1, "ip_flex": 10 },
+      "index": { "mcp_abd": -9.1, "mcp_flex": 35, "pip_flex": 45, "dip_flex": 25 },
+      "middle": { "mcp_abd": -10.6, "mcp_flex": 35, "pip_flex": 45, "dip_flex": 25 },
+      "ring": { "mcp_abd": 4.1, "mcp_flex": 35, "pip_flex": 45, "dip_flex": 25 },
+      "pinky": { "mcp_abd": -7.7, "mcp_flex": 38, "pip_flex": 45, "dip_flex": 25 }
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.index.proximal", "right.middle.proximal"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    },
+    {
+      "touch": ["right.middle.proximal", "right.ring.proximal"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    },
+    {
+      "touch": ["right.ring.proximal", "right.pinky.proximal"],
+      "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"]
+    },
+    {
+      "touch": ["right.thumb.tip", "right.index.tip"],
+      "gap_mm": 45,
+      "vary": ["right.thumb.cmc_abd", "right.thumb.mcp_flex"]
+    }
+  ],
+  "camera": { "position": [0.04, 0.11, 0.42], "target": [0.04, 0.085, 0.02], "fov": 34 }
+}

@@ -36,6 +36,12 @@ handkit sheet clips/demo_basics.json -n 12 --mesh
 
 `render` needs node and a Playwright Chromium (found under `%LOCALAPPDATA%/ms-playwright`, or set `HANDKIT_CHROME`); run `npm install` in `tools/preview` once. `--mesh` draws the skinned hand, generating `assets/hand_R.glb` and `hand_L.glb` on first use (a few seconds each; `handkit mesh` writes them anywhere). With `HANDKIT_STUDIO=1` it renders portrait frames under studio light, for comparing with photos: `docs/m5-shape.png` puts the hand beside the reference photos in `experiments/looks/gen/`.
 
+### Sign language
+
+![The ASL manual alphabet](docs/asl-alphabet.png)
+
+The gesture library has the ASL manual alphabet (`asl_a` ... `asl_z`, plus `asl_ily`), posed as a signer holds them for the person watching. `handkit spell HELLO -o hello.json` fingerspells a word as a clip (`--rate 3.5` letters per second, `--look toon`; double letters bounce, J and Z are traced), and `clips/asl_*.json` sign HELLO, THANK-YOU, I-LOVE-YOU, YES, NO and PLEASE. `handkit explain sign` has the details.
+
 ### Skin
 
 ![The textured hand beside the reference photos](docs/m5-skin.png)

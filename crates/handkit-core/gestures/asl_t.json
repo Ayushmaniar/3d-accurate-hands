@@ -1,0 +1,24 @@
+{
+  "name": "asl_t",
+  "description": "ASL T: a fist with the thumb tucked under the curled index, its tip poking up between the index and middle fingers; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 8,
+      "thumb": { "cmc_flex": -15.4, "cmc_abd": 30.5, "cmc_rot": 47.1, "mcp_flex": 53.4, "ip_flex": 69.3 },
+      "index": { "mcp_abd": 0, "mcp_flex": 68.6, "pip_flex": 66.7, "dip_flex": 37.5 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.thumb.nail", "right.index.middle"],
+      "vary": ["right.index.mcp_flex", "right.index.pip_flex", "right.index.dip_flex", "right.thumb.*"]
+    },
+    { "touch": ["right.thumb.tip", "right.middle.proximal"], "vary": ["right.thumb.*"] }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "asl_l",
+  "description": "ASL L: thumb and index stretched out in an L, middle, ring and pinky curled into the palm; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 3.7,
+      "thumb": { "cmc_flex": -18, "cmc_abd": 12, "cmc_rot": 5, "mcp_flex": 8, "ip_flex": 10 },
+      "index": { "mcp_abd": 2, "mcp_flex": 2, "pip_flex": 4 },
+      "middle": { "mcp_abd": 1.9, "mcp_flex": 86.4, "pip_flex": 101.3, "dip_flex": 72.1, "mcp_roll": -1.0 },
+      "ring": { "mcp_abd": -2.1, "mcp_flex": 83.3, "pip_flex": 100.3, "dip_flex": 73.0, "mcp_roll": -0.1 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 78, "pip_flex": 94, "dip_flex": 72 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.middle.tip", "right.middle.metacarpal"] },
+    { "touch": ["right.ring.tip", "right.ring.metacarpal"] }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}
