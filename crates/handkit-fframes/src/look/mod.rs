@@ -472,7 +472,7 @@ impl Styler {
             Some([x, y, z]) => Vec3::new(x as f32, y as f32, z as f32),
             None => {
                 let d = (camera.target - camera.position).length();
-                camera.position - camera.right() * 0.35 * d + camera.up_vector() * 0.2 * d
+                camera.position - camera.right() * 0.7 * d + camera.up_vector() * 0.3 * d
             }
         }
     }
