@@ -34,6 +34,7 @@ pub struct Report {
     pub checks: Vec<Pair>,
     pub probes: Vec<ProbeHit>,
     pub tips: Vec<(String, DVec3)>,
+    pub sites: Vec<(String, DVec3)>,
 }
 
 pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
@@ -71,14 +72,20 @@ pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
         }
     }
 
-    let site = |name: &str| -> Result<DVec3, String> {
-        hands.iter().flat_map(|h| &h.sites).find(|s| s.name == name).map(|s| s.pos).ok_or_else(|| {
-            format!("unknown site \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>; the hand must be in the file")
-        })
+    // A check names a site (a surface point) or a segment (a capsule, e.g. right.index.middle).
+    let target = |name: &str| -> Result<(DVec3, DVec3, f64), String> {
+        if let Some(s) = hands.iter().flat_map(|h| &h.sites).find(|s| s.name == name) {
+            return Ok((s.pos, s.pos, 0.0));
+        }
+        if let Some(c) = caps.iter().find(|c| c.label() == name) {
+            return Ok((c.a, c.b, c.r));
+        }
+        Err(format!("unknown site or segment \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>. Segments are <hand>.<digit>.<metacarpal|proximal|middle|distal> (the thumb has metacarpal, proximal, distal) and <hand>.forearm. The hand must be in the file"))
     };
     let mut checks = Vec::new();
     for [a, b] in &pose.checks {
-        let gap = site(a)?.distance(site(b)?) * 1000.0;
+        let ((a0, a1, ra), (b0, b1, rb)) = (target(a)?, target(b)?);
+        let gap = (seg_dist(a0, a1, b0, b1) - ra - rb) * 1000.0;
         checks.push(Pair { a: a.clone(), b: b.clone(), gap_mm: round1(gap) });
     }
 
@@ -115,6 +122,7 @@ pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
         checks,
         probes,
         tips,
+        sites: hands.iter().flat_map(|h| &h.sites).map(|s| (s.name.clone(), s.pos)).collect(),
     })
 }
 
@@ -153,7 +161,8 @@ fn v3(p: DVec3) -> String {
 }
 
 impl Report {
-    pub fn text(&self) -> String {
+    /// `all_sites` lists every site's position instead of only the fingertips.
+    pub fn text(&self, all_sites: bool) -> String {
         let mut s = String::new();
         let list = |s: &mut String, title: &str, items: &[String]| {
             if items.is_empty() {
@@ -187,7 +196,8 @@ impl Report {
         if !self.coupled.is_empty() {
             list(&mut s, "coupled defaults", &self.coupled);
         }
-        list(&mut s, "fingertips (m)", &self.tips.iter().map(|(n, p)| format!("{n} {}", v3(*p))).collect::<Vec<_>>());
+        let (title, points) = if all_sites { ("sites (m)", &self.sites) } else { ("fingertips (m; --sites for all sites)", &self.tips) };
+        list(&mut s, title, &points.iter().map(|(n, p)| format!("{n} {}", v3(*p))).collect::<Vec<_>>());
         s
     }
 

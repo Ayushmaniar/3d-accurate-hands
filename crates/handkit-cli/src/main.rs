@@ -19,6 +19,9 @@ enum Cmd {
         pose: PathBuf,
         #[arg(long)]
         json: bool,
+        /// List every site's position, not only the fingertips.
+        #[arg(long)]
+        sites: bool,
     },
     /// Every bone's joint position and axes, and every site.
     Fk { pose: PathBuf },
@@ -61,12 +64,12 @@ fn main() {
 
 fn run() -> Result<()> {
     match Cli::parse().cmd {
-        Cmd::Query { pose, json } => {
+        Cmd::Query { pose, json, sites } => {
             let report = load(&pose)?.query().map_err(|e| anyhow!(e))?;
             if json {
                 println!("{}", serde_json::to_string_pretty(&report.json())?);
             } else {
-                print!("{}", report.text());
+                print!("{}", report.text(sites));
             }
         }
         Cmd::Fk { pose } => print!("{}", load(&pose)?.fk_text()),

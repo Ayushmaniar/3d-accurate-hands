@@ -54,6 +54,8 @@ Placement, per hand, one of:
   place: { wrist, palm_facing, fingers_toward }   the hand frame directly: wrist position, the
       direction the palm faces and the direction the fingers point (at wrist_flex/dev 0 the
       straight fingers point exactly there). The forearm follows from twist and the wrist angles.
+      The two directions need not be at right angles or unit length: fingers_toward is kept
+      and palm_facing is made perpendicular to it.
       The right thumb is on the side of fingers_toward x palm_facing (cross product); the left
       thumb on the opposite side. Example: palm_facing [0,-1,0], fingers_toward [1,0,0] puts the
       right thumb toward -Z and the left thumb toward +Z.
@@ -67,10 +69,14 @@ Chains: wrist = twist (about the forearm) -> wrist_dev -> wrist_flex. Fingers: k
 (rest fan + mcp_abd) -> mcp_flex -> pip_flex -> dip_flex. Thumb: base at (0.020, 0.018, 0.008)
 in the hand frame (x toward the thumb, y toward the fingers, z out of the palm); rest
 orientation = lean 35 deg toward the thumb side, lift 10 deg out of the palm, turn the pad 55
-deg toward the index; then cmc_flex adds to the lean (toward the pinky), cmc_abd to the lift,
-cmc_rot to the pad turn; mcp_flex and ip_flex curl toward the pad. At rest the right thumb
-points along (0.57, 0.81, 0.17) and its pad faces (-0.73, 0.39, 0.57), toward the index and the
-viewer. Run `handkit fk` on a pose to see every joint's position and axes.
+deg toward the index. Exactly, with rotations about the hand frame's axes applied left to right
+(each about the already-rotated axes): Rz(-35 + cmc_flex) * Rx(10 + cmc_abd) *
+Ry(-55 - cmc_rot). So positive cmc_flex undoes the lean, swinging the thumb toward the pinky
+(at cmc_flex 35 it points along the fingers, before the lift); positive cmc_abd lifts it toward
++Z; positive cmc_rot turns the pad further toward the fingers. mcp_flex and ip_flex then rotate
+about the thumb's own X axis, curling the tip toward the pad. At rest the right thumb points
+along (0.57, 0.81, 0.17) and its pad faces (-0.73, 0.39, 0.57), toward the index and the viewer.
+Run `handkit fk` on a pose to see every joint's position and axes.
 
 Sizes: fingers (knuckle x, y; proximal, middle, distal length; radius): index (0.030, 0.093;
 0.040, 0.025, 0.020; 9.5 mm), middle (0.010, 0.096; 0.045, 0.028, 0.021; 9.8 mm), ring
@@ -84,11 +90,18 @@ side_ulnar (thumb side and pinky side of the fingertip) and dip_radial, dip_ulna
 last joint); for the thumb side_palmar and side_dorsal (its two edges: the pad faces the index,
 so one edge faces the palm side and one the back of the hand); for the hand palm_center,
 palm_heel, wrist_back. Example: right.thumb.pad.
+Where they sit, in each fingertip segment's frame (y along the segment from its base joint, z
+toward the palm side, r its radius, l its length): tip (0, l + r, 0), pad (0, 0.55 l, r), nail
+(0, 0.6 l, -r), side_radial (r, 0.5 l, 0), side_ulnar (-r, 0.5 l, 0); the thumb's side_palmar
+and side_dorsal are the same two points as radial and ulnar. The palm surface is 12.5 mm in
+front of the palm plane (palm_center (0, 0.055, 0.013) in the hand frame) and the back of the
+hand 12.5 to 16 mm behind it.
 
 Touching: a gap between surfaces of 0 to 3 mm. `query` lists contacts (across hands, anything
 with a thumb, fingertips on the palm), penetrations (overlap over 2 mm), the nearest part to
-each thumb tip, site-to-site gaps for the pairs in `checks`, and how well fingers aim at
-`probes`.
+each thumb tip, the surface gap for each pair in `checks` (a pair names sites or segments such
+as right.index.middle; segments are metacarpal, proximal, middle, distal, and forearm), and
+how well fingers aim at `probes`.
 
 Couplings (version 1 files): a dip_flex left out follows 2/3 of pip_flex.
 

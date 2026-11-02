@@ -136,3 +136,16 @@ fn spec_embeds_the_explain_text() {
         "docs/POSE_SPEC.md is out of date: paste the output of `handkit explain` into its Reference section"
     );
 }
+
+#[test]
+fn checks_accept_segments() {
+    // A curled index: its middle phalanx is a segment, not a site, and can still be checked.
+    let s = solve(
+        r#"{"version":1,"hands":{"right":{"index":{"mcp_flex":80,"pip_flex":90}}},
+            "checks":[["right.thumb.tip","right.index.middle"],["right.index.distal","right.middle.distal"]]}"#,
+    )
+    .unwrap();
+    let r = s.query().unwrap();
+    assert_eq!(r.checks.len(), 2);
+    assert!(r.checks.iter().all(|c| c.gap_mm.is_finite()));
+}
