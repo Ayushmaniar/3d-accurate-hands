@@ -79,7 +79,7 @@ pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
         if let Some(s) = hands.iter().flat_map(|h| &h.sites).find(|s| s.name == name) {
             return Ok((s.pos, s.pos, 0.0));
         }
-        if let Some(c) = caps.iter().find(|c| c.label() == name) {
+        if let Some(c) = caps.iter().find(|c| c.is(name)) {
             return Ok((c.a, c.b, c.r));
         }
         Err(format!("unknown site or segment \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>. Segments are <hand>.<digit>.<metacarpal|proximal|middle|distal> (the thumb has metacarpal, proximal, distal) and <hand>.forearm; <hand> is right, left, or <person>.right / <person>.left. The hand must be in the file"))
