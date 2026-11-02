@@ -57,3 +57,8 @@ launch/**/*.mp4
 launch/**/*.png
 launch/**/target/
 target-fix/
+launch/film/work/
+launch/film/.hyperframes/
+launch/**/*.jpg
+launch/**/*.m4a
+showcase/**/work/*.png

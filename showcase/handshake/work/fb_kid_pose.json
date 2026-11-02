@@ -1,0 +1,162 @@
+{
+ "name": "fist_bump_pair",
+ "description": "Two-person fist bump: two people's right fists meet knuckles to knuckles, forearms level and pointing at each other.",
+ "version": 1,
+ "hands": {
+  "ana.right": {
+   "palm_cup": 10.0,
+   "thumb": {
+    "cmc_abd": 44.1,
+    "cmc_flex": 2.8,
+    "cmc_rot": 48.8,
+    "ip_flex": 24.0,
+    "mcp_flex": 48.7
+   },
+   "index": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 85.0,
+    "pip_flex": 95.0,
+    "dip_flex": 63.0,
+    "mcp_roll": 0.0
+   },
+   "middle": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 88.0,
+    "pip_flex": 98.0,
+    "dip_flex": 65.0,
+    "mcp_roll": 0.0
+   },
+   "ring": {
+    "mcp_abd": -3.0,
+    "mcp_flex": 88.0,
+    "pip_flex": 98.0,
+    "dip_flex": 65.0,
+    "mcp_roll": 0.0
+   },
+   "pinky": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 85.0,
+    "pip_flex": 88.0,
+    "dip_flex": 58.0,
+    "mcp_roll": 0.0
+   },
+   "place": {
+    "wrist": [
+     -0.105,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     0.0,
+     0.0,
+     -1.0
+    ],
+    "fingers_toward": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "forearm_toward": [
+     -1.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "ben.right": {
+   "palm_cup": 10.0,
+   "thumb": {
+    "cmc_abd": 44.1,
+    "cmc_flex": 2.8,
+    "cmc_rot": 48.8,
+    "ip_flex": 24.0,
+    "mcp_flex": 48.7
+   },
+   "index": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 85.0,
+    "pip_flex": 95.0,
+    "dip_flex": 63.0,
+    "mcp_roll": 0.0
+   },
+   "middle": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 88.0,
+    "pip_flex": 98.0,
+    "dip_flex": 65.0,
+    "mcp_roll": 0.0
+   },
+   "ring": {
+    "mcp_abd": -3.0,
+    "mcp_flex": 88.0,
+    "pip_flex": 98.0,
+    "dip_flex": 65.0,
+    "mcp_roll": 0.0
+   },
+   "pinky": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 85.0,
+    "pip_flex": 88.0,
+    "dip_flex": 58.0,
+    "mcp_roll": 0.0
+   },
+   "place": {
+    "wrist": [
+     0.11085,
+     0.0,
+     -0.046
+    ],
+    "palm_facing": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "fingers_toward": [
+     -1.0,
+     0.0,
+     0.0
+    ],
+    "forearm_toward": [
+     1.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "people": {
+  "ana": {
+   "look": {
+    "skin": "brown"
+   }
+  },
+  "ben": {
+   "look": {
+    "skin": "light"
+   },
+   "scale": 0.75
+  }
+ },
+ "goals": [
+  {
+   "grip": [
+    "ana.right",
+    "ben.right"
+   ],
+   "style": "fist_bump"
+  }
+ ],
+ "camera": {
+  "position": [
+   0.05,
+   0.25,
+   0.55
+  ],
+  "target": [
+   0,
+   0.03,
+   0
+  ],
+  "fov": 35
+ }
+}

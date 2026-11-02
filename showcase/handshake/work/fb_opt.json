@@ -1,0 +1,151 @@
+{
+ "version": 1,
+ "hands": {
+  "dad.right": {
+   "palm_cup": 10.0,
+   "thumb": {
+    "cmc_abd": 44.1,
+    "cmc_flex": 2.8,
+    "cmc_rot": 48.8,
+    "ip_flex": 24.0,
+    "mcp_flex": 48.7
+   },
+   "index": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 85.0,
+    "pip_flex": 95.0,
+    "dip_flex": 63.0,
+    "mcp_roll": 0.0
+   },
+   "middle": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 88.0,
+    "pip_flex": 98.0,
+    "dip_flex": 65.0,
+    "mcp_roll": 0.0
+   },
+   "ring": {
+    "mcp_abd": -3.0,
+    "mcp_flex": 88.0,
+    "pip_flex": 98.0,
+    "dip_flex": 65.0,
+    "mcp_roll": 0.0
+   },
+   "pinky": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 85.0,
+    "pip_flex": 88.0,
+    "dip_flex": 58.0,
+    "mcp_roll": 0.0
+   },
+   "place": {
+    "wrist": [
+     -0.105,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     0.0,
+     0.0,
+     -1.0
+    ],
+    "fingers_toward": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "forearm_toward": [
+     -1.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "kid.right": {
+   "palm_cup": 10.0,
+   "thumb": {
+    "cmc_abd": 44.1,
+    "cmc_flex": 2.8,
+    "cmc_rot": 48.8,
+    "ip_flex": 24.0,
+    "mcp_flex": 48.7
+   },
+   "index": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 85.0,
+    "pip_flex": 95.0,
+    "dip_flex": 63.0,
+    "mcp_roll": 0.0
+   },
+   "middle": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 88.0,
+    "pip_flex": 98.0,
+    "dip_flex": 65.0,
+    "mcp_roll": 0.0
+   },
+   "ring": {
+    "mcp_abd": -3.0,
+    "mcp_flex": 88.0,
+    "pip_flex": 98.0,
+    "dip_flex": 65.0,
+    "mcp_roll": 0.0
+   },
+   "pinky": {
+    "mcp_abd": 0.0,
+    "mcp_flex": 85.0,
+    "pip_flex": 88.0,
+    "dip_flex": 58.0,
+    "mcp_roll": 0.0
+   },
+   "place": {
+    "wrist": [
+     0.08023519999999999,
+     0.010450240000000001,
+     -0.0690352
+    ],
+    "palm_facing": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "fingers_toward": [
+     -1.0,
+     0.0,
+     0.0
+    ],
+    "forearm_toward": [
+     1.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "people": {
+  "dad": {},
+  "kid": {
+   "scale": 0.75
+  }
+ },
+ "goals": [
+  {
+   "touch": [
+    "dad.right.middle.proximal",
+    "kid.right.middle.proximal"
+   ]
+  },
+  {
+   "touch": [
+    "dad.right.index.proximal",
+    "kid.right.index.proximal"
+   ]
+  },
+  {
+   "touch": [
+    "dad.right.ring.proximal",
+    "kid.right.ring.proximal"
+   ]
+  }
+ ]
+}

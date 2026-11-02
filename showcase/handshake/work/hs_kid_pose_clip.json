@@ -1,0 +1,171 @@
+{
+ "version": 1,
+ "fps": 30,
+ "duration": 1.0,
+ "size": [
+  1920,
+  1080
+ ],
+ "camera": {
+  "position": [
+   0.0,
+   0.1,
+   0.62
+  ],
+  "target": [
+   0.0,
+   -0.015,
+   0.0
+  ],
+  "fov": 28
+ },
+ "people": {
+  "ana": {
+   "look": {
+    "skin": "brown"
+   }
+  },
+  "ben": {
+   "look": {
+    "skin": "light"
+   },
+   "scale": 0.75
+  }
+ },
+ "keys": [
+  {
+   "t": 0,
+   "hands": {
+    "ana.right": {
+     "palm_cup": 6.0,
+     "thumb": {
+      "cmc_flex": -4.5,
+      "cmc_abd": 2.7,
+      "cmc_rot": 12.8,
+      "mcp_flex": 12.7,
+      "ip_flex": 5.0
+     },
+     "index": {
+      "mcp_flex": 5.7,
+      "pip_flex": 11.7,
+      "dip_flex": 44.0,
+      "mcp_abd": -2.2,
+      "mcp_roll": -1.0
+     },
+     "middle": {
+      "mcp_flex": 15.3,
+      "pip_flex": 48.3,
+      "dip_flex": 84.6,
+      "mcp_abd": -2.3,
+      "mcp_roll": -1.5
+     },
+     "ring": {
+      "mcp_flex": 21.2,
+      "pip_flex": 77.0,
+      "dip_flex": 68.1,
+      "mcp_abd": 3.7,
+      "mcp_roll": -4.1
+     },
+     "pinky": {
+      "mcp_flex": 31.3,
+      "pip_flex": 70.1,
+      "dip_flex": 70.5,
+      "mcp_abd": 0.6,
+      "mcp_roll": -1.0
+     },
+     "place": {
+      "wrist": [
+       -0.075,
+       0.0,
+       0.0
+      ],
+      "palm_facing": [
+       0.0,
+       0.0,
+       -1.0
+      ],
+      "fingers_toward": [
+       1.0,
+       -0.4,
+       0.0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.0,
+       0.25
+      ]
+     }
+    },
+    "ben.right": {
+     "palm_cup": 6.0,
+     "thumb": {
+      "cmc_flex": -18.0,
+      "cmc_abd": 7.6,
+      "cmc_rot": 9.7,
+      "mcp_flex": 7.1,
+      "ip_flex": 5.0
+     },
+     "index": {
+      "mcp_flex": 4.5,
+      "pip_flex": 9.7,
+      "dip_flex": 6.2,
+      "mcp_abd": -0.1,
+      "mcp_roll": 0.0
+     },
+     "middle": {
+      "mcp_flex": 6.5,
+      "pip_flex": 12.2,
+      "dip_flex": 47.7,
+      "mcp_abd": -4.1,
+      "mcp_roll": -1.8
+     },
+     "ring": {
+      "mcp_flex": 8.8,
+      "pip_flex": 14.1,
+      "dip_flex": 70.2,
+      "mcp_abd": 5.3,
+      "mcp_roll": -3.4
+     },
+     "pinky": {
+      "mcp_flex": 9.1,
+      "pip_flex": 14.6,
+      "dip_flex": 46.1,
+      "mcp_abd": 3.1,
+      "mcp_roll": -1.9
+     },
+     "place": {
+      "wrist": [
+       0.0724,
+       -0.0134,
+       -0.0319
+      ],
+      "palm_facing": [
+       0.004,
+       -0.049,
+       0.998
+      ],
+      "fingers_toward": [
+       -0.971,
+       -0.288,
+       -0.002
+      ],
+      "forearm_toward": [
+       0.92156,
+       0.30316,
+       -0.24251
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  }
+ ]
+}
