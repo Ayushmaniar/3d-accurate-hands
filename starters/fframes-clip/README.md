@@ -26,6 +26,13 @@ fframes-clip --clip clip.json --assets ../../assets render -o out.mp4
   spotlight is x as a fraction of the frame width (0 left, 1 right), y and radius as fractions
   of its height (0 top), then the color. `handkit sheet clip.json --background "#2b2e33"`
   draws a contact sheet on the same color.
+- Looks (`handkit explain looks`): the clip's `"look"`, or `--look toon,skin=tan,outline=4`,
+  `--look-json '{"style": "clay"}'`, and `--motion-blur 4` (sub-frames averaged across a 180
+  degree shutter). Styles: realistic, toon, spiderverse, arcane, clay; skin light, medium, tan,
+  brown, dark or `#rrggbb`. The looks demo cycles through looks, each on its own backdrop with
+  its name: `fframes-clip --clip ../../clips/demo_looks.json --looks
+  "realistic;toon;spiderverse;arcane;clay" --look-every 2 render -o looks.mp4`.
+  A 1080p frame takes about 80 ms per style on the CPU (16 threads), times N with motion blur.
 - `fframes-clip --help` lists these flags and the standard fframes commands.
 - The video runs at 30 fps; write clips at 30 fps.
 

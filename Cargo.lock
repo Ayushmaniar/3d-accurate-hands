@@ -538,6 +538,7 @@ dependencies = [
  "handkit-core",
  "handkit-mesh",
  "image",
+ "rayon",
  "serde_json",
 ]
 

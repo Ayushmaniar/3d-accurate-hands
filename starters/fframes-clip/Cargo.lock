@@ -1374,6 +1374,8 @@ dependencies = [
  "fframes_three_d",
  "handkit-core",
  "handkit-mesh",
+ "rayon",
+ "serde_json",
 ]
 
 [[package]]

@@ -1,0 +1,4 @@
+{
+  "from": "spread_palm",
+  "camera": { "position": [0.03, 0.11, 0.40], "target": [0.0, 0.085, 0.0], "fov": 36 }
+}

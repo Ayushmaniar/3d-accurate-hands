@@ -11,8 +11,12 @@
 //! hand.pose(&mut scene, &pose);
 //! ```
 
+pub mod look;
+
 pub use fframes_three_d as three_d;
 pub use handkit_core::pose::Side;
+
+use std::sync::Arc;
 
 use fframes_three_d::{Model, ModelError, ModelInstance, NodeId, Quat, Scene, Vec3};
 use handkit_core::Solved;
@@ -23,6 +27,9 @@ pub struct HandModel {
     pub model: Model,
     pub side: Side,
     joint_names: Vec<String>,
+    /// Per vertex of the skinned mesh: 1 on the nail plates, 0 elsewhere (the `.glb`'s
+    /// TEXCOORD_1.x; all 0 when the file has none).
+    pub nail: Arc<[f32]>,
 }
 
 /// A hand in one scene.
@@ -42,7 +49,14 @@ impl HandModel {
         let side = if left { Side::Left } else { Side::Right };
         let skeleton = handkit_mesh::bind_geom(side);
         let joint_names = (0..skeleton.bones.len()).map(|i| skeleton.joint_name(i)).collect();
-        Ok(HandModel { model, side, joint_names })
+        let vertices = skinned_mesh(&model.scene).map_or(0, |id| model.scene[id].as_mesh().unwrap().geometry.positions.len());
+        let nail = glb_texcoord1_x(bytes).filter(|n| n.len() == vertices).unwrap_or_else(|| vec![0.0; vertices]);
+        Ok(HandModel { model, side, joint_names, nail: nail.into() })
+    }
+
+    /// The skinned mesh node in `model.scene`.
+    pub fn mesh(&self) -> Option<NodeId> {
+        skinned_mesh(&self.model.scene)
     }
 
     /// Generates the procedural hand (about a second in a release build).
@@ -54,11 +68,35 @@ impl HandModel {
     pub fn add_to(&self, scene: &mut Scene) -> Hand {
         let instance = self.model.add_to(scene, None);
         let joints = self.joint_names.iter().map(|n| instance.find(scene, n)).collect();
-        let mesh = (instance.offset..instance.offset + instance.len)
-            .map(NodeId)
-            .find(|id| scene.get(*id).and_then(|n| n.as_mesh()).is_some_and(|m| m.skin.is_some()));
+        let mesh = self.mesh().map(|id| instance.node(id));
         Hand { instance, side: self.side, joints, mesh }
     }
+}
+
+fn skinned_mesh(scene: &Scene) -> Option<NodeId> {
+    scene.nodes().find(|(_, n)| n.as_mesh().is_some_and(|m| m.skin.is_some())).map(|(id, _)| id)
+}
+
+/// The x of TEXCOORD_1 of the first mesh primitive of a binary glTF (Handkit's nail mask).
+fn glb_texcoord1_x(glb: &[u8]) -> Option<Vec<f32>> {
+    let u32_at = |i: usize| Some(u32::from_le_bytes(glb.get(i..i + 4)?.try_into().ok()?) as usize);
+    if glb.get(0..4)? != b"glTF" {
+        return None;
+    }
+    let json_len = u32_at(12)?;
+    let json: serde_json::Value = serde_json::from_slice(glb.get(20..20 + json_len)?).ok()?;
+    let bin_start = 20 + json_len + 8;
+    let bin = glb.get(bin_start..bin_start + u32_at(20 + json_len)?)?;
+    let accessor = &json["accessors"][json["meshes"][0]["primitives"][0]["attributes"]["TEXCOORD_1"].as_u64()? as usize];
+    if accessor["componentType"].as_u64()? != 5126 || accessor["type"].as_str()? != "VEC2" {
+        return None;
+    }
+    let view = &json["bufferViews"][accessor["bufferView"].as_u64()? as usize];
+    let offset = view["byteOffset"].as_u64().unwrap_or(0) as usize + accessor["byteOffset"].as_u64().unwrap_or(0) as usize;
+    let stride = view["byteStride"].as_u64().unwrap_or(8) as usize;
+    (0..accessor["count"].as_u64()? as usize)
+        .map(|i| Some(f32::from_le_bytes(bin.get(offset + i * stride..offset + i * stride + 4)?.try_into().ok()?)))
+        .collect()
 }
 
 impl Hand {

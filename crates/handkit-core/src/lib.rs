@@ -6,6 +6,7 @@ pub mod clip;
 pub mod explain;
 pub mod gestures;
 pub mod goals;
+pub mod look;
 pub mod params;
 pub mod pose;
 pub mod query;
@@ -79,6 +80,7 @@ impl Solved {
     pub fn geometry(&self) -> Value {
         json!({
             "camera": self.pose.camera,
+            "look": self.pose.look,
             "capsules": self.hands.iter().flat_map(|h| &h.capsules).map(|c| json!({
                 "a": arr(c.a), "b": arr(c.b), "r": c.r, "side": c.side.name(), "label": c.label(), "arm": c.seg == rig::Seg::Arm,
             })).collect::<Vec<_>>(),

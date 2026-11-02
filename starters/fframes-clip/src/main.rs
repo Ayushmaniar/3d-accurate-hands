@@ -1,6 +1,6 @@
 use fframes::cli::clap; // the derive below expands to `clap::...`
 use fframes::{EncoderOptions, RenderOptions, StaticMediaProvider, cli};
-use fframes_clip::{FframesClipMedia, FframesClipVideo, HEIGHT, WIDTH};
+use fframes_clip::{FframesClipMedia, FframesClipVideo, HEIGHT, LookArgs, WIDTH};
 use fframes_skia_renderer::{SkiaFFramesRenderer, SkiaPipelineConcurrencyPolicy, SkiaPipelineConfig, vulkan::SkiaVulkanCtx};
 use std::process::ExitCode;
 
@@ -22,6 +22,26 @@ struct VideoArgs {
     /// 0.5,0.45,0.28,#e8b4b0 centred.
     #[arg(long, global = true)]
     spotlight: Option<String>,
+    /// How the hands are drawn, over the clip's own "look": a style (realistic, toon,
+    /// spiderverse, arcane, clay), then key=value pairs, e.g. toon,skin=tan,outline=4
+    /// (keys: skin, nail, outline, motion_blur, shutter, halftone, misregister, texture,
+    /// subsurface; skin is light, medium, tan, brown, dark or #rrggbb).
+    #[arg(long, global = true)]
+    look: Option<String>,
+    /// The look as JSON, e.g. '{"style": "clay", "skin": "#c68e6e"}'.
+    #[arg(long, global = true)]
+    look_json: Option<String>,
+    /// Motion blur: average N sub-frame renders across the shutter (180 degrees unless the look
+    /// sets "shutter").
+    #[arg(long, global = true)]
+    motion_blur: Option<u32>,
+    /// A looks demo: cycle through these looks (separated by ';', each like --look), each
+    /// shown on its own backdrop with its name, e.g. "realistic;toon;spiderverse;arcane;clay".
+    #[arg(long, global = true)]
+    looks: Option<String>,
+    /// Seconds per look of --looks.
+    #[arg(long, default_value_t = 2.0, global = true)]
+    look_every: f64,
 }
 
 fn main() -> ExitCode {
@@ -34,7 +54,14 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    let video = match FframesClipVideo::new(&media, &text, args.app.assets.as_deref(), &args.app.background, args.app.spotlight.as_deref()) {
+    let look = LookArgs {
+        look: args.app.look.clone(),
+        look_json: args.app.look_json.clone(),
+        motion_blur: args.app.motion_blur,
+        looks: args.app.looks.clone(),
+        look_every: args.app.look_every,
+    };
+    let video = match FframesClipVideo::new(&media, &text, args.app.assets.as_deref(), &args.app.background, args.app.spotlight.as_deref(), &look) {
         Ok(v) => v,
         Err(e) => {
             eprintln!("error: {}: {e}", args.app.clip.display());
