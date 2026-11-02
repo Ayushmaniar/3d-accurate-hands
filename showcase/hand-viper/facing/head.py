@@ -22,7 +22,8 @@ EYES = (('right', 'pinky'), ('left', 'ring'))
 
 
 def hooked(hands, lift=8, sink=0):
-    """The interlaced fingers hooked tight (tips tucked out of sight), the two eye fingers bent
+    """The interlaced fingers hooked over each other's knuckles, lying flat so the top of the head
+    is solid (tips tucked out of sight); the two eye fingers bent
     `lift` degrees less at the knuckle and the others `sink` more, so the eyes' middle joints
     stand above the rest."""
     out = copy.deepcopy(hands)
@@ -30,7 +31,7 @@ def hooked(hands, lift=8, sink=0):
         for d in ('middle', 'ring', 'pinky'):
             f = out[s][d]
             eye = (s, d) in EYES
-            f.update(mcp_flex=max(-30, min(90, f['mcp_flex'] + (-lift if eye else sink))), pip_flex=100 if eye else 105, dip_flex=70)
+            f.update(mcp_flex=max(-30, min(90, f['mcp_flex'] + (-lift if eye else sink))), pip_flex=90 if eye else 95, dip_flex=30)
     return out
 
 

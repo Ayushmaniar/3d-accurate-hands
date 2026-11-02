@@ -534,39 +534,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 6.9,
+      "cmc_flex": 7.0,
       "cmc_abd": -8.0,
       "cmc_rot": 0.0,
-      "mcp_flex": 3.7,
-      "ip_flex": 4.5
+      "mcp_flex": 3.5,
+      "ip_flex": 4.4
      },
      "index": {
-      "mcp_abd": 22.5,
-      "mcp_roll": 18.4,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 21.3
+      "mcp_abd": 22.7,
+      "mcp_roll": 18.3,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 29.3
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.1,
-      "pip_flex": 105.0,
-      "dip_flex": 70.0
+      "mcp_abd": -0.9,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.6,
+      "pip_flex": 94.1,
+      "dip_flex": 29.4
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.4,
-      "pip_flex": 105.0,
-      "dip_flex": 70.1
+      "mcp_abd": 19.2,
+      "mcp_roll": -8.5,
+      "mcp_flex": 0.5,
+      "pip_flex": 94.7,
+      "dip_flex": 29.8
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.1,
-      "pip_flex": 100.0,
-      "dip_flex": 70.1
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.1,
+      "pip_flex": 88.4,
+      "dip_flex": 29.3
      },
      "place": {
       "wrist": [
@@ -593,39 +593,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 6.4,
+      "cmc_flex": 6.5,
       "cmc_abd": -8.0,
       "cmc_rot": -0.1,
-      "mcp_flex": 3.6,
-      "ip_flex": 4.4
+      "mcp_flex": 3.5,
+      "ip_flex": 4.3
      },
      "index": {
-      "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 98.9,
-      "dip_flex": 47.9
+      "mcp_abd": 24.9,
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 97.0,
+      "dip_flex": 51.9
      },
      "middle": {
-      "mcp_abd": 3.9,
-      "mcp_roll": -7.3,
-      "mcp_flex": 13.6,
-      "pip_flex": 105.0,
-      "dip_flex": 70.0
+      "mcp_abd": 10.8,
+      "mcp_roll": -7.4,
+      "mcp_flex": 4.5,
+      "pip_flex": 94.9,
+      "dip_flex": 30.1
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 99.9,
-      "dip_flex": 70.0
+      "mcp_abd": 11.2,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.8,
+      "pip_flex": 88.8,
+      "dip_flex": 29.3
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.4,
-      "mcp_flex": -2.0,
-      "pip_flex": 105.0,
-      "dip_flex": 70.1
+      "mcp_abd": 25.6,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 94.0,
+      "dip_flex": 30.0
      },
      "place": {
       "wrist": [
@@ -676,39 +676,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 14.15,
+      "cmc_flex": 14.25,
       "cmc_abd": -10,
       "cmc_rot": 0,
       "mcp_flex": 0,
       "ip_flex": 0
      },
      "index": {
-      "mcp_abd": 22.5,
-      "mcp_roll": 18.4,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 21.3
+      "mcp_abd": 22.7,
+      "mcp_roll": 18.3,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 29.3
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.1,
-      "pip_flex": 105.0,
-      "dip_flex": 70.0
+      "mcp_abd": -0.9,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.6,
+      "pip_flex": 94.1,
+      "dip_flex": 29.4
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.4,
-      "pip_flex": 105.0,
-      "dip_flex": 70.1
+      "mcp_abd": 19.2,
+      "mcp_roll": -8.5,
+      "mcp_flex": 0.5,
+      "pip_flex": 94.7,
+      "dip_flex": 29.8
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.1,
-      "pip_flex": 100.0,
-      "dip_flex": 70.1
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.1,
+      "pip_flex": 88.4,
+      "dip_flex": 29.3
      },
      "place": {
       "wrist": [
@@ -735,39 +735,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 9.75,
+      "cmc_flex": 9.85,
       "cmc_abd": -10,
       "cmc_rot": 0,
       "mcp_flex": 0,
       "ip_flex": 0
      },
      "index": {
-      "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 98.9,
-      "dip_flex": 47.9
+      "mcp_abd": 24.9,
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 97.0,
+      "dip_flex": 51.9
      },
      "middle": {
-      "mcp_abd": 3.9,
-      "mcp_roll": -7.3,
-      "mcp_flex": 13.6,
-      "pip_flex": 105.0,
-      "dip_flex": 70.0
+      "mcp_abd": 10.8,
+      "mcp_roll": -7.4,
+      "mcp_flex": 4.5,
+      "pip_flex": 94.9,
+      "dip_flex": 30.1
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 99.9,
-      "dip_flex": 70.0
+      "mcp_abd": 11.2,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.8,
+      "pip_flex": 88.8,
+      "dip_flex": 29.3
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.4,
-      "mcp_flex": -2.0,
-      "pip_flex": 105.0,
-      "dip_flex": 70.1
+      "mcp_abd": 25.6,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 94.0,
+      "dip_flex": 30.0
      },
      "place": {
       "wrist": [
@@ -800,39 +800,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 20.3,
+      "cmc_flex": 20.5,
       "cmc_abd": -10,
-      "cmc_rot": 12.6,
+      "cmc_rot": 16.4,
       "mcp_flex": -15,
-      "ip_flex": 4.399999999999999
+      "ip_flex": -4.300000000000001
      },
      "index": {
-      "mcp_abd": 23.6,
-      "mcp_roll": 19.1,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 20.4
+      "mcp_abd": 23.5,
+      "mcp_roll": 19.2,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 28.4
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.2,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": -0.7,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.8,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.5,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 19.5,
+      "mcp_roll": -8.5,
+      "mcp_flex": 1.9,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.8,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -859,39 +859,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 11.5,
+      "cmc_flex": 11.7,
       "cmc_abd": -10,
-      "cmc_rot": 42.6,
+      "cmc_rot": 40.9,
       "mcp_flex": -15,
-      "ip_flex": 10.899999999999999
+      "ip_flex": 6.0
      },
      "index": {
       "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 100.1,
-      "dip_flex": 48.5
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 98.2,
+      "dip_flex": 52.6
      },
      "middle": {
-      "mcp_abd": 3.8,
+      "mcp_abd": 10.8,
       "mcp_roll": -7.4,
-      "mcp_flex": 13.7,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_flex": 4.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_abd": 11.5,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.3,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.5,
-      "mcp_flex": -1.9,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 25.9,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -924,39 +924,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 20.3,
-      "cmc_abd": -3.1,
-      "cmc_rot": 12.6,
-      "mcp_flex": -4.3,
-      "ip_flex": 39.4
+      "cmc_flex": 20.5,
+      "cmc_abd": -2.8,
+      "cmc_rot": 16.4,
+      "mcp_flex": -1.6,
+      "ip_flex": 30.7
      },
      "index": {
-      "mcp_abd": 23.6,
-      "mcp_roll": 19.1,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 20.4
+      "mcp_abd": 23.5,
+      "mcp_roll": 19.2,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 28.4
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.2,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": -0.7,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.8,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.5,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 19.5,
+      "mcp_roll": -8.5,
+      "mcp_flex": 1.9,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.8,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -983,39 +983,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 11.5,
-      "cmc_abd": -5.5,
-      "cmc_rot": 42.6,
-      "mcp_flex": 7.2,
-      "ip_flex": 45.9
+      "cmc_flex": 11.7,
+      "cmc_abd": -5.9,
+      "cmc_rot": 40.9,
+      "mcp_flex": 8.4,
+      "ip_flex": 41.0
      },
      "index": {
       "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 100.1,
-      "dip_flex": 48.5
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 98.2,
+      "dip_flex": 52.6
      },
      "middle": {
-      "mcp_abd": 3.8,
+      "mcp_abd": 10.8,
       "mcp_roll": -7.4,
-      "mcp_flex": 13.7,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_flex": 4.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_abd": 11.5,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.3,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.5,
-      "mcp_flex": -1.9,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 25.9,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1049,39 +1049,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 20.3,
+      "cmc_flex": 20.5,
       "cmc_abd": -10,
-      "cmc_rot": 12.6,
+      "cmc_rot": 16.4,
       "mcp_flex": -15,
-      "ip_flex": 20.15
+      "ip_flex": 11.45
      },
      "index": {
-      "mcp_abd": 23.6,
-      "mcp_roll": 19.1,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 20.4
+      "mcp_abd": 23.5,
+      "mcp_roll": 19.2,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 28.4
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.2,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": -0.7,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.8,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.5,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 19.5,
+      "mcp_roll": -8.5,
+      "mcp_flex": 1.9,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.8,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1108,39 +1108,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 11.5,
+      "cmc_flex": 11.7,
       "cmc_abd": -10,
-      "cmc_rot": 42.6,
-      "mcp_flex": -9.3,
-      "ip_flex": 26.65
+      "cmc_rot": 40.9,
+      "mcp_flex": -8.1,
+      "ip_flex": 21.75
      },
      "index": {
       "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 100.1,
-      "dip_flex": 48.5
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 98.2,
+      "dip_flex": 52.6
      },
      "middle": {
-      "mcp_abd": 3.8,
+      "mcp_abd": 10.8,
       "mcp_roll": -7.4,
-      "mcp_flex": 13.7,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_flex": 4.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_abd": 11.5,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.3,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.5,
-      "mcp_flex": -1.9,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 25.9,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1173,39 +1173,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 20.3,
-      "cmc_abd": -3.1,
-      "cmc_rot": 12.6,
-      "mcp_flex": -4.3,
-      "ip_flex": 39.4
+      "cmc_flex": 20.5,
+      "cmc_abd": -2.8,
+      "cmc_rot": 16.4,
+      "mcp_flex": -1.6,
+      "ip_flex": 30.7
      },
      "index": {
-      "mcp_abd": 23.6,
-      "mcp_roll": 19.1,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 20.4
+      "mcp_abd": 23.5,
+      "mcp_roll": 19.2,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 28.4
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.2,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": -0.7,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.8,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.5,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 19.5,
+      "mcp_roll": -8.5,
+      "mcp_flex": 1.9,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.8,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1232,39 +1232,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 11.5,
-      "cmc_abd": -5.5,
-      "cmc_rot": 42.6,
-      "mcp_flex": 7.2,
-      "ip_flex": 45.9
+      "cmc_flex": 11.7,
+      "cmc_abd": -5.9,
+      "cmc_rot": 40.9,
+      "mcp_flex": 8.4,
+      "ip_flex": 41.0
      },
      "index": {
       "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 100.1,
-      "dip_flex": 48.5
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 98.2,
+      "dip_flex": 52.6
      },
      "middle": {
-      "mcp_abd": 3.8,
+      "mcp_abd": 10.8,
       "mcp_roll": -7.4,
-      "mcp_flex": 13.7,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_flex": 4.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_abd": 11.5,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.3,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.5,
-      "mcp_flex": -1.9,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 25.9,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1298,39 +1298,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 20.3,
-      "cmc_abd": -3.1,
-      "cmc_rot": 12.6,
-      "mcp_flex": -4.3,
-      "ip_flex": 39.4
+      "cmc_flex": 20.5,
+      "cmc_abd": -2.8,
+      "cmc_rot": 16.4,
+      "mcp_flex": -1.6,
+      "ip_flex": 30.7
      },
      "index": {
-      "mcp_abd": 23.6,
-      "mcp_roll": 19.1,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 20.4
+      "mcp_abd": 23.5,
+      "mcp_roll": 19.2,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 28.4
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.2,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": -0.7,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.8,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.5,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 19.5,
+      "mcp_roll": -8.5,
+      "mcp_flex": 1.9,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.8,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1357,39 +1357,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 11.5,
-      "cmc_abd": -5.5,
-      "cmc_rot": 42.6,
-      "mcp_flex": 7.2,
-      "ip_flex": 45.9
+      "cmc_flex": 11.7,
+      "cmc_abd": -5.9,
+      "cmc_rot": 40.9,
+      "mcp_flex": 8.4,
+      "ip_flex": 41.0
      },
      "index": {
       "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 100.1,
-      "dip_flex": 48.5
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 98.2,
+      "dip_flex": 52.6
      },
      "middle": {
-      "mcp_abd": 3.8,
+      "mcp_abd": 10.8,
       "mcp_roll": -7.4,
-      "mcp_flex": 13.7,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_flex": 4.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_abd": 11.5,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.3,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.5,
-      "mcp_flex": -1.9,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 25.9,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1422,39 +1422,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 20.3,
+      "cmc_flex": 20.5,
       "cmc_abd": -10,
-      "cmc_rot": 12.6,
+      "cmc_rot": 16.4,
       "mcp_flex": -15,
-      "ip_flex": 4.399999999999999
+      "ip_flex": -4.300000000000001
      },
      "index": {
-      "mcp_abd": 23.6,
-      "mcp_roll": 19.1,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 20.4
+      "mcp_abd": 23.5,
+      "mcp_roll": 19.2,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 28.4
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.2,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": -0.7,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.8,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.5,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 19.5,
+      "mcp_roll": -8.5,
+      "mcp_flex": 1.9,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.8,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1481,39 +1481,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 11.5,
+      "cmc_flex": 11.7,
       "cmc_abd": -10,
-      "cmc_rot": 42.6,
+      "cmc_rot": 40.9,
       "mcp_flex": -15,
-      "ip_flex": 10.899999999999999
+      "ip_flex": 6.0
      },
      "index": {
       "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 100.1,
-      "dip_flex": 48.5
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 98.2,
+      "dip_flex": 52.6
      },
      "middle": {
-      "mcp_abd": 3.8,
+      "mcp_abd": 10.8,
       "mcp_roll": -7.4,
-      "mcp_flex": 13.7,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_flex": 4.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_abd": 11.5,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.3,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.5,
-      "mcp_flex": -1.9,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 25.9,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1547,39 +1547,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 20.3,
-      "cmc_abd": -3.1,
-      "cmc_rot": 12.6,
-      "mcp_flex": -4.3,
-      "ip_flex": 39.4
+      "cmc_flex": 20.5,
+      "cmc_abd": -2.8,
+      "cmc_rot": 16.4,
+      "mcp_flex": -1.6,
+      "ip_flex": 30.7
      },
      "index": {
-      "mcp_abd": 23.6,
-      "mcp_roll": 19.1,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 20.4
+      "mcp_abd": 23.5,
+      "mcp_roll": 19.2,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 28.4
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.2,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": -0.7,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.8,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.5,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 19.5,
+      "mcp_roll": -8.5,
+      "mcp_flex": 1.9,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.8,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1606,39 +1606,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 11.5,
-      "cmc_abd": -5.5,
-      "cmc_rot": 42.6,
-      "mcp_flex": 7.2,
-      "ip_flex": 45.9
+      "cmc_flex": 11.7,
+      "cmc_abd": -5.9,
+      "cmc_rot": 40.9,
+      "mcp_flex": 8.4,
+      "ip_flex": 41.0
      },
      "index": {
       "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 100.1,
-      "dip_flex": 48.5
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 98.2,
+      "dip_flex": 52.6
      },
      "middle": {
-      "mcp_abd": 3.8,
+      "mcp_abd": 10.8,
       "mcp_roll": -7.4,
-      "mcp_flex": 13.7,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_flex": 4.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_abd": 11.5,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.3,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.5,
-      "mcp_flex": -1.9,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 25.9,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1672,39 +1672,39 @@
    "hands": {
     "me.right": {
      "thumb": {
-      "cmc_flex": 20.3,
-      "cmc_abd": -3.1,
-      "cmc_rot": 12.6,
-      "mcp_flex": -4.3,
-      "ip_flex": 39.4
+      "cmc_flex": 20.5,
+      "cmc_abd": -2.8,
+      "cmc_rot": 16.4,
+      "mcp_flex": -1.6,
+      "ip_flex": 30.7
      },
      "index": {
-      "mcp_abd": 23.6,
-      "mcp_roll": 19.1,
-      "mcp_flex": -22.4,
-      "pip_flex": 110.0,
-      "dip_flex": 20.4
+      "mcp_abd": 23.5,
+      "mcp_roll": 19.2,
+      "mcp_flex": -20.9,
+      "pip_flex": 106.6,
+      "dip_flex": 28.4
      },
      "middle": {
-      "mcp_abd": -4.7,
-      "mcp_roll": -7.1,
-      "mcp_flex": 4.2,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": -0.7,
+      "mcp_roll": -7.8,
+      "mcp_flex": 5.8,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 19.9,
-      "mcp_roll": -5.6,
-      "mcp_flex": 5.5,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 19.5,
+      "mcp_roll": -8.5,
+      "mcp_flex": 1.9,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "pinky": {
       "mcp_abd": 35.0,
-      "mcp_roll": -8.9,
-      "mcp_flex": 14.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_roll": -10.0,
+      "mcp_flex": 22.8,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [
@@ -1731,39 +1731,39 @@
     },
     "me.left": {
      "thumb": {
-      "cmc_flex": 11.5,
-      "cmc_abd": -5.5,
-      "cmc_rot": 42.6,
-      "mcp_flex": 7.2,
-      "ip_flex": 45.9
+      "cmc_flex": 11.7,
+      "cmc_abd": -5.9,
+      "cmc_rot": 40.9,
+      "mcp_flex": 8.4,
+      "ip_flex": 41.0
      },
      "index": {
       "mcp_abd": 25.0,
-      "mcp_roll": 17.1,
-      "mcp_flex": -28.5,
-      "pip_flex": 100.1,
-      "dip_flex": 48.5
+      "mcp_roll": 17.4,
+      "mcp_flex": -27.2,
+      "pip_flex": 98.2,
+      "dip_flex": 52.6
      },
      "middle": {
-      "mcp_abd": 3.8,
+      "mcp_abd": 10.8,
       "mcp_roll": -7.4,
-      "mcp_flex": 13.7,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_flex": 4.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "ring": {
-      "mcp_abd": 11.8,
-      "mcp_roll": -7.1,
-      "mcp_flex": -11.3,
-      "pip_flex": 100,
-      "dip_flex": 70
+      "mcp_abd": 11.5,
+      "mcp_roll": -7.4,
+      "mcp_flex": -2.3,
+      "pip_flex": 90,
+      "dip_flex": 30
      },
      "pinky": {
-      "mcp_abd": 26.3,
-      "mcp_roll": -1.5,
-      "mcp_flex": -1.9,
-      "pip_flex": 105,
-      "dip_flex": 70
+      "mcp_abd": 25.9,
+      "mcp_roll": -5.3,
+      "mcp_flex": -12.7,
+      "pip_flex": 95,
+      "dip_flex": 30
      },
      "place": {
       "wrist": [

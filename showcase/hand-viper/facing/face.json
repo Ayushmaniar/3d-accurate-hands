@@ -24,39 +24,39 @@
    "wrist_dev": 4.3,
    "palm_cup": 0,
    "thumb": {
-    "cmc_flex": 20.3,
-    "cmc_abd": -3.1,
-    "cmc_rot": 12.6,
-    "mcp_flex": -4.3,
-    "ip_flex": 39.4
+    "cmc_flex": 20.5,
+    "cmc_abd": -2.8,
+    "cmc_rot": 16.4,
+    "mcp_flex": -1.6,
+    "ip_flex": 30.7
    },
    "index": {
-    "mcp_abd": 23.6,
-    "mcp_roll": 19.1,
-    "mcp_flex": -22.4,
-    "pip_flex": 110.0,
-    "dip_flex": 20.4
+    "mcp_abd": 23.5,
+    "mcp_roll": 19.2,
+    "mcp_flex": -20.9,
+    "pip_flex": 106.6,
+    "dip_flex": 28.4
    },
    "middle": {
-    "mcp_abd": -4.7,
-    "mcp_roll": -7.1,
-    "mcp_flex": 4.2,
-    "pip_flex": 105,
-    "dip_flex": 70
+    "mcp_abd": -0.7,
+    "mcp_roll": -7.8,
+    "mcp_flex": 5.8,
+    "pip_flex": 95,
+    "dip_flex": 30
    },
    "ring": {
-    "mcp_abd": 19.9,
-    "mcp_roll": -5.6,
-    "mcp_flex": 5.5,
-    "pip_flex": 105,
-    "dip_flex": 70
+    "mcp_abd": 19.5,
+    "mcp_roll": -8.5,
+    "mcp_flex": 1.9,
+    "pip_flex": 95,
+    "dip_flex": 30
    },
    "pinky": {
     "mcp_abd": 35.0,
-    "mcp_roll": -8.9,
-    "mcp_flex": 14.3,
-    "pip_flex": 100,
-    "dip_flex": 70
+    "mcp_roll": -10.0,
+    "mcp_flex": 22.8,
+    "pip_flex": 90,
+    "dip_flex": 30
    }
   },
   "left": {
@@ -82,39 +82,39 @@
    "wrist_dev": 4.3,
    "palm_cup": 0,
    "thumb": {
-    "cmc_flex": 11.5,
-    "cmc_abd": -5.5,
-    "cmc_rot": 42.6,
-    "mcp_flex": 7.2,
-    "ip_flex": 45.9
+    "cmc_flex": 11.7,
+    "cmc_abd": -5.9,
+    "cmc_rot": 40.9,
+    "mcp_flex": 8.4,
+    "ip_flex": 41.0
    },
    "index": {
     "mcp_abd": 25.0,
-    "mcp_roll": 17.1,
-    "mcp_flex": -28.5,
-    "pip_flex": 100.1,
-    "dip_flex": 48.5
+    "mcp_roll": 17.4,
+    "mcp_flex": -27.2,
+    "pip_flex": 98.2,
+    "dip_flex": 52.6
    },
    "middle": {
-    "mcp_abd": 3.8,
+    "mcp_abd": 10.8,
     "mcp_roll": -7.4,
-    "mcp_flex": 13.7,
-    "pip_flex": 105,
-    "dip_flex": 70
+    "mcp_flex": 4.7,
+    "pip_flex": 95,
+    "dip_flex": 30
    },
    "ring": {
-    "mcp_abd": 11.8,
-    "mcp_roll": -7.1,
-    "mcp_flex": -11.3,
-    "pip_flex": 100,
-    "dip_flex": 70
+    "mcp_abd": 11.5,
+    "mcp_roll": -7.4,
+    "mcp_flex": -2.3,
+    "pip_flex": 90,
+    "dip_flex": 30
    },
    "pinky": {
-    "mcp_abd": 26.3,
-    "mcp_roll": -1.5,
-    "mcp_flex": -1.9,
-    "pip_flex": 105,
-    "dip_flex": 70
+    "mcp_abd": 25.9,
+    "mcp_roll": -5.3,
+    "mcp_flex": -12.7,
+    "pip_flex": 95,
+    "dip_flex": 30
    }
   }
  },
