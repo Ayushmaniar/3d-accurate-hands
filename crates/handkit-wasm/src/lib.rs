@@ -36,3 +36,37 @@ pub fn gesture(name: &str) -> Result<String, JsError> {
     let v = handkit_core::pose::gesture_value(name).map_err(|e| JsError::new(&e))?;
     Ok(handkit_core::pose::to_text(&v))
 }
+
+/// A clip (keyed poses over time), parsed and solved once; sample it per frame.
+#[wasm_bindgen]
+pub struct Clip(handkit_core::clip::Clip);
+
+#[wasm_bindgen]
+impl Clip {
+    #[wasm_bindgen(constructor)]
+    pub fn new(text: &str) -> Result<Clip, JsError> {
+        handkit_core::clip::Clip::parse(text).map(Clip).map_err(|e| JsError::new(&e))
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn duration(&self) -> f64 {
+        self.0.duration
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn fps(&self) -> f64 {
+        self.0.fps
+    }
+
+    /// The pose file at `t` seconds, as JSON text.
+    pub fn sample(&self, t: f64) -> Result<String, JsError> {
+        Ok(self.0.sample(t).map_err(|e| JsError::new(&e))?.pose.to_string())
+    }
+
+    /// Joint transforms and corrective weights at `t`, for `handRig` (see `bones`).
+    pub fn bones(&self, t: f64) -> Result<String, JsError> {
+        let f = self.0.sample(t).map_err(|e| JsError::new(&e))?;
+        let solved = handkit_core::solve_value(&f.pose).map_err(|e| JsError::new(&e))?;
+        Ok(solved.bones().to_string())
+    }
+}

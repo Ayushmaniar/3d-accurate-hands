@@ -1,4 +1,95 @@
 /**
+ * A clip (keyed poses over time), parsed and solved once; sample it per frame.
+ */
+export class Clip {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        ClipFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_clip_free(ptr, 0);
+    }
+    /**
+     * Joint transforms and corrective weights at `t`, for `handRig` (see `bones`).
+     * @param {number} t
+     * @returns {string}
+     */
+    bones(t) {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.clip_bones(this.__wbg_ptr, t);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * @returns {number}
+     */
+    get duration() {
+        const ret = wasm.clip_duration(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get fps() {
+        const ret = wasm.clip_fps(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {string} text
+     */
+    constructor(text) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.clip_new(ptr0, len0);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        this.__wbg_ptr = ret[0];
+        ClipFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * The pose file at `t` seconds, as JSON text.
+     * @param {number} t
+     * @returns {string}
+     */
+    sample(t) {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.clip_sample(this.__wbg_ptr, t);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+}
+if (Symbol.dispose) Clip.prototype[Symbol.dispose] = Clip.prototype.free;
+
+/**
  * Joint transforms and corrective shape weights for a pose file:
  * `{"joints": {"index_pip_R": {"t": [..], "r": [x, y, z, w]}}, "morph": {"skin_R": [..]}}`.
  * Apply them with `handRig(gltf.scene)` from `@handkit/three`.
@@ -110,6 +201,9 @@ function __wbg_get_imports() {
             const ret = Error(getStringFromWasm0(arg0, arg1));
             return ret;
         },
+        __wbg___wbindgen_throw_4c88d8bf264fd984: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
         __wbindgen_init_externref_table: function() {
             const table = wasm.__wbindgen_externrefs;
             table.set(0, undefined);
@@ -124,6 +218,10 @@ function __wbg_get_imports() {
         "./handkit_wasm_bg.js": import0,
     };
 }
+
+const ClipFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_clip_free(ptr, 1));
 
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;

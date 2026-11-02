@@ -135,6 +135,10 @@ fn spec_embeds_the_explain_text() {
         spec.replace("\r\n", "\n").contains(&handkit_core::explain::all()),
         "docs/POSE_SPEC.md is out of date: paste the output of `handkit explain` into its Reference section"
     );
+    assert!(
+        spec.replace("\r\n", "\n").contains(handkit_core::explain::CLIPS),
+        "docs/POSE_SPEC.md is out of date: paste the output of `handkit explain clips` into its Clips section"
+    );
 }
 
 #[test]

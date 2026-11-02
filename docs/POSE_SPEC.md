@@ -46,6 +46,69 @@ Angles are degrees, positions meters; anything left out is 0. Unknown keys are e
 `goals`, `checks`, `probes` and `camera` are optional; `solve` needs goals. Leave out a hand to
 show only one. Goals (touch, aim, vary) are explained under "Goals" below.
 
+## Clips
+
+Motion is a clip: keyed poses over time. The text below is the output of `handkit explain clips`.
+
+```text
+Clips: motion as keyed poses. A clip file:
+  { "version": 1, "fps": 30, "duration": 9.0, "size": [1920, 1080],
+    "camera": { "position": [..], "target": [..], "fov": 35 },
+    "keys": [ { "t": 0, "hands": {..}, "goals": [..] }, { "t": 1.2, "move": 0.4, ... }, ... ] }
+duration defaults to the last key + 0.5 s; size (the video's, for the framing check) to 16:9.
+
+A key is a pose file plus timing. Every key starts from the previous key: write only what
+changes (a key { "t": 2, "hands": { "right": { "index": { "mcp_flex": 0 } } } } straightens one
+finger and keeps everything else). On a hand, "from": "<gesture>" takes that gesture's joint
+values (keeping the hand where it is); "from" at the top of a key takes the whole gesture,
+placement and goals included. A placement written replaces the previous one. Every hand must be
+in the first key. Goals belong to their key only (repeat a goal in the next key to hold it).
+
+Timing, per key (all optional except t):
+  t          when the hand arrives at this key's pose (seconds).
+  move       how long the move into it takes (default: the whole gap since the previous key).
+             The hand holds the previous pose until t - move. Short = fast: 0.12 is a flick.
+  ease       natural (default: smooth start and stop, a little follow-through), snappy (quick,
+             overshoots and settles), smooth (no overshoot), linear.
+  spring     { "hz": 4, "damping": 0.7 } tunes the settle (damping 0.2 bouncy to 1 none).
+  anticipate a small move the other way first, as a fraction of the move (0.05 to 0.15).
+  cascade    seconds between fingers in the move (default up to 0.035): closing runs pinky to
+             index and then the thumb, opening frees the thumb, then index to pinky.
+Moves overlap freely: a key can start moving before the previous one has arrived.
+Clip-wide: "idle": { "amount": 1, "seed": 0 } is a small breathing movement so a held hand
+never freezes (0 turns it off); "follow": 1 scales how much relaxed fingers trail fast hand
+moves.
+
+Goals in clips: a goal held by two neighbouring keys (the same goal written in both) holds
+through the move between them, every frame, so a pinch stays closed while the hand travels.
+A goal only in the later key closes as the hand arrives; one only in the earlier key lets go
+as the move starts. Fingers never pass through each other: where a move would, they slide
+past. A goal with only "vary" (no touch or aim) does the same in a pose file: it keeps the
+parts it varies from passing through anything.
+
+Commands: `handkit check clip.json` (held goals, penetrations, joint speeds, pops, fingertips
+leaving the camera's view; fix everything it reports), `handkit sheet clip.json -n 12 --mesh`
+(a contact sheet; --at 1.2,1.3,1.4 for chosen times), `handkit sample clip.json 1.5` (the pose
+file at a time, to query or render), `handkit preview clip.json` (a quick MP4).
+```
+
+A fist that opens, points, makes an OK sign and turns while holding the pinch (`clips/demo_basics.json`; the OK pinch is held through the last move because both keys take it from the `ok` gesture):
+
+```json
+{
+  "version": 1,
+  "fps": 30,
+  "camera": { "position": [0.05, 0.15, 0.55], "target": [0.1, 0.06, 0.0], "fov": 35 },
+  "keys": [
+    { "t": 0, "hands": { "right": { "from": "fist", "place": { "wrist": [0.1, -0.02, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] } } } },
+    { "t": 1.2, "move": 0.5, "hands": { "right": { "from": "spread_palm" } } },
+    { "t": 2.2, "move": 0.35, "ease": "snappy", "hands": { "right": { "from": "point" } } },
+    { "t": 3.2, "move": 0.5, "hands": { "right": { "from": "ok" } } },
+    { "t": 4.6, "move": 1.0, "hands": { "right": { "from": "ok", "place": { "wrist": [0.12, 0.0, 0.02], "palm_facing": [0.7, 0, 0.7], "fingers_toward": [-0.2, 1, 0] } } } }
+  ]
+}
+```
+
 ## Reference
 
 The text below is the output of `handkit explain`.
@@ -141,6 +204,8 @@ Gestures: `handkit gestures` lists a library of finished poses; `handkit gesture
 one. "from": "<name>" at the top of a file starts from a whole gesture (keys you write win;
 its goals are added to yours). On a hand, { "from": "ok" } takes that gesture's joint
 values for this hand (not its placement), and its goals renamed to this hand.
+
+Motion: `handkit explain clips` (keyed poses over time, checked and previewed as a whole).
 
 Parameters (key, range in degrees, meaning):
   twist [-100, 100]: Turns the hand about the forearm's long axis. +90 makes the palm face the side the thumb pointed to at rest (right hand: +X, the thumb then points to -Z).

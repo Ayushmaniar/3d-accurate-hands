@@ -22,3 +22,8 @@ assets/*.glb
 bench/golden/*.png
 clips/*.png
 clips/*.mp4
+starters/*/target/
+starters/*/.cargo/
+starters/*/out*.mp4
+starters/*/frames/
+starters/*/strip.png

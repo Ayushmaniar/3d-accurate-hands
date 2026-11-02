@@ -1,0 +1,39 @@
+[package]
+name = "fframes-clip"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Plays a Handkit clip as an fframes video: copy this folder and restyle src/lib.rs."
+
+[features]
+# 1080x1920 instead of 1920x1080.
+portrait = []
+
+[dependencies]
+fframes = { version = "=1.4.0", features = ["compile-time-svgtree", "cli"] }
+fframes_skia_renderer = { version = "=1.4.0", features = ["vulkan"] }
+fframes_native_player = { version = "=1.4.0", default-features = false, features = ["vulkan", "audio"] }
+handkit-core = { path = "../../crates/handkit-core" }
+handkit-fframes = { path = "../../crates/handkit-fframes" }
+handkit-mesh = { path = "../../crates/handkit-mesh" }
+serde_json = "1"
+
+[target.'cfg(not(windows))'.dependencies]
+fframes = { version = "=1.4.0", features = ["h264", "libav-agree-gpl"] }
+
+[lib]
+name = "fframes_clip"
+path = "src/lib.rs"
+doctest = false
+
+[[bin]]
+name = "fframes-clip"
+path = "src/main.rs"
+
+[workspace]
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
