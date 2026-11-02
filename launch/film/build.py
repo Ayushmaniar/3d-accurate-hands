@@ -32,7 +32,7 @@ T = {k: fr(v) for k, v in dict(
     drop=27.10, d2=28.09, d3=29.09, d4=30.09, piano=31.10, trip=33.09, skins=35.10,
     sk2=35.61, sk3=36.11, sk4=36.61, sk5=37.09, d9=39.09, d10=40.09, d11=41.09,
     brk=43.07, gap=50.26, ily=50.6, hit=51.852,
-    hf=54.82, hf_touch=55.32, hold=56.80, four=58.80, kid=60.82, bump=62.31, ship=62.82, ship_tap=63.82,
+    hf=54.82, hf_touch=55.32, hold=56.80, four=58.80, lift=60.82, kid=61.82, bump=62.31, ship=62.82, ship_tap=63.82,
     eng=64.80, eng2=65.31, eng3=65.82, eng4=66.32,
     end=68.80, tag=70.82, fade=72.30, out=73.80,
 ).items()}
@@ -68,9 +68,10 @@ def clip(id_, start, dur, inner="", cls="", style="", tag="div", extra=""):
     return f'<{tag} id="{id_}" class="clip {cls}" data-start="{start:.4f}" data-duration="{dur:.4f}" style="{style}" {extra}>{inner}</{tag}>'
 
 
-def video(id_, src, start, dur, media=0.0, style="", cls="vid", track=1):
+def video(id_, src, start, dur, media=0.0, style="", cls="vid", track=1, rate=None):
+    r = f'data-playback-rate="{rate}" ' if rate else ""
     return (f'<video id="{id_}" class="clip {cls}" src="assets/v/{src}.mp4" data-start="{start:.4f}" data-duration="{dur:.4f}" '
-            f'data-media-start="{media:.4f}" data-track-index="{track}" muted playsinline style="{style}"></video>')
+            f'data-media-start="{media:.4f}" {r}data-track-index="{track}" muted playsinline style="{style}"></video>')
 
 
 def chars(id_, text):
@@ -401,9 +402,14 @@ S = T["hit"]
 L = lambda t: t - S
 a6_dur = T["end"] - S
 ride = [("handshake", T["hit"], T["hf"], 0.85), ("high_five", T["hf"], T["hold"], 0.73 - (T["hf_touch"] - T["hf"])),
-        ("holding_hands", T["hold"], T["four"], 0.5), ("four_hands", T["four"], T["kid"], 0.8),
+        ("holding_hands", T["hold"], T["four"], 0.5),
         ("hs_kid", T["kid"], T["ship"], 4.07 - (T["bump"] - T["kid"]))]
 ride_html = "".join(video(f"a6-v{i}", s, L(a), b - a, mo) for i, (s, a, b, mo) in enumerate(ride))
+# huddle showcase: the five-hand stack at 1.6x into the throw-up, whose arrival (source 6.45 s) lands on the
+# 60.82 downbeat; then the open palms at normal speed
+HUD_LIFT, HUD_RATE = 6.45, 1.6
+ride_html += video("a6-hud1", "huddle", L(T["four"]), T["lift"] - T["four"], HUD_LIFT - HUD_RATE * (T["lift"] - T["four"]), rate=HUD_RATE)
+ride_html += video("a6-hud2", "huddle", L(T["lift"]), T["kid"] - T["lift"], HUD_LIFT)
 ship_mo = 2.5 - (T["ship_tap"] - T["ship"])
 ew = [("fframes", T["eng"]), ("three.js", T["eng2"]), ("Remotion", T["eng3"]), ("HyperFrames", T["eng4"])]
 eng_html = f"""<div style="position:absolute;left:0;top:150px;width:1920px;display:flex;flex-direction:column;align-items:center;gap:6px;" class="big">
@@ -416,14 +422,14 @@ a6_body = f"""
 {ride_html}
 <div id="a6-sw" class="full">{video("a6-ship", "shipit", L(T["ship"]), T["eng"] - T["ship"], ship_mo)}</div>
 {clip("a6-w1", 0, T["hf"] - T["hit"] - 0.3, word("a6-w1t", 'two people<span class="acc">.</span>'), cls="full")}
-{clip("a6-w2", L(T["four"]), T["kid"] - T["four"] - 0.2, word("a6-w2t", 'four hands<span class="acc">.</span>'), cls="full")}
+{clip("a6-w2", L(T["lift"]) - 1 / FPS, T["kid"] - T["lift"] - 0.05, word("a6-w2t", 'the whole team<span class="acc">.</span>'), cls="full")}
 {clip("a6-eng", L(T["eng"]), T["end"] - T["eng"], eng_html, cls="full", style=f"background:{BG};")}
 """
 a6_js = f"""
 tl.fromTo("#a6-w1t",{{yPercent:110}},{{yPercent:0,duration:0.38,ease:"expo.out"}},0.0001);
 tl.to("#a6-w1t",{{yPercent:110,duration:0.22,ease:"power3.in"}},{T["hf"] - T["hit"] - 0.55:.4f});
-tl.fromTo("#a6-w2t",{{yPercent:110}},{{yPercent:0,duration:0.38,ease:"expo.out"}},{L(T["four"]):.4f});
-tl.to("#a6-w2t",{{yPercent:110,duration:0.22,ease:"power3.in"}},{L(T["kid"]) - 0.45:.4f});
+tl.fromTo("#a6-w2t",{{yPercent:110}},{{yPercent:0,duration:0.3,ease:"expo.out"}},{L(T["lift"]) - 1 / FPS:.4f});
+tl.to("#a6-w2t",{{yPercent:110,duration:0.18,ease:"power3.in"}},{L(T["kid"]) - 0.25:.4f});
 tl.fromTo("#a6-sw",{{scale:1.55,transformOrigin:"50% 56%"}},{{scale:1.42,duration:{T["eng"] - T["ship"]:.3f},ease:"power2.out"}},{L(T["ship"]):.4f});
 tl.fromTo("#a6-webw",{{y:60,opacity:0}},{{y:0,opacity:1,duration:0.5,ease:"expo.out"}},{L(T["eng"]) + 0.1:.4f});
 """
@@ -437,7 +443,8 @@ cue(T["hf"], "whoosh", "whoosh_fast/whip", -16)
 cue(T["hf_touch"], "clap", "fit/hit/bamboo_tok", -11)
 cue(T["hold"], "whoosh", "swipe/cloth", -16)
 cue(T["four"], "whoosh", "whoosh_fast/heavy", -15)
-cue(T["four"], "impact", "pro_impact/air", -10)
+cue(T["lift"], "whoosh", "whoosh_big/thump", -13)
+cue(T["lift"], "impact", "pro_impact/air", -9)
 cue(T["kid"], "whoosh", "swipe/flick", -16)
 cue(T["bump"], "hit", "cut_hit/punch", -14)
 cue(T["ship"], "whoosh", "swish/soft", -16)
