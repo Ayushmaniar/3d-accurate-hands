@@ -12,7 +12,18 @@ HEAD_CAM = {'position': [0.0, 0.09, 0.40], 'target': [0.0, 0.085, 0.0], 'fov': 2
 
 s1, s2, s3, s4a, s4, s5 = build()
 # The head keeps step 5's knot (as the tutorial's does): only the thumbs come up to the index tips.
-code, text, sol = solve('tut_head', {'version': 1, 'hands': s5, 'goals': [ARCH] + SHUT + [clear('middle', 'ring', 'pinky')]})
+# As the tutorial's head: the wrists close in a V and the hands leaning out above them, the
+# index fingers curled into a low round arch on top, the knot folded in under it, the thumbs
+# bent short at the bottom of the mouth (headsweep2.py chose these).
+h = copy.deepcopy(s5)
+pl = oriented(-5, 0, -45, 0.036)
+for s in S:
+    h[s]['place'] = dict(pl[s]['place'], forearm_toward=h[s]['place']['forearm_toward'])
+    h[s]['thumb'] = {'cmc_flex': 30, 'cmc_abd': 35, 'cmc_rot': 35, 'mcp_flex': 30, 'ip_flex': 40}
+    for d in ('middle', 'ring'):
+        h[s][d] = dict(h[s][d], mcp_flex=min(90, h[s][d]['mcp_flex'] + 50))
+    h[s]['index'] = {'mcp_abd': -5, 'mcp_roll': 0, 'mcp_flex': 35, 'pip_flex': 90, 'dip_flex': 45}
+code, text, sol = solve('tut_head', {'version': 1, 'hands': h, 'goals': [ARCH] + SHUT + [clear('middle', 'ring', 'pinky')]})
 print('head', [l.strip()[:80] for l in text.splitlines() if 'MISS' in l or 'penetr' in l])
 head = sol['hands']
 
