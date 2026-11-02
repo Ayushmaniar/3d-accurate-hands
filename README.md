@@ -48,8 +48,6 @@ The rig stops at the elbow. With the elbow in view, a look's `"arm": "fade"` fad
 
 ![The ASL manual alphabet](docs/asl-alphabet.png)
 
-`clips/demo_hand_viper.json` makes the hand viper step by step, facing the camera, and opens its mouth and strikes; its head is the `hand_viper` and `hand_viper_open` gestures.
-
 The gesture library has the ASL manual alphabet (`asl_a` ... `asl_z`, plus `asl_ily`), posed as a signer holds them for the person watching. `handkit spell HELLO -o hello.json` fingerspells a word as a clip (`--rate 3.5` letters per second, `--look toon`; double letters bounce, J and Z are traced), and `clips/asl_*.json` sign HELLO, THANK-YOU, I-LOVE-YOU, YES, NO and PLEASE. `handkit explain sign` has the details.
 
 ### Skin

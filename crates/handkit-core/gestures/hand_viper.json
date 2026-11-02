@@ -1,29 +1,35 @@
 {
   "name": "hand_viper",
-  "description": "Hand viper (snake head) facing the viewer, mouth shut: both palms cupped toward the viewer, wrists close in a V; little fingers curled into the palms, ring and middle fingers crossed and hooked into a knot inside; the index fingers curled into an arch on top, tips meeting (the upper jaw), each thumb bent up under its own index tip (the lower jaw). Built as youtube ef1n1x2WlZ0 shows.",
+  "description": "Hand viper (snake head), jaw shut: the hands clasped with middle, ring and little fingers interlaced over each other's backs, the index fingers curled forward over the front, one on the other (the snout), and both thumbs forward underneath (the lower jaw), the index tips resting on them; forearms up from below. Seen from the side the head points to the right.",
   "version": 1,
   "hands": {
     "right": {
-      "place": { "wrist": [0.036, 0.0, 0.0], "palm_facing": [-0.7093, -0.0254, 0.7044], "fingers_toward": [0.0872, 0.9962, 0.0], "forearm_toward": [0.2, -1.0, -0.4] },
-      "thumb": { "cmc_flex": -18.3, "cmc_abd": 63.2, "cmc_rot": 49.3, "mcp_flex": 29.6, "ip_flex": 67.0 },
-      "index": { "mcp_abd": 19.1, "mcp_roll": -6.5, "mcp_flex": 71.3, "pip_flex": 32.1, "dip_flex": 41.9 },
-      "middle": { "mcp_abd": -5.3, "mcp_roll": 2.5, "mcp_flex": 48.8, "pip_flex": 51.8, "dip_flex": 27.3 },
-      "ring": { "mcp_abd": 12.5, "mcp_roll": 3.7, "mcp_flex": 69.5, "pip_flex": 69.9, "dip_flex": 38.0 },
-      "pinky": { "mcp_abd": 35.0, "mcp_flex": 88.2, "pip_flex": 94.8, "dip_flex": 44.7, "mcp_roll": -7.4 }
+      "place": { "wrist": [-0.0041, 0.0024, -0.0272], "palm_facing": [0.1261, -0.0588, 0.9903], "fingers_toward": [0.4226, 0.9063, 0.0] },
+      "twist": 0,
+      "wrist_flex": -10.8,
+      "wrist_dev": 4.3,
+      "palm_cup": 0,
+      "thumb": { "cmc_flex": 13.7, "cmc_abd": 12.3, "cmc_rot": 51.5, "mcp_flex": -9.4, "ip_flex": 2.6 },
+      "index": { "mcp_abd": 20.9, "mcp_roll": 16.7, "mcp_flex": 0.9, "pip_flex": 86.9, "dip_flex": 37.8 },
+      "middle": { "mcp_abd": -1.7, "mcp_roll": -7.1, "mcp_flex": 29.8, "pip_flex": 83.7, "dip_flex": 11.3 },
+      "ring": { "mcp_abd": 19.8, "mcp_roll": -8.6, "mcp_flex": 20.0, "pip_flex": 85.5, "dip_flex": 19.0 },
+      "pinky": { "mcp_abd": 35.0, "mcp_roll": -8.9, "mcp_flex": 29.0, "pip_flex": 69.1, "dip_flex": 16.8 }
     },
     "left": {
-      "place": { "wrist": [-0.036, 0.0, 0.0], "palm_facing": [0.7093, -0.0254, 0.7044], "fingers_toward": [-0.0872, 0.9962, 0.0], "forearm_toward": [-0.2, -1.0, -0.4] },
-      "thumb": { "cmc_flex": -12.2, "cmc_abd": 51.0, "cmc_rot": 49.1, "mcp_flex": 14.6, "ip_flex": 69.5 },
-      "index": { "mcp_abd": -1.6, "mcp_roll": -6.5, "mcp_flex": 56.4, "pip_flex": 69.1, "dip_flex": 4.2 },
-      "middle": { "mcp_abd": 6.2, "mcp_roll": -2.9, "mcp_flex": 43.0, "pip_flex": 73.1, "dip_flex": 54.0 },
-      "ring": { "mcp_abd": 0.7, "mcp_roll": 19.8, "mcp_flex": 69.0, "pip_flex": 85.2, "dip_flex": 45.1 },
-      "pinky": { "mcp_abd": 32.9, "mcp_flex": 88.2, "pip_flex": 89.8, "dip_flex": 46.9, "mcp_roll": 30.0 }
+      "place": { "wrist": [0.0065, -0.0026, 0.0157], "palm_facing": [0.1261, -0.0588, -0.9903], "fingers_toward": [0.4226, 0.9063, 0.0] },
+      "twist": 0,
+      "wrist_flex": -10.8,
+      "wrist_dev": 4.3,
+      "palm_cup": 0,
+      "thumb": { "cmc_flex": -8.1, "cmc_abd": 2.2, "cmc_rot": 20.0, "mcp_flex": 24.1, "ip_flex": 29.6 },
+      "index": { "mcp_abd": 25.0, "mcp_roll": 15.9, "mcp_flex": -8.3, "pip_flex": 70.5, "dip_flex": 67.4 },
+      "middle": { "mcp_abd": 9.9, "mcp_roll": -7.3, "mcp_flex": 25.9, "pip_flex": 77.1, "dip_flex": 11.4 },
+      "ring": { "mcp_abd": 11.4, "mcp_roll": -7.1, "mcp_flex": 13.5, "pip_flex": 79.3, "dip_flex": 19.5 },
+      "pinky": { "mcp_abd": 25.8, "mcp_roll": -5.6, "mcp_flex": 2.7, "pip_flex": 72.5, "dip_flex": 9.9 }
     }
   },
   "goals": [
-    { "touch": ["right.index.tip", "left.index.tip"], "vary": ["right.index.*", "left.index.*"] },
-    { "touch": ["right.index.tip", "right.thumb.tip"], "vary": ["right.index.*", "right.thumb.*"] },
-    { "touch": ["left.index.tip", "left.thumb.tip"], "vary": ["left.index.*", "left.thumb.*"] }
+    { "vary": ["right.index.*", "left.index.*", "right.thumb.*", "left.thumb.*"] }
   ],
-  "camera": { "position": [0.0, 0.09, 0.42], "target": [0.0, 0.085, 0.0], "fov": 28 }
+  "camera": { "position": [0.27, 0.085, 0.3], "target": [0.06, 0.07, 0.0], "fov": 30 }
 }

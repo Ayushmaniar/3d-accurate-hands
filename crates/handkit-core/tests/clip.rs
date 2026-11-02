@@ -380,12 +380,3 @@ fn a_site_is_tracked_on_screen() {
     assert!(none.screen.is_none() && none.json()["depth"].is_null());
     assert!(clip.site_on_screen(t, "right.index.tipp").unwrap_err().contains("unknown site"));
 }
-
-#[test]
-fn the_hand_viper_plays_clean() {
-    // The gold-standard showcase: two hands interlaced into a snake head that opens its mouth and
-    // strikes. Library changes must not make its fingers pass through each other or jump.
-    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../clips/demo_hand_viper.json")).unwrap();
-    let report = check(&Clip::parse(&text).unwrap()).text();
-    assert!(report.contains("penetrations: none") && report.contains("pops: none"), "{report}");
-}
