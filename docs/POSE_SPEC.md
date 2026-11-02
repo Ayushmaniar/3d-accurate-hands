@@ -190,6 +190,11 @@ Looks: how renderers draw the hands. A pose or a clip may carry a top-level "loo
                elbow it fades out as if it went on up the arm). With the elbow in view, use
                fade or a sleeve: `check` then lists it as information, not a problem.
                clips/demo_arms.json shows all three (docs/m6-arm.png).
+  wall         a shadow-puppet wall: true, a colour (default #e9dfcf), or { "color": ..,
+               "behind": 0.25, "lamp": [x, y, z], "softness": 0.3 }. The wall faces the camera,
+               behind meters past the point it looks at; a lamp (default: beside the camera, a
+               little up and to the left) lights the hands in a dim room and throws their
+               shadows on it, softness 0 (a bare bulb) to 1. Works with every style.
 The fframes player takes the same as flags over the file's look: --look toon,skin=tan,outline=4,
 --look-json '{..}', --motion-blur 4, and --looks "realistic;toon;arcane" --look-every 2 to
 cycle through looks (a demo). Each person's "look" (see "people") sets their skin, nail

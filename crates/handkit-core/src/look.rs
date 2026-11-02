@@ -136,6 +136,62 @@ impl Arm {
     }
 }
 
+/// A wall behind the hands and a lamp in front of them that throws their shadows on it, as in
+/// a shadow-puppet show.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Wall {
+    /// Its colour (sRGB).
+    pub color: [u8; 3],
+    /// How far behind the point the camera looks at it stands (meters, along the view).
+    pub behind: f64,
+    /// Where the lamp stands (world, meters); none puts it beside the camera, a little up and
+    /// to the left, so the shadows fall down and to the right of the hands.
+    pub lamp: Option<[f64; 3]>,
+    /// The blur of the shadows' edges, 0 (a bare bulb) to 1 (a large soft lamp).
+    pub softness: f64,
+}
+
+impl Wall {
+    pub const COLOR: [u8; 3] = [0xe9, 0xdf, 0xcf];
+    pub const BEHIND: f64 = 0.25;
+    pub const SOFTNESS: f64 = 0.3;
+
+    /// `true`, a colour, or `{"color": .., "behind": 0.25, "lamp": [x, y, z], "softness": 0.3}`.
+    pub fn from_value(v: &Value) -> Result<Wall, String> {
+        const HELP: &str = "look wall: true, a colour, or {\"color\": \"#e9dfcf\", \"behind\": 0.25, \"lamp\": [x, y, z], \"softness\": 0.3}";
+        let mut wall = Wall { color: Wall::COLOR, behind: Wall::BEHIND, lamp: None, softness: Wall::SOFTNESS };
+        match v {
+            Value::Bool(true) => {}
+            Value::String(s) if ["true", "on"].contains(&s.trim()) => {}
+            Value::String(s) => wall.color = parse_color(s).map_err(|e| format!("look wall: {e}"))?,
+            Value::Object(o) => {
+                if let Some(k) = o.keys().find(|k| !["color", "behind", "lamp", "softness"].contains(&k.as_str())) {
+                    return Err(format!("{HELP} (unknown key \"{k}\")"));
+                }
+                if let Some(c) = o.get("color").filter(|c| !c.is_null()) {
+                    wall.color = parse_color(c.as_str().ok_or(HELP)?).map_err(|e| format!("look wall color: {e}"))?;
+                }
+                if let Some(x) = o.get("behind").filter(|x| !x.is_null()) {
+                    wall.behind = x.as_f64().filter(|x| (0.02..=5.0).contains(x)).ok_or("look wall behind: meters behind what the camera looks at, 0.02 to 5")?;
+                }
+                if let Some(x) = o.get("softness").filter(|x| !x.is_null()) {
+                    wall.softness = x.as_f64().filter(|x| (0.0..=1.0).contains(x)).ok_or("look wall softness: 0 to 1")?;
+                }
+                if let Some(l) = o.get("lamp").filter(|l| !l.is_null()) {
+                    let a = l.as_array().filter(|a| a.len() == 3).ok_or("look wall lamp: a position [x, y, z] in meters")?;
+                    let n: Vec<f64> = a.iter().filter_map(Value::as_f64).collect();
+                    if n.len() != 3 {
+                        return Err("look wall lamp: a position [x, y, z] in meters".into());
+                    }
+                    wall.lamp = Some([n[0], n[1], n[2]]);
+                }
+            }
+            _ => return Err(HELP.into()),
+        }
+        Ok(wall)
+    }
+}
+
 /// A checked look.Fields left `None` take the style's default (the renderer's choice).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Look {
@@ -161,6 +217,8 @@ pub struct Look {
     pub subsurface: Option<f64>,
     /// How the forearm ends at the elbow.
     pub arm: Arm,
+    /// A lamp-lit wall behind the hands that shows their shadows.
+    pub wall: Option<Wall>,
 }
 
 impl Default for Look {
@@ -169,7 +227,7 @@ impl Default for Look {
     }
 }
 
-pub const KEYS: [&str; 11] = ["style", "skin", "nail", "outline", "motion_blur", "shutter", "halftone", "misregister", "texture", "subsurface", "arm"];
+pub const KEYS: [&str; 12] = ["style", "skin", "nail", "outline", "motion_blur", "shutter", "halftone", "misregister", "texture", "subsurface", "arm", "wall"];
 
 impl Look {
     /// The style's defaults.
@@ -186,6 +244,7 @@ impl Look {
             texture: None,
             subsurface: None,
             arm: Arm::Bare,
+            wall: None,
         }
     }
 
@@ -246,6 +305,9 @@ impl Look {
         look.subsurface = num("subsurface", 0.0, 1.0)?;
         if let Some(a) = obj.get("arm").filter(|a| !a.is_null()) {
             look.arm = Arm::from_value(a)?;
+        }
+        if let Some(w) = obj.get("wall").filter(|w| !w.is_null() && **w != Value::Bool(false)) {
+            look.wall = Some(Wall::from_value(w)?);
         }
         Ok(look)
     }
@@ -327,6 +389,19 @@ impl Look {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reads_a_wall() {
+        assert_eq!(Look::from_value(&json!({ "wall": false })).unwrap().wall, None);
+        let w = Look::from_value(&json!({ "wall": true })).unwrap().wall.unwrap();
+        assert_eq!((w.color, w.behind, w.lamp), (Wall::COLOR, Wall::BEHIND, None));
+        assert_eq!(Look::from_value(&json!({ "wall": "#ffffff" })).unwrap().wall.unwrap().color, [255, 255, 255]);
+        let w = Look::from_value(&json!({ "wall": { "behind": 0.4, "lamp": [0.1, 0.3, 0.6], "softness": 0 } })).unwrap().wall.unwrap();
+        assert_eq!((w.behind, w.lamp, w.softness), (0.4, Some([0.1, 0.3, 0.6]), 0.0));
+        for bad in [json!(3), json!({ "lamp": [1, 2] }), json!({ "behind": 9 }), json!({ "colour": "#fff" })] {
+            assert!(Look::from_value(&json!({ "wall": bad })).unwrap_err().contains("wall"), "{bad}");
+        }
+    }
 
     #[test]
     fn reads_names_hex_and_defaults() {
