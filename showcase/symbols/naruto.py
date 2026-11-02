@@ -16,7 +16,7 @@ def report(name, text, sol):
 
 
 # Snake: the tiger's hands, every finger closing in the interlaced grip, thumbs crossed.
-h = tiger.hands()
+h = tiger.hands(gap=0.06, dz=0.008)
 for s in h:
     for d in ('index', 'middle'):
         h[s][d] = {'mcp_abd': 0, 'mcp_flex': 30, 'pip_flex': 40, 'dip_flex': 20}
