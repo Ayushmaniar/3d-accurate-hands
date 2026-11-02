@@ -17,7 +17,7 @@ const OVERLAP_SLACK: f64 = 0.0005;
 /// weight against overlaps. The first pass may pass fingers through each other to reach the
 /// right arrangement (only the result matters); the second pushes them apart; the third closes
 /// the last fraction of a millimeter.
-const STAGES: [(f64, f64); 3] = [(1e-3, 0.0), (1e-3, 1.0), (2e-4, 1.0)];
+const STAGES: [(f64, f64); 3] = [(1e-3, 0.0), (1e-3, 1.0), (2e-4, 1.5)];
 /// Meters of residual per 10 deg that a varied dip_flex strays from 2/3 of its pip_flex.
 const DIP_COUPLING_WEIGHT: f64 = 0.001;
 /// Meters of residual for a joint at its limit, fading to zero 15% of its range inside it, so
