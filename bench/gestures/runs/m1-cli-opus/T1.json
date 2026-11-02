@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, -1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 10,
+      "thumb":  { "cmc_flex": 0, "cmc_abd": 20, "cmc_rot": 20, "mcp_flex": 10, "ip_flex": 10 },
+      "index":  { "mcp_flex": 55, "mcp_abd": 0, "pip_flex": 55, "dip_flex": 25 },
+      "middle": { "mcp_flex": 80, "pip_flex": 95, "dip_flex": 55 },
+      "ring":   { "mcp_flex": 80, "pip_flex": 95, "dip_flex": 55 },
+      "pinky":  { "mcp_flex": 80, "pip_flex": 95, "dip_flex": 55 }
+    }
+  },
+  "checks": [["right.thumb.pad", "right.index.dip_radial"]]
+}

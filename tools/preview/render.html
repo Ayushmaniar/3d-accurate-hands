@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js" } }</script>
+<style>
+  html, body { margin: 0; background: #2b2e33; }
+  #wrap { position: relative; }
+  .label { position: absolute; color: #e8e8e8; font: 600 13px system-ui, sans-serif; padding: 5px 8px; }
+</style>
+</head>
+<body>
+<div id="wrap"></div>
+<script type="module">
+// Draws `handkit geometry` output (capsules, nails, probes) from several views in one image.
+import * as THREE from 'three';
+
+const SKIN = { right: 0xd9a383, left: 0xb98466 };
+const VIEWS = {
+  front: { name: 'FRONT (from +Z)', dir: [0, 0, 1], up: [0, 1, 0] },
+  back: { name: 'BACK (from -Z)', dir: [0, 0, -1], up: [0, 1, 0] },
+  side: { name: 'SIDE (from +X)', dir: [1, 0, 0], up: [0, 1, 0] },
+  top: { name: 'TOP (from +Y, -Z up)', dir: [0, 1, 0], up: [0, 0, -1] },
+  three_quarter: { name: 'THREE-QUARTER', dir: [0.7, 0.45, 0.85], up: [0, 1, 0] },
+};
+
+const V = (a) => new THREE.Vector3(...a);
+
+function capsule(c) {
+  const a = V(c.a), b = V(c.b);
+  const mat = new THREE.MeshStandardMaterial({ color: SKIN[c.side], roughness: 0.6, transparent: c.arm, opacity: c.arm ? 0.55 : 1 });
+  const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(c.r, a.distanceTo(b), 6, 16), mat);
+  mesh.position.copy(a).add(b).multiplyScalar(0.5);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+  return mesh;
+}
+
+function nail(n) {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8), new THREE.MeshStandardMaterial({ color: 0xf0d2c8, roughness: 0.25 }));
+  const up = V(n.up), out = V(n.out);
+  const x = new THREE.Vector3().crossVectors(up, out).normalize();
+  mesh.matrix.makeBasis(x, up, out).scale(new THREE.Vector3(n.w * 0.55, n.w * 0.75, n.w * 0.18)).setPosition(...n.pos);
+  mesh.matrixAutoUpdate = false;
+  return mesh;
+}
+
+window.render = (geom, viewNames, size) => {
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x404050, 1.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(0.6, 1, 0.8); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.8); fill.position.set(-0.8, -0.3, -0.6); scene.add(fill);
+  geom.capsules.forEach((c) => scene.add(capsule(c)));
+  geom.nails.forEach((n) => scene.add(nail(n)));
+  for (const p of Object.values(geom.probes || {})) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.006, 12, 8), new THREE.MeshBasicMaterial({ color: 0xff3b30 }));
+    m.position.set(...p); scene.add(m);
+  }
+
+  // Frame the hands; forearms may leave the frame.
+  const box = new THREE.Box3();
+  geom.capsules.filter((c) => !c.arm).forEach((c) => { box.expandByPoint(V(c.a)); box.expandByPoint(V(c.b)); });
+  const center = box.getCenter(new THREE.Vector3());
+  const radius = Math.max(box.getSize(new THREE.Vector3()).length() * 0.62, 0.08);
+
+  const views = viewNames.map((name) => {
+    if (name === 'hero') return geom.camera ? { name: 'HERO (pose camera)', cam: geom.camera } : { ...VIEWS.three_quarter };
+    if (!VIEWS[name]) throw new Error(`unknown view "${name}"; use ${Object.keys(VIEWS).join(', ')}, hero`);
+    return VIEWS[name];
+  });
+  const cols = views.length === 1 ? 1 : 2, rows = Math.ceil(views.length / cols);
+  const wrap = document.getElementById('wrap');
+  wrap.innerHTML = '';
+  wrap.style.width = `${cols * size}px`; wrap.style.height = `${rows * size}px`;
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(cols * size, rows * size);
+  renderer.setScissorTest(true);
+  wrap.appendChild(renderer.domElement);
+
+  views.forEach((v, i) => {
+    let cam;
+    if (v.cam) {
+      cam = new THREE.PerspectiveCamera(v.cam.fov || 35, 1, 0.01, 50);
+      cam.position.set(...v.cam.position); cam.lookAt(V(v.cam.target));
+    } else {
+      cam = new THREE.OrthographicCamera(-radius, radius, radius, -radius, 0.01, 50);
+      cam.position.copy(center).addScaledVector(V(v.dir).normalize(), 3);
+      cam.up.set(...v.up); cam.lookAt(center);
+    }
+    const col = i % cols, row = Math.floor(i / cols);
+    const x = col * size, y = (rows - 1 - row) * size;
+    renderer.setViewport(x, y, size, size); renderer.setScissor(x, y, size, size);
+    renderer.setClearColor((col + row) % 2 ? 0x34383e : 0x30343a);
+    renderer.render(scene, cam);
+    const label = document.createElement('div');
+    label.className = 'label'; label.textContent = v.name;
+    label.style.left = `${col * size}px`; label.style.top = `${row * size}px`;
+    wrap.appendChild(label);
+  });
+};
+window.ready = true;
+</script>
+</body>
+</html>
