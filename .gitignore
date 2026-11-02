@@ -44,3 +44,15 @@ starters/*/public/*.glb
 starters/*/assets/*.glb
 starters/*/renders/
 starters/*/.hyperframes/
+
+# Showcase and launch media (local only)
+showcase/**/*.mp4
+showcase/**/*.png
+showcase/**/*.wav
+showcase/**/target/
+showcase/**/frames/
+showcase/**/review/
+launch/**/*.wav
+launch/**/*.mp4
+launch/**/*.png
+launch/**/target/

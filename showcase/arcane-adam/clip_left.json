@@ -1,0 +1,221 @@
+{
+ "version": 1,
+ "fps": 30,
+ "duration": 8.9,
+ "size": [
+  1080,
+  1920
+ ],
+ "camera": {
+  "position": [
+   0,
+   0,
+   1.6
+  ],
+  "target": [
+   0,
+   0,
+   0
+  ],
+  "fov": 40
+ },
+ "look": {
+  "style": "arcane",
+  "motion_blur": 3,
+  "skin": "light"
+ },
+ "keys": [
+  {
+   "t": -0.5,
+   "hands": {
+    "left": {
+     "from": "relaxed",
+     "index": {
+      "mcp_flex": 8,
+      "pip_flex": 12,
+      "dip_flex": 6
+     },
+     "middle": {
+      "mcp_flex": 35,
+      "pip_flex": 50
+     },
+     "thumb": {
+      "cmc_abd": 35
+     },
+     "place": {
+      "screen": [
+       0.26,
+       0.98
+      ],
+      "depth": 1.75,
+      "palm_facing": [
+       0,
+       -0.3,
+       1
+      ],
+      "fingers_toward": [
+       1,
+       0.35,
+       0
+      ],
+      "elbow_screen": [
+       -0.2,
+       1.15
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 0.45,
+   "pass": true,
+   "hands": {
+    "left": {
+     "place": {
+      "screen": [
+       0.3,
+       0.68
+      ],
+      "depth": 1.75,
+      "palm_facing": [
+       0,
+       -0.3,
+       1
+      ],
+      "fingers_toward": [
+       1,
+       0.45,
+       0
+      ],
+      "elbow_screen": [
+       -0.15,
+       0.85
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 1.4,
+   "ease": "smooth",
+   "hands": {
+    "left": {
+     "place": {
+      "screen": [
+       0.28,
+       0.555
+      ],
+      "depth": 1.75,
+      "palm_facing": [
+       0,
+       -0.3,
+       1
+      ],
+      "fingers_toward": [
+       1,
+       0.5,
+       0
+      ],
+      "elbow_screen": [
+       -0.15,
+       0.7
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 3.6,
+   "hands": {
+    "left": {
+     "index": {
+      "mcp_flex": 4
+     },
+     "place": {
+      "screen": [
+       0.285,
+       0.55
+      ],
+      "depth": 1.75,
+      "palm_facing": [
+       0,
+       -0.3,
+       1
+      ],
+      "fingers_toward": [
+       1,
+       0.52,
+       0
+      ],
+      "elbow_screen": [
+       -0.15,
+       0.7
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 6.0,
+   "hands": {
+    "left": {
+     "index": {
+      "mcp_flex": 10
+     },
+     "place": {
+      "screen": [
+       0.28,
+       0.56
+      ],
+      "depth": 1.75,
+      "palm_facing": [
+       0,
+       -0.3,
+       1
+      ],
+      "fingers_toward": [
+       1,
+       0.48,
+       0
+      ],
+      "elbow_screen": [
+       -0.15,
+       0.7
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 8.4,
+   "hands": {
+    "left": {
+     "index": {
+      "mcp_flex": 6
+     },
+     "place": {
+      "screen": [
+       0.285,
+       0.553
+      ],
+      "depth": 1.75,
+      "palm_facing": [
+       0,
+       -0.3,
+       1
+      ],
+      "fingers_toward": [
+       1,
+       0.5,
+       0
+      ],
+      "elbow_screen": [
+       -0.15,
+       0.7
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

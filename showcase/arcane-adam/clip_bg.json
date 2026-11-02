@@ -1,0 +1,1 @@
+{"version": 1, "fps": 30, "duration": 0.1, "size": [1080, 1920], "camera": {"position": [0, 0, 1.6], "target": [0, 0, 0], "fov": 40}, "look": {"style": "arcane", "motion_blur": 3}, "keys": [{"t": 0, "hands": {"right": {"from": "relaxed", "place": {"screen": [4, 4], "depth": 1.75, "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0]}}}}]}
