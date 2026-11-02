@@ -552,11 +552,36 @@
    "hands": {
     "me.right": {
      "index": {
-      "mcp_abd": 20.933333333333334,
-      "mcp_roll": 16.166666666666668,
+      "mcp_abd": 20.9,
+      "mcp_roll": 16.2,
       "mcp_flex": -20,
       "pip_flex": 45,
       "dip_flex": 20
+     }
+    },
+    "me.left": {
+     "index": {
+      "mcp_abd": 25.0,
+      "mcp_roll": 15.9,
+      "mcp_flex": -14.4,
+      "pip_flex": 60.5,
+      "dip_flex": 67.4
+     }
+    }
+   }
+  },
+  {
+   "t": 3.9,
+   "pass": true,
+   "move": 0.12,
+   "hands": {
+    "me.right": {
+     "index": {
+      "mcp_abd": 20.9,
+      "mcp_roll": 16.2,
+      "mcp_flex": -30,
+      "pip_flex": 76.9,
+      "dip_flex": 37.8
      }
     }
    }
@@ -573,9 +598,9 @@
       "ip_flex": 0
      },
      "index": {
-      "mcp_abd": 20.933333333333334,
-      "mcp_roll": 16.166666666666668,
-      "mcp_flex": 0.03333333333333336,
+      "mcp_abd": 20.9,
+      "mcp_roll": 16.2,
+      "mcp_flex": 8.7,
       "pip_flex": 76.9,
       "dip_flex": 37.8
      },
@@ -622,7 +647,7 @@
        -0.2
       ]
      },
-     "move": 0.22
+     "move": 0.1
     },
     "me.left": {
      "thumb": {
@@ -684,8 +709,7 @@
      },
      "move": 0.7
     }
-   },
-   "cascade": 0.08
+   }
   },
   {
    "t": 4.6,

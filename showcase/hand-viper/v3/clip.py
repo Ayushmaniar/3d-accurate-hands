@@ -110,6 +110,8 @@ def build():
                                      'cmc_abd': -10, 'cmc_rot': 0, 'mcp_flex': 0, 'ip_flex': 0}) for s in S}
     # The index fingers curl only as far as the open jaw: the squeeze brings them down onto the thumbs.
     curl = {s: dict(curl[s], index=dict(jaw[s]['index']), thumb=dict(swing[s]['thumb'])) for s in S}
+    # The stacked index fingers part where the jaw's values put one through the other.
+    curl = tidy(curl, 'curl_index', only=('index',), base=PV)
     swing = {s: dict(swing[s], index=dict(jaw[s]['index'])) for s in S}
     keys = [
         key(0.0, flat, gap=0.07),
@@ -117,9 +119,13 @@ def build():
         key(2.0, cross, {'move': 0.55, 'cascade': 0.06}),
         key(3.0, stack, {'move': 0.5}),
         {'t': 3.4, 'camera': WIDE_CAM},
-        # The right index lifts over the top of the left one before curling down onto it.
-        {'t': 3.78, 'pass': True, 'move': 0.3, 'hands': {'me.right': {'index': dict(curl['right']['index'], mcp_flex=-20, pip_flex=45, dip_flex=20)}}},
-        key(4.0, curl, {'cascade': 0.08}, {'left': {'move': 0.7}, 'right': {'move': 0.22}}, base=PV),
+        # The right index lifts over the top of the left one before curling down onto it,
+        # while the left one has already curled into place underneath.
+        {'t': 3.78, 'pass': True, 'move': 0.3, 'hands': {'me.right': {'index': dict(curl['right']['index'], mcp_flex=-20, pip_flex=45, dip_flex=20)},
+                                                         'me.left': {'index': dict(curl['left']['index'])}}},
+        # It hooks (the last two joints curl, the knuckle still up), then comes down like a hook.
+        {'t': 3.9, 'pass': True, 'move': 0.12, 'hands': {'me.right': {'index': dict(curl['right']['index'], mcp_flex=-30)}}},
+        key(4.0, curl, {}, {'left': {'move': 0.7}, 'right': {'move': 0.1}}, base=PV),
         key(4.6, swing, {'pass': True}, base=PV),
         {'t': 4.9, 'camera': HEAD_CAM, 'move': 1.5, 'ease': 'smooth'},
         key(5.0, jaw, {'move': 0.5}, base=PV),
