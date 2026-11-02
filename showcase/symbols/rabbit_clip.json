@@ -70,26 +70,27 @@
       "dip_flex": 3
      },
      "ring": {
-      "mcp_flex": 52.2,
-      "pip_flex": 78.5,
-      "dip_flex": 72.8,
-      "mcp_abd": 3.1,
-      "mcp_roll": -5.0
+      "mcp_flex": 34.3,
+      "pip_flex": 95.1,
+      "dip_flex": 21.3,
+      "mcp_abd": 14.8,
+      "mcp_roll": 13.8
      },
      "pinky": {
-      "mcp_flex": 32.3,
-      "pip_flex": 94.5,
-      "dip_flex": 22.1,
-      "mcp_abd": 29.3,
-      "mcp_roll": 24.4
+      "mcp_flex": 78.4,
+      "pip_flex": 30.0,
+      "dip_flex": 10.5,
+      "mcp_abd": 27.9,
+      "mcp_roll": 7.2
      },
      "thumb": {
-      "cmc_flex": 36.1,
-      "cmc_abd": 14.6,
-      "cmc_rot": 50.9,
-      "mcp_flex": 27.3,
-      "ip_flex": -18.3
-     }
+      "cmc_flex": 7.4,
+      "cmc_abd": 38.6,
+      "cmc_rot": 53.0,
+      "mcp_flex": 38.4,
+      "ip_flex": -6.3
+     },
+     "palm_cup": 25.0
     }
    }
   },
@@ -132,26 +133,27 @@
       "dip_flex": 3
      },
      "ring": {
-      "mcp_flex": 52.2,
-      "pip_flex": 78.5,
-      "dip_flex": 72.8,
-      "mcp_abd": 3.1,
-      "mcp_roll": -5.0
+      "mcp_flex": 34.3,
+      "pip_flex": 95.1,
+      "dip_flex": 21.3,
+      "mcp_abd": 14.8,
+      "mcp_roll": 13.8
      },
      "pinky": {
-      "mcp_flex": 32.3,
-      "pip_flex": 94.5,
-      "dip_flex": 22.1,
-      "mcp_abd": 29.3,
-      "mcp_roll": 24.4
+      "mcp_flex": 78.4,
+      "pip_flex": 30.0,
+      "dip_flex": 10.5,
+      "mcp_abd": 27.9,
+      "mcp_roll": 7.2
      },
      "thumb": {
-      "cmc_flex": 36.1,
-      "cmc_abd": 14.6,
-      "cmc_rot": 50.9,
-      "mcp_flex": 27.3,
-      "ip_flex": -18.3
-     }
+      "cmc_flex": 7.4,
+      "cmc_abd": 38.6,
+      "cmc_rot": 53.0,
+      "mcp_flex": 38.4,
+      "ip_flex": -6.3
+     },
+     "palm_cup": 25.0
     }
    },
    "move": 0.18,
@@ -196,26 +198,27 @@
       "dip_flex": 3
      },
      "ring": {
-      "mcp_flex": 52.2,
-      "pip_flex": 78.5,
-      "dip_flex": 72.8,
-      "mcp_abd": 3.1,
-      "mcp_roll": -5.0
+      "mcp_flex": 34.3,
+      "pip_flex": 95.1,
+      "dip_flex": 21.3,
+      "mcp_abd": 14.8,
+      "mcp_roll": 13.8
      },
      "pinky": {
-      "mcp_flex": 32.3,
-      "pip_flex": 94.5,
-      "dip_flex": 22.1,
-      "mcp_abd": 29.3,
-      "mcp_roll": 24.4
+      "mcp_flex": 78.4,
+      "pip_flex": 30.0,
+      "dip_flex": 10.5,
+      "mcp_abd": 27.9,
+      "mcp_roll": 7.2
      },
      "thumb": {
-      "cmc_flex": 36.1,
-      "cmc_abd": 14.6,
-      "cmc_rot": 50.9,
-      "mcp_flex": 27.3,
-      "ip_flex": -18.3
-     }
+      "cmc_flex": 7.4,
+      "cmc_abd": 38.6,
+      "cmc_rot": 53.0,
+      "mcp_flex": 38.4,
+      "ip_flex": -6.3
+     },
+     "palm_cup": 25.0
     }
    },
    "move": 0.18,
@@ -260,26 +263,27 @@
       "dip_flex": 3
      },
      "ring": {
-      "mcp_flex": 52.2,
-      "pip_flex": 78.5,
-      "dip_flex": 72.8,
-      "mcp_abd": 3.1,
-      "mcp_roll": -5.0
+      "mcp_flex": 34.3,
+      "pip_flex": 95.1,
+      "dip_flex": 21.3,
+      "mcp_abd": 14.8,
+      "mcp_roll": 13.8
      },
      "pinky": {
-      "mcp_flex": 32.3,
-      "pip_flex": 94.5,
-      "dip_flex": 22.1,
-      "mcp_abd": 29.3,
-      "mcp_roll": 24.4
+      "mcp_flex": 78.4,
+      "pip_flex": 30.0,
+      "dip_flex": 10.5,
+      "mcp_abd": 27.9,
+      "mcp_roll": 7.2
      },
      "thumb": {
-      "cmc_flex": 36.1,
-      "cmc_abd": 14.6,
-      "cmc_rot": 50.9,
-      "mcp_flex": 27.3,
-      "ip_flex": -18.3
-     }
+      "cmc_flex": 7.4,
+      "cmc_abd": 38.6,
+      "cmc_rot": 53.0,
+      "mcp_flex": 38.4,
+      "ip_flex": -6.3
+     },
+     "palm_cup": 25.0
     }
    },
    "move": 0.18,
@@ -324,26 +328,27 @@
       "dip_flex": 3
      },
      "ring": {
-      "mcp_flex": 52.2,
-      "pip_flex": 78.5,
-      "dip_flex": 72.8,
-      "mcp_abd": 3.1,
-      "mcp_roll": -5.0
+      "mcp_flex": 34.3,
+      "pip_flex": 95.1,
+      "dip_flex": 21.3,
+      "mcp_abd": 14.8,
+      "mcp_roll": 13.8
      },
      "pinky": {
-      "mcp_flex": 32.3,
-      "pip_flex": 94.5,
-      "dip_flex": 22.1,
-      "mcp_abd": 29.3,
-      "mcp_roll": 24.4
+      "mcp_flex": 78.4,
+      "pip_flex": 30.0,
+      "dip_flex": 10.5,
+      "mcp_abd": 27.9,
+      "mcp_roll": 7.2
      },
      "thumb": {
-      "cmc_flex": 36.1,
-      "cmc_abd": 14.6,
-      "cmc_rot": 50.9,
-      "mcp_flex": 27.3,
-      "ip_flex": -18.3
-     }
+      "cmc_flex": 7.4,
+      "cmc_abd": 38.6,
+      "cmc_rot": 53.0,
+      "mcp_flex": 38.4,
+      "ip_flex": -6.3
+     },
+     "palm_cup": 25.0
     }
    },
    "move": 0.18,
@@ -388,26 +393,27 @@
       "dip_flex": 3
      },
      "ring": {
-      "mcp_flex": 52.2,
-      "pip_flex": 78.5,
-      "dip_flex": 72.8,
-      "mcp_abd": 3.1,
-      "mcp_roll": -5.0
+      "mcp_flex": 34.3,
+      "pip_flex": 95.1,
+      "dip_flex": 21.3,
+      "mcp_abd": 14.8,
+      "mcp_roll": 13.8
      },
      "pinky": {
-      "mcp_flex": 32.3,
-      "pip_flex": 94.5,
-      "dip_flex": 22.1,
-      "mcp_abd": 29.3,
-      "mcp_roll": 24.4
+      "mcp_flex": 78.4,
+      "pip_flex": 30.0,
+      "dip_flex": 10.5,
+      "mcp_abd": 27.9,
+      "mcp_roll": 7.2
      },
      "thumb": {
-      "cmc_flex": 36.1,
-      "cmc_abd": 14.6,
-      "cmc_rot": 50.9,
-      "mcp_flex": 27.3,
-      "ip_flex": -18.3
-     }
+      "cmc_flex": 7.4,
+      "cmc_abd": 38.6,
+      "cmc_rot": 53.0,
+      "mcp_flex": 38.4,
+      "ip_flex": -6.3
+     },
+     "palm_cup": 25.0
     }
    },
    "move": 0.18,
@@ -452,26 +458,27 @@
       "dip_flex": 3
      },
      "ring": {
-      "mcp_flex": 52.2,
-      "pip_flex": 78.5,
-      "dip_flex": 72.8,
-      "mcp_abd": 3.1,
-      "mcp_roll": -5.0
+      "mcp_flex": 34.3,
+      "pip_flex": 95.1,
+      "dip_flex": 21.3,
+      "mcp_abd": 14.8,
+      "mcp_roll": 13.8
      },
      "pinky": {
-      "mcp_flex": 32.3,
-      "pip_flex": 94.5,
-      "dip_flex": 22.1,
-      "mcp_abd": 29.3,
-      "mcp_roll": 24.4
+      "mcp_flex": 78.4,
+      "pip_flex": 30.0,
+      "dip_flex": 10.5,
+      "mcp_abd": 27.9,
+      "mcp_roll": 7.2
      },
      "thumb": {
-      "cmc_flex": 36.1,
-      "cmc_abd": 14.6,
-      "cmc_rot": 50.9,
-      "mcp_flex": 27.3,
-      "ip_flex": -18.3
-     }
+      "cmc_flex": 7.4,
+      "cmc_abd": 38.6,
+      "cmc_rot": 53.0,
+      "mcp_flex": 38.4,
+      "ip_flex": -6.3
+     },
+     "palm_cup": 25.0
     }
    },
    "move": 0.4

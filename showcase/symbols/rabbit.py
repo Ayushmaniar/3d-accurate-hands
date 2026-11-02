@@ -9,7 +9,7 @@ hand = {'place': {'wrist': [-0.02, 0.08, 0.0], 'palm_facing': [0, -0.3, -1], 'fi
         'middle': {'mcp_abd': -6, 'mcp_flex': -15, 'pip_flex': 5, 'dip_flex': 3},
         'ring': {'mcp_flex': 60, 'pip_flex': 70, 'dip_flex': 35}, 'pinky': {'mcp_flex': 60, 'pip_flex': 75, 'dip_flex': 35},
         'thumb': {'cmc_flex': 30, 'cmc_abd': 40, 'cmc_rot': 40, 'mcp_flex': 20, 'ip_flex': 20}}
-GOALS = [{'touch': ['right.ring.pad', 'right.thumb.pad'], 'vary': ['right.ring.*', 'right.thumb.*']},
+GOALS = [{'touch': ['right.ring.tip', 'right.thumb.pad'], 'vary': ['right.ring.*', 'right.thumb.*', 'right.palm_cup']},
          {'touch': ['right.pinky.tip', 'right.thumb.side_palmar'], 'vary': ['right.pinky.*']}]
 code, text, sol = solve('rabbit', {'version': 1, 'hands': {'right': hand}, 'camera': CAM, 'goals': GOALS})
 print([l.strip()[:90] for l in text.splitlines() if 'MISS' in l or ' ok ' in l or 'penetr' in l])

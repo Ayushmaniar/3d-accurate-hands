@@ -27,7 +27,12 @@ def flat(half=0.041):
 
 
 def clear(*digits):
-    return {'vary': ['%s.%s.*' % (s, d) for s in S for d in digits]}
+    """Keep these digits out of everything; the little fingers, curled into the palms since step 2
+    (as in the tutorial), may spread, roll or curl at their outer joints, never lift at the knuckle."""
+    v = ['%s.%s.*' % (s, d) for s in S for d in digits if d != 'pinky']
+    if 'pinky' in digits:
+        v += ['%s.pinky.%s' % (s, j) for s in S for j in ('mcp_abd', 'mcp_roll', 'pip_flex', 'dip_flex')]
+    return {'vary': v}
 
 
 def step(name, hands, goals):
@@ -43,7 +48,7 @@ def build():
     s1 = flat()
     h = copy.deepcopy(s1)
     for s in S:
-        h[s]['pinky'] = {'mcp_abd': 0, 'mcp_flex': 60, 'pip_flex': 100, 'dip_flex': 45}
+        h[s]['pinky'] = {'mcp_abd': 0, 'mcp_flex': 88, 'pip_flex': 100, 'dip_flex': 50}
     s2 = step('s2', h, [{'touch': ['right.pinky.tip', 'left.pinky.tip'], 'vary': ['right.pinky.*', 'left.pinky.*']}])
     h = copy.deepcopy(s2)
     # Ring abduction spreads toward the little finger: here, toward the other hand. The hands
@@ -61,7 +66,7 @@ def build():
     lean2 = oriented(13, 0, -90, 0.058)
     for s in S:
         h[s]['place'] = dict(lean2[s]['place'], forearm_toward=h[s]['place']['forearm_toward'])
-    s4a = step('s4a', h, [{'touch': ['left.middle.middle', 'right.middle.middle'], 'vary': ['right.middle.*', 'left.middle.*']}, clear('middle', 'ring', 'pinky')])
+    s4a = step('s4a', h, [{'touch': ['left.middle.middle', 'right.middle.middle'], 'vary': ['right.middle.*', 'left.middle.*', 'left.place.position']}, clear('middle', 'ring', 'pinky')])
     # ...then the crossed middle and ring fingers hook round each other: a knot (34.5 s).
     h = copy.deepcopy(s4a)
     for s in S:
