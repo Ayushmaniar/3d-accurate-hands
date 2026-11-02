@@ -4,7 +4,7 @@ An anatomically constrained, agent-drivable 3D hand and forearm rig for code-mad
 
 Design doc: https://claude.ai/artifact/MxBq9Ef5StLhakD7BpCRBa
 
-![A fist, skinned mesh](docs/mesh-fist.png)
+![The hand in five looks and five skin tones](docs/m5-looks.png)
 
 ## Layout
 
