@@ -1,0 +1,10 @@
+[package]
+name = "handkit-mesh"
+version = "0.1.0"
+edition = "2024"
+description = "The procedural Handkit hand: a skinned mesh generated from the rig, written as glTF."
+
+[dependencies]
+glam = "0.30"
+handkit-core = { version = "0.1.0", path = "../handkit-core" }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }

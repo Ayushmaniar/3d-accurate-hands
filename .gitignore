@@ -15,3 +15,8 @@ Reference videos to Animate/**/frames*/
 Reference videos to Animate/**/thumbs*/
 *.score.png
 target-docs/
+.cargo/
+
+# Generated: `handkit mesh` (or the first `render --mesh`) rebuilds them.
+assets/*.glb
+bench/golden/*.png

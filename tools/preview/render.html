@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js" } }</script>
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }</script>
 <style>
   html, body { margin: 0; background: #2b2e33; }
   #wrap { position: relative; }
@@ -14,6 +14,8 @@
 <script type="module">
 // Draws `handkit geometry` output (capsules, nails, probes) from several views in one image.
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { handRig, skinMaterial } from './handkit-three.js';
 
 const SKIN = { right: 0xd9a383, left: 0xb98466 };
 const VIEWS = {
@@ -44,13 +46,29 @@ function nail(n) {
   return mesh;
 }
 
-window.render = (geom, viewNames, size) => {
+// With `geom.mesh`, draws the skinned hand meshes posed by `geom.mesh.bones` instead of capsules.
+async function addMeshes(scene, mesh) {
+  const loader = new GLTFLoader();
+  for (const side of Object.keys(mesh.files)) {
+    const gltf = await loader.loadAsync(`/asset/${side}.glb`);
+    gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE); o.frustumCulled = false; } });
+    handRig(gltf.scene)(mesh.bones);
+    scene.add(gltf.scene);
+  }
+}
+
+window.render = async (geom, viewNames, size) => {
+  if (geom.golden) document.documentElement.style.background = document.body.style.background = 'transparent';
   const scene = new THREE.Scene();
   scene.add(new THREE.HemisphereLight(0xffffff, 0x404050, 1.6));
   const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(0.6, 1, 0.8); scene.add(sun);
   const fill = new THREE.DirectionalLight(0xbfd4ff, 0.8); fill.position.set(-0.8, -0.3, -0.6); scene.add(fill);
-  geom.capsules.forEach((c) => scene.add(capsule(c)));
-  geom.nails.forEach((n) => scene.add(nail(n)));
+  if (geom.mesh) {
+    await addMeshes(scene, geom.mesh);
+  } else {
+    geom.capsules.forEach((c) => scene.add(capsule(c)));
+    geom.nails.forEach((n) => scene.add(nail(n)));
+  }
   for (const p of Object.values(geom.probes || {})) {
     const m = new THREE.Mesh(new THREE.SphereGeometry(0.006, 12, 8), new THREE.MeshBasicMaterial({ color: 0xff3b30 }));
     m.position.set(...p); scene.add(m);
@@ -71,7 +89,7 @@ window.render = (geom, viewNames, size) => {
   const wrap = document.getElementById('wrap');
   wrap.innerHTML = '';
   wrap.style.width = `${cols * size}px`; wrap.style.height = `${rows * size}px`;
-  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: !!geom.golden });
   renderer.setSize(cols * size, rows * size);
   renderer.setScissorTest(true);
   wrap.appendChild(renderer.domElement);
@@ -89,8 +107,10 @@ window.render = (geom, viewNames, size) => {
     const col = i % cols, row = Math.floor(i / cols);
     const x = col * size, y = (rows - 1 - row) * size;
     renderer.setViewport(x, y, size, size); renderer.setScissor(x, y, size, size);
-    renderer.setClearColor((col + row) % 2 ? 0x34383e : 0x30343a);
+    // Golden renders (compared with fframes): transparent, no labels.
+    renderer.setClearColor((col + row) % 2 ? 0x34383e : 0x30343a, geom.golden ? 0 : 1);
     renderer.render(scene, cam);
+    if (geom.golden) return;
     const label = document.createElement('div');
     label.className = 'label'; label.textContent = v.name;
     label.style.left = `${col * size}px`; label.style.top = `${row * size}px`;

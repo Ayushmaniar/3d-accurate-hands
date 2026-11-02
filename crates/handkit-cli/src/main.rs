@@ -41,6 +41,19 @@ enum Cmd {
     Explain { key: Option<String> },
     /// Capsules, nails and sites in world space as JSON, for renderers.
     Geometry { pose: PathBuf },
+    /// Each skeleton joint's local rotation and translation for a pose, as JSON for mesh adapters.
+    Bones { pose: PathBuf },
+    /// Generate the procedural hand as a skinned binary glTF (.glb).
+    Mesh {
+        /// right or left.
+        #[arg(long, default_value = "right")]
+        side: String,
+        #[arg(short, long)]
+        out: PathBuf,
+        /// Grid spacing in millimeters (smaller = finer, slower).
+        #[arg(long, default_value_t = 1.6)]
+        voxel_mm: f64,
+    },
     /// A multi-view PNG preview (needs node; uses tools/preview).
     Render {
         pose: PathBuf,
@@ -53,6 +66,9 @@ enum Cmd {
         /// Pixel size of each view.
         #[arg(long, default_value_t = 384)]
         size: u32,
+        /// Draw the skinned hand mesh instead of the capsules (generates assets/hand_*.glb once).
+        #[arg(long)]
+        mesh: bool,
     },
 }
 
@@ -70,6 +86,21 @@ fn preview_script() -> PathBuf {
 /// Prints to stdout; a reader that stops early (`| head`) is not an error.
 fn emit(text: impl AsRef<str>) {
     let _ = std::io::stdout().lock().write_all(text.as_ref().as_bytes());
+}
+
+/// The hand mesh for a side: `$HANDKIT_ASSETS/hand_R.glb` (default: the repo's assets/),
+/// generated on first use.
+fn mesh_asset(side: handkit_core::pose::Side) -> Result<PathBuf> {
+    let dir = std::env::var_os("HANDKIT_ASSETS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets"));
+    let path = dir.join(format!("hand_{}.glb", if side == handkit_core::pose::Side::Left { "L" } else { "R" }));
+    if !path.exists() {
+        std::fs::create_dir_all(&dir)?;
+        let mesh = handkit_mesh::generate(side, &handkit_mesh::Options::default());
+        std::fs::write(&path, handkit_mesh::glb::to_glb(&mesh))?;
+    }
+    Ok(std::fs::canonicalize(path)?)
 }
 
 fn main() {
@@ -111,12 +142,47 @@ fn run() -> Result<()> {
             Some(k) => emit(handkit_core::explain::one(&k).map_err(|e| anyhow!(e))? + "\n"),
             None => emit(handkit_core::explain::all() + "\n"),
         },
+        Cmd::Bones { pose } => emit(serde_json::to_string(&load(&pose)?.bones())? + "
+"),
+        Cmd::Mesh { side, out, voxel_mm } => {
+            let side = match side.as_str() {
+                "right" => handkit_core::pose::Side::Right,
+                "left" => handkit_core::pose::Side::Left,
+                _ => bail!("--side is right or left"),
+            };
+            let start = std::time::Instant::now();
+            let mesh = handkit_mesh::generate(side, &handkit_mesh::Options { voxel: voxel_mm / 1000.0 });
+            let glb = handkit_mesh::glb::to_glb(&mesh);
+            std::fs::write(&out, &glb)?;
+            emit(format!(
+                "wrote {} ({} vertices, {} triangles, {} joints, {:.0} KB, {:.1} s)
+",
+                out.display(),
+                mesh.positions.len(),
+                mesh.indices.len() / 3,
+                mesh.skeleton.bones.len(),
+                glb.len() as f64 / 1024.0,
+                start.elapsed().as_secs_f64()
+            ));
+        }
         Cmd::Geometry { pose } => emit(serde_json::to_string(&load(&pose)?.geometry())? + "\n"),
-        Cmd::Render { pose, out, views, size } => {
+        Cmd::Render { pose, out, views, size, mesh } => {
             let solved = load(&pose)?;
             let out = out.unwrap_or_else(|| pose.with_extension("png"));
             let geom = std::env::temp_dir().join(format!("handkit-geom-{}.json", std::process::id()));
-            std::fs::write(&geom, serde_json::to_string(&solved.geometry())?)?;
+            let mut g = solved.geometry();
+            if mesh {
+                let mut files = serde_json::Map::new();
+                for h in &solved.hands {
+                    files.insert(h.side.name().into(), serde_json::json!(mesh_asset(h.side)?));
+                }
+                g["mesh"] = serde_json::json!({ "bones": solved.bones(), "files": files });
+            }
+            // A clean transparent image for comparing renderers (tools/golden).
+            if std::env::var_os("HANDKIT_GOLDEN").is_some() {
+                g["golden"] = serde_json::json!(true);
+            }
+            std::fs::write(&geom, serde_json::to_string(&g)?)?;
             let script = preview_script();
             let status = Command::new("node")
                 .arg(&script)

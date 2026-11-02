@@ -1,0 +1,13 @@
+[package]
+name = "handkit-wasm"
+version = "0.1.0"
+edition = "2024"
+description = "The Handkit core for the browser (HyperFrames, Remotion): pose files in, joint transforms out."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+handkit-core = { version = "0.1.0", path = "../handkit-core" }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+wasm-bindgen = "=0.2.130"

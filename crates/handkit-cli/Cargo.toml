@@ -7,6 +7,7 @@ edition = "2024"
 anyhow = "1.0.104"
 clap = { version = "4.6.7", features = ["derive"] }
 handkit-core = { version = "0.1.0", path = "../handkit-core" }
+handkit-mesh = { version = "0.1.0", path = "../handkit-mesh" }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
 
 [[bin]]
