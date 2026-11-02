@@ -5,8 +5,11 @@ export PATH="/c/Users/Rajat/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$P
 F="/c/Users/Rajat/Documents/3D Accurate Hands/launch/film"; HK="/c/Users/Rajat/Documents/3D Accurate Hands"
 SRC="${1:-$F/out/render_public.mp4}"
 cd "$F"
-ffmpeg -v error -y -i "$SRC" -i assets/audio/mix.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -cutoff 18000 -ar 48000 -t 73.8 -movflags +faststart out/handkit-launch-public.mp4
-ffmpeg -v error -y -i out/handkit-launch-public.mp4 -i assets/audio/mix.wav -map 0:v:0 -map 1:a:0 -t 73.8 -vf "scale=960:540:flags=lanczos" -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p -c:a aac -b:a 160k -cutoff 17000 -movflags +faststart "$HK/phone/handkit-launch-public.mp4"
+# The music is mono (MusicGen): widen the mix a little, then bring it back to about -14.5 LUFS
+# with the peak under -2 dBTP (earshot critique: stereo width in range).
+mkdir -p work && ffmpeg -v error -y -i assets/audio/mix.wav -af "stereowiden=delay=18:feedback=0.25:crossfeed=0.25:drymix=0.85,volume=4.1dB,alimiter=limit=0.74:level=false:attack=3:release=60" -ar 48000 work/mix_wide.wav
+ffmpeg -v error -y -i "$SRC" -i work/mix_wide.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -cutoff 18000 -ar 48000 -t 73.8 -movflags +faststart out/handkit-launch-public.mp4
+ffmpeg -v error -y -i out/handkit-launch-public.mp4 -i work/mix_wide.wav -map 0:v:0 -map 1:a:0 -t 73.8 -vf "scale=960:540:flags=lanczos" -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p -c:a aac -b:a 160k -cutoff 17000 -movflags +faststart "$HK/phone/handkit-launch-public.mp4"
 for f in out/handkit-launch-public.mp4 "$HK/phone/handkit-launch-public.mp4"; do
   echo "== $f"; ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate,sample_rate,channels -of compact "$f"
   ffmpeg -hide_banner -nostats -i "$f" -map 0:a -af ebur128=peak=true -f null - 2>&1 | sed -n "/Summary/,\$p" | grep -E "I:|Peak:" | sed -n "1p;3p"
