@@ -51,7 +51,7 @@ async function addMeshes(scene, mesh) {
   const loader = new GLTFLoader();
   for (const side of Object.keys(mesh.files)) {
     const gltf = await loader.loadAsync(`/asset/${side}.glb`);
-    gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE); o.frustumCulled = false; } });
+    gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE, {}, o.material); o.frustumCulled = false; } });
     handRig(gltf.scene)(mesh.bones);
     scene.add(gltf.scene);
   }
@@ -153,7 +153,7 @@ window.setupFrames = async (spec) => {
     const loader = new GLTFLoader();
     for (const side of Object.keys(spec.mesh.files)) {
       const gltf = await loader.loadAsync(`/asset/${side}.glb`);
-      gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE); o.frustumCulled = false; } });
+      gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE, {}, o.material); o.frustumCulled = false; } });
       appliers.push(handRig(gltf.scene));
       scene.add(gltf.scene);
     }

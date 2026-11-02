@@ -5,7 +5,7 @@ use handkit_core::pose::Side;
 use handkit_mesh::{Options, generate, glb};
 
 fn coarse(side: Side) -> handkit_mesh::HandMesh {
-    generate(side, &Options { voxel: 0.004 })
+    generate(side, &Options { voxel: 0.004, textures: 256 })
 }
 
 #[test]
@@ -20,6 +20,44 @@ fn every_vertex_is_skinned_with_weights_summing_to_one() {
         assert!(j.iter().all(|x| *x < n));
     }
     assert!(m.indices.len() % 3 == 0 && m.indices.iter().all(|i| (*i as usize) < m.positions.len()));
+}
+
+#[test]
+fn uv_seams_split_vertices_without_opening_the_surface() {
+    let m = coarse(Side::Right);
+    assert_eq!(m.uvs.len(), m.positions.len());
+    assert!(m.uvs.iter().all(|t| (0.0..=1.0).contains(&t[0]) && (0.0..=1.0).contains(&t[1])));
+    // Copies of a vertex share its position, skin weights and corrective offsets: weld them by
+    // position and no edge is open.
+    let mut id = std::collections::HashMap::new();
+    let key = |p: [f32; 3]| p.map(f32::to_bits);
+    let mut by_key: std::collections::HashMap<[u32; 3], usize> = std::collections::HashMap::new();
+    for (i, p) in m.positions.iter().enumerate() {
+        let first = *by_key.entry(key(*p)).or_insert(i);
+        assert_eq!(m.joints[i], m.joints[first]);
+        assert_eq!(m.weights[i], m.weights[first]);
+        id.insert(i, first);
+    }
+    assert!(by_key.len() < m.positions.len(), "seams split some vertices");
+    let mut edges: std::collections::HashMap<(usize, usize), u32> = std::collections::HashMap::new();
+    for t in m.indices.chunks(3) {
+        for k in 0..3 {
+            let (a, b) = (id[&(t[k] as usize)], id[&(t[(k + 1) % 3] as usize)]);
+            *edges.entry((a.min(b), a.max(b))).or_default() += 1;
+        }
+    }
+    // (Surface nets can make an edge where two pairs of triangles meet: 4 is closed too.)
+    let open = edges.values().filter(|c| *c % 2 == 1).count();
+    assert_eq!(open, 0, "{open} edges are open");
+    for t in &m.targets {
+        let moved: std::collections::HashMap<usize, [f32; 3]> = t.iter().map(|(v, d)| (*v as usize, *d)).collect();
+        for (v, d) in &moved {
+            assert_eq!(moved.get(&id[v]), Some(d), "every copy moves the same");
+        }
+    }
+    let maps = m.maps.as_ref().expect("baked maps");
+    // (At 256 px the gutters take much of the atlas; at 2048 the charts cover about half.)
+    assert!(maps.covered > 0.25, "the charts cover {:.0}% of the atlas", maps.covered * 100.0);
 }
 
 #[test]

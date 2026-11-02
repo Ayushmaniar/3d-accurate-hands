@@ -54,6 +54,13 @@ enum Cmd {
         /// Grid spacing in millimeters (smaller = finer, slower).
         #[arg(long, default_value_t = 1.2)]
         voxel_mm: f64,
+        /// Side of the baked skin colour and normal maps (0 for none: vertex colors instead).
+        #[arg(long, default_value_t = 2048)]
+        textures: u32,
+        /// Also write the skin maps as files to this folder (skin_color.jpg, skin_normal.png,
+        /// skin_orm.png, skin_masks.png), e.g. assets/skin.
+        #[arg(long)]
+        skin_dir: Option<PathBuf>,
     },
     /// A multi-view PNG preview (needs node; uses tools/preview).
     Render {
@@ -351,16 +358,25 @@ fn run() -> Result<()> {
         },
         Cmd::Bones { pose } => emit(serde_json::to_string(&load(&pose)?.bones())? + "
 "),
-        Cmd::Mesh { side, out, voxel_mm } => {
+        Cmd::Mesh { side, out, voxel_mm, textures, skin_dir } => {
             let side = match side.as_str() {
                 "right" => handkit_core::pose::Side::Right,
                 "left" => handkit_core::pose::Side::Left,
                 _ => bail!("--side is right or left"),
             };
             let start = std::time::Instant::now();
-            let mesh = handkit_mesh::generate(side, &handkit_mesh::Options { voxel: voxel_mm / 1000.0 });
+            let mesh = handkit_mesh::generate(side, &handkit_mesh::Options { voxel: voxel_mm / 1000.0, textures });
             let glb = handkit_mesh::glb::to_glb(&mesh);
             std::fs::write(&out, &glb)?;
+            if let (Some(dir), Some(maps)) = (&skin_dir, &mesh.maps) {
+                std::fs::create_dir_all(dir)?;
+                for (name, data) in [("skin_color.jpg", &maps.albedo), ("skin_normal.png", &maps.normal), ("skin_orm.png", &maps.orm), ("skin_masks.png", &maps.masks)] {
+                    std::fs::write(dir.join(name), data)?;
+                }
+            }
+            if let Some(maps) = &mesh.maps {
+                eprintln!("skin maps {}px: charts cover {:.0}% of the atlas ({} texels overlap)", maps.size, maps.covered * 100.0, maps.overlap);
+            }
             emit(format!(
                 "wrote {} ({} vertices, {} triangles, {} joints, {:.0} KB, {:.1} s)
 ",
