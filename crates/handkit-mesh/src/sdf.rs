@@ -396,8 +396,9 @@ impl PalmHeights {
             let (pa, ba) = (dvec2(x, y) - *a, *b - *a);
             let t = pa.dot(ba) / ba.length_squared();
             let d = (pa - ba * t.clamp(0.0, 1.0)).length();
-            let fade = smoothstep(0.0, 0.35, t) * smoothstep(1.05, 0.75, t);
-            z -= 0.00035 * fade * (-(d / 0.0022).powi(2)).exp();
+            // Barely there on a relaxed hand, gone before the knuckles.
+            let fade = smoothstep(0.0, 0.35, t) * smoothstep(0.85, 0.55, t);
+            z -= 0.00018 * fade * (-(d / 0.0032).powi(2)).exp();
         }
         z
     }
@@ -669,22 +670,22 @@ fn creases(h: &HandGeom, field: &Field) -> Vec<Cut> {
     let mut cuts = Vec::new();
     let palm: [(Vec<DVec2>, f64); 4] = [
         // Distal transverse (heart line), from the pinky edge to between index and middle.
-        (v(&[[-0.040, 0.061], [-0.026, 0.066], [-0.010, 0.071], [0.004, 0.077], [0.016, 0.084]]), 0.0003),
+        (v(&[[-0.040, 0.061], [-0.026, 0.066], [-0.010, 0.071], [0.004, 0.077], [0.016, 0.084]]), 0.00014),
         // Proximal transverse (head line), from the index side across the middle of the palm.
-        (v(&[[0.037, 0.070], [0.024, 0.064], [0.008, 0.058], [-0.008, 0.052], [-0.022, 0.046]]), 0.0003),
+        (v(&[[0.037, 0.070], [0.024, 0.064], [0.008, 0.058], [-0.008, 0.052], [-0.022, 0.046]]), 0.00014),
         // Thenar crease (life line), around the thenar pad.
-        (v(&[[0.036, 0.071], [0.024, 0.060], [0.014, 0.046], [0.009, 0.030], [0.010, 0.014], [0.013, 0.002]]), 0.0004),
+        (v(&[[0.036, 0.071], [0.024, 0.060], [0.014, 0.046], [0.009, 0.030], [0.010, 0.014], [0.013, 0.002]]), 0.00018),
         // The wrist creases.
-        (v(&[[-0.020, -0.003], [-0.008, -0.005], [0.008, -0.005], [0.018, -0.003]]), 0.00022),
+        (v(&[[-0.020, -0.003], [-0.008, -0.005], [0.008, -0.005], [0.018, -0.003]]), 0.0001),
     ];
     for (pts, depth) in palm.iter() {
-        cuts.extend(crease(field, hand, pts, 0.0035, *depth, 0.001));
+        cuts.extend(crease(field, hand, pts, 0.0045, *depth, 0.0015));
     }
     // Finger flexion creases: at the base of each finger, and under the pip and dip joints.
     for d in Digit::ALL {
         let thumb = d == Digit::Thumb;
         let names: &[(&str, f64, f64)] =
-            if thumb { &[("thumb_mcp", 0.0, 0.0005), ("thumb_ip", 0.0, 0.0005)] } else { &[("_mcp", 0.27, 0.00035), ("_pip", -0.02, 0.0004), ("_dip", -0.02, 0.0003)] };
+            if thumb { &[("thumb_mcp", 0.0, 0.0003), ("thumb_ip", 0.0, 0.0003)] } else { &[("_mcp", 0.27, 0.00022), ("_pip", -0.02, 0.00026), ("_dip", -0.02, 0.0002)] };
         for (suffix, at, depth) in names {
             let name = if thumb { suffix.to_string() } else { format!("{}{suffix}", d.name()) };
             let b = &h.bones[bone(h, &name)];
@@ -700,7 +701,7 @@ fn creases(h: &HandGeom, field: &Field) -> Vec<Cut> {
             let r = h.capsules.iter().find(|c| c.digit == Some(d) && c.seg == seg).unwrap().r;
             let y = at * b.len;
             let pts = [dvec2(-0.62 * r, y + 0.0003), dvec2(0.0, y), dvec2(0.62 * r, y + 0.0003)];
-            cuts.extend(crease(field, b.frame, &pts, 0.0025, *depth, 0.0008));
+            cuts.extend(crease(field, b.frame, &pts, 0.003, *depth, 0.001));
         }
     }
     cuts
