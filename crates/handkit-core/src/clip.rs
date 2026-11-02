@@ -944,15 +944,16 @@ impl Clip {
                 (Some(d), Some("dip_flex")) if d > 0 => 0.4,
                 _ => 0.0,
             };
+            let mut extra = 0.0;
             if k != 0.0 {
                 // Curled fingers are held, not loose.
                 let curl = (values[j] / 90.0).clamp(0.0, 1.0);
-                values[j] += k * drag * (1.0 - 0.7 * curl) * quiet[j];
+                extra += k * drag * (1.0 - 0.7 * curl) * quiet[j];
             }
-            values[j] += self.idle * idle(self.seed, ch, j, p.key, t) * quiet[j];
-            // A held grip keeps its solved values exactly, even near a limit.
-            let hard = values[j].clamp(p.min, p.max);
-            values[j] = hard + (soft_clamp(values[j], p.min, p.max) - hard) * quiet[j];
+            extra += self.idle * idle(self.seed, ch, j, p.key, t) * quiet[j];
+            // The keyed value is kept exactly (a pose near a limit holds where it was put); only
+            // idle and follow-through are eased into the room left before the limit.
+            values[j] = within(values[j], extra, p.min, p.max);
         }
         for (a, axis) in [(0, DVec3::X), (1, DVec3::Y), (2, DVec3::Z)] {
             wrist += axis * self.idle * 0.0012 * noise(self.seed, ch * 100 + 90 + a, t, 0.2);
@@ -995,7 +996,7 @@ impl Clip {
         let trail = [("wrist_dev", v.x.clamp(-1.0, 1.0).asin().to_degrees()), ("wrist_flex", v.z.atan2(-v.y).to_degrees())];
         for (k, x) in trail {
             let j = PARAMS.iter().position(|p| p.key == k).unwrap();
-            values[j] = soft_clamp(values[j] + (x - values[j]) * w, PARAMS[j].min, PARAMS[j].max);
+            values[j] = within(values[j], (x - values[j]) * w, PARAMS[j].min, PARAMS[j].max);
         }
         let rot = DQuat::from_mat3(&f.matrix3.into()) * wrist_rot(side, &values).inverse();
         (values, f.translation, rot)
@@ -1428,16 +1429,16 @@ fn smooth(x: f64) -> f64 {
     x * x * (3.0 - 2.0 * x)
 }
 
-/// Keeps a value inside its limits without a kink: within 4 degrees of a limit it eases in.
-fn soft_clamp(x: f64, lo: f64, hi: f64) -> f64 {
-    let m = 4.0_f64.min((hi - lo) / 4.0);
-    if x > hi - m {
-        hi - m * (-(x - (hi - m)) / m).exp()
-    } else if x < lo + m {
-        lo + m * (-((lo + m) - x) / m).exp()
-    } else {
-        x
+/// `base + extra` kept inside the limits: `base` is only clamped (a pose past a limit stops
+/// there), and `extra` is eased into the room `base` leaves before the limit it moves toward, so
+/// it never reaches it and has no kink. Small moves far from a limit are left as they are.
+fn within(base: f64, extra: f64, lo: f64, hi: f64) -> f64 {
+    let b = base.clamp(lo, hi);
+    let room = if extra > 0.0 { hi - b } else { b - lo };
+    if room <= 0.0 {
+        return b;
     }
+    b + extra.signum() * room * (1.0 - (-extra.abs() / room).exp())
 }
 
 fn hash(mut x: u64) -> u64 {
