@@ -268,7 +268,9 @@ Looks: how renderers draw the hands. A pose or a clip may carry a top-level \"lo
                \"behind\": 0.25, \"lamp\": [x, y, z], \"softness\": 0.3 }. The wall faces the camera,
                behind meters past the point it looks at; a lamp (default: beside the camera, a
                little up and to the left) lights the hands in a dim room and throws their
-               shadows on it, softness 0 (a bare bulb) to 1. Works with every style.
+               shadows on it, softness 0 (a bare bulb) to 1. Works with every style. For a
+               wall that stays put while the camera moves, give \"at\": [x, y, z] (a point on
+               it) and \"facing\": [x, y, z] (default [0, 0, 1]) instead of behind.
 The fframes player takes the same as flags over the file's look: --look toon,skin=tan,outline=4,
 --look-json '{..}', --motion-blur 4, and --looks \"realistic;toon;arcane\" --look-every 2 to
 cycle through looks (a demo). Each person's \"look\" (see \"people\") sets their skin, nail

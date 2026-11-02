@@ -142,8 +142,12 @@ impl Arm {
 pub struct Wall {
     /// Its colour (sRGB).
     pub color: [u8; 3],
-    /// How far behind the point the camera looks at it stands (meters, along the view).
+    /// How far behind the point the camera looks at it stands (meters, along the view), facing
+    /// the camera and moving with it.
     pub behind: f64,
+    /// A wall fixed in the world instead: a point on it (meters) and the way it faces.
+    pub at: Option<[f64; 3]>,
+    pub facing: [f64; 3],
     /// Where the lamp stands (world, meters); none puts it beside the camera, a little up and
     /// to the left, so the shadows fall down and to the right of the hands.
     pub lamp: Option<[f64; 3]>,
@@ -156,16 +160,17 @@ impl Wall {
     pub const BEHIND: f64 = 0.25;
     pub const SOFTNESS: f64 = 0.3;
 
-    /// `true`, a colour, or `{"color": .., "behind": 0.25, "lamp": [x, y, z], "softness": 0.3}`.
+    /// `true`, a colour, or `{"color": .., "behind": 0.25, "lamp": [x, y, z], "softness": 0.3}`
+    /// (`"at": [x, y, z], "facing": [x, y, z]` in place of `behind` fix the wall in the world).
     pub fn from_value(v: &Value) -> Result<Wall, String> {
-        const HELP: &str = "look wall: true, a colour, or {\"color\": \"#e9dfcf\", \"behind\": 0.25, \"lamp\": [x, y, z], \"softness\": 0.3}";
-        let mut wall = Wall { color: Wall::COLOR, behind: Wall::BEHIND, lamp: None, softness: Wall::SOFTNESS };
+        const HELP: &str = "look wall: true, a colour, or {\"color\": \"#e9dfcf\", \"behind\": 0.25 or \"at\": [x, y, z] and \"facing\": [x, y, z], \"lamp\": [x, y, z], \"softness\": 0.3}";
+        let mut wall = Wall { color: Wall::COLOR, behind: Wall::BEHIND, at: None, facing: [0.0, 0.0, 1.0], lamp: None, softness: Wall::SOFTNESS };
         match v {
             Value::Bool(true) => {}
             Value::String(s) if ["true", "on"].contains(&s.trim()) => {}
             Value::String(s) => wall.color = parse_color(s).map_err(|e| format!("look wall: {e}"))?,
             Value::Object(o) => {
-                if let Some(k) = o.keys().find(|k| !["color", "behind", "lamp", "softness"].contains(&k.as_str())) {
+                if let Some(k) = o.keys().find(|k| !["color", "behind", "at", "facing", "lamp", "softness"].contains(&k.as_str())) {
                     return Err(format!("{HELP} (unknown key \"{k}\")"));
                 }
                 if let Some(c) = o.get("color").filter(|c| !c.is_null()) {
@@ -177,13 +182,18 @@ impl Wall {
                 if let Some(x) = o.get("softness").filter(|x| !x.is_null()) {
                     wall.softness = x.as_f64().filter(|x| (0.0..=1.0).contains(x)).ok_or("look wall softness: 0 to 1")?;
                 }
-                if let Some(l) = o.get("lamp").filter(|l| !l.is_null()) {
-                    let a = l.as_array().filter(|a| a.len() == 3).ok_or("look wall lamp: a position [x, y, z] in meters")?;
-                    let n: Vec<f64> = a.iter().filter_map(Value::as_f64).collect();
-                    if n.len() != 3 {
-                        return Err("look wall lamp: a position [x, y, z] in meters".into());
+                let vec3 = |k: &str, what: &str| -> Result<Option<[f64; 3]>, String> {
+                    let Some(v) = o.get(k).filter(|v| !v.is_null()) else { return Ok(None) };
+                    let n: Vec<f64> = v.as_array().map(|a| a.iter().filter_map(Value::as_f64).collect()).unwrap_or_default();
+                    match n[..] {
+                        [x, y, z] if k != "facing" || x * x + y * y + z * z > 1e-12 => Ok(Some([x, y, z])),
+                        _ => Err(format!("look wall {k}: {what} [x, y, z]")),
                     }
-                    wall.lamp = Some([n[0], n[1], n[2]]);
+                };
+                wall.lamp = vec3("lamp", "a position in meters")?;
+                wall.at = vec3("at", "a point on the wall in meters")?;
+                if let Some(f) = vec3("facing", "the direction the wall faces")? {
+                    wall.facing = f;
                 }
             }
             _ => return Err(HELP.into()),
@@ -398,7 +408,9 @@ mod tests {
         assert_eq!(Look::from_value(&json!({ "wall": "#ffffff" })).unwrap().wall.unwrap().color, [255, 255, 255]);
         let w = Look::from_value(&json!({ "wall": { "behind": 0.4, "lamp": [0.1, 0.3, 0.6], "softness": 0 } })).unwrap().wall.unwrap();
         assert_eq!((w.behind, w.lamp, w.softness), (0.4, Some([0.1, 0.3, 0.6]), 0.0));
-        for bad in [json!(3), json!({ "lamp": [1, 2] }), json!({ "behind": 9 }), json!({ "colour": "#fff" })] {
+        let w = Look::from_value(&json!({ "wall": { "at": [0, 0, -0.2], "facing": [0, 0, 2] } })).unwrap().wall.unwrap();
+        assert_eq!((w.at, w.facing), (Some([0.0, 0.0, -0.2]), [0.0, 0.0, 2.0]));
+        for bad in [json!(3), json!({ "lamp": [1, 2] }), json!({ "facing": [0, 0, 0] }), json!({ "behind": 9 }), json!({ "colour": "#fff" })] {
             assert!(Look::from_value(&json!({ "wall": bad })).unwrap_err().contains("wall"), "{bad}");
         }
     }

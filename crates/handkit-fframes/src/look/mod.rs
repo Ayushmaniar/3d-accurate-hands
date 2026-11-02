@@ -502,19 +502,34 @@ impl Styler {
             mesh.cast_shadow = true;
         }
         let forward = camera.forward();
-        let center = camera.target + forward * wall.behind as f32;
-        let depth = (center - camera.position).dot(forward);
+        let v3 = |a: [f64; 3]| Vec3::new(a[0] as f32, a[1] as f32, a[2] as f32);
+        // The wall's plane: fixed in the world, or facing the camera behind what it looks at.
+        let (point, normal) = match wall.at {
+            Some(at) => (v3(at), v3(wall.facing).normalize_or(Vec3::Z)),
+            None => (camera.target + forward * wall.behind as f32, -forward),
+        };
+        let meet = |from: Vec3, along: Vec3| {
+            let across = along.dot(normal);
+            let t = (point - from).dot(normal) / across;
+            (across.abs() > 1e-5 && t > 0.0).then(|| from + along * t)
+        };
+        let center = meet(camera.position, forward).unwrap_or(point);
+        let depth = (center - camera.position).length();
         let aspect = self.width as f32 / self.height as f32;
-        let h = 2.0 * depth * (camera.fov.to_radians() * 0.5).tan() * 1.4 + 2.0 * camera.shift.length() * depth;
-        let plane = Arc::new(Geometry::plane(h * aspect, h));
-        s.add(Node::mesh(plane, Material::shadow_catcher(1.0)).with_position(center).with_rotation(Quat::from_rotation_arc(Vec3::Z, -forward)));
+        // The wall in view (more of it when seen at a slant), and a margin.
+        let slant = forward.dot(normal).abs().max(0.25);
+        let h = (2.0 * depth * (camera.fov.to_radians() * 0.5).tan() + 2.0 * camera.shift.length() * depth) / slant;
+        let side = 1.4 * h * aspect.max(1.0);
+        s.add(Node::mesh(Arc::new(Geometry::plane(side, side)), Material::shadow_catcher(1.0)).with_position(center).with_rotation(Quat::from_rotation_arc(Vec3::Z, normal)));
         let lamp = Self::lamp(wall, camera);
         // A larger lamp blurs the edges more; the map is sized for crisp edges at a bare bulb.
         // The map covers the wall in view and the space in front of it, where the hands are
         // (fitted to the hands alone, it would end before the wall).
-        let (hw, hh) = (0.5 * h * aspect / 1.4, 0.5 * h / 1.4);
-        let corners = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)].map(|(x, y)| center + camera.right() * x * hw + camera.up_vector() * y * hh);
-        let front = forward * -(wall.behind as f32 + 0.2);
+        let u = (camera.right() - normal * camera.right().dot(normal)).normalize_or(normal.any_orthonormal_vector());
+        let w = normal.cross(u);
+        let (hw, hh) = (0.5 * h * aspect, 0.5 * h);
+        let corners = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)].map(|(x, y)| center + u * x * hw + w * y * hh);
+        let front = normal * ((camera.target - point).dot(normal).abs() + 0.2);
         let bounds = Aabb::from_points(corners.iter().flat_map(|c| [*c, *c + front]));
         let shadow = Shadow { map_size: 4096, softness: 0.8 + 10.0 * wall.softness as f32, strength: 1.0, bias: 1.5, bounds: Some(bounds) };
         s.add(Node::light(Light::directional(Rgb::WHITE, 1.0, lamp - camera.target).with_shadow(shadow)));
@@ -523,9 +538,7 @@ impl Styler {
         let (rgb, alpha) = img::decode(&px, full);
         // The lamp's pool of light: centred where its ray through what the camera looks at
         // meets the wall, falling off toward the frame's corners.
-        let ray = camera.target - lamp;
-        let across = ray.dot(forward);
-        let hit = if across > 1e-4 { camera.target + ray * ((center - camera.target).dot(forward) / across) } else { center };
+        let hit = meet(camera.target, camera.target - lamp).unwrap_or(center);
         let pool = camera.project(hit, self.width as f32, self.height as f32).map(|p| Vec2::new(p.x, p.y)).unwrap_or(Vec2::new(self.width as f32, self.height as f32) * 0.5);
         let c = img::srgb(wall.color);
         let hgt = self.height as f32;
