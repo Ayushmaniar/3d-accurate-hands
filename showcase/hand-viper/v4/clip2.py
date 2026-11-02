@@ -13,14 +13,16 @@ HEAD_CAM = {'position': [0.0, 0.10, 0.40], 'target': [0.0, 0.08, 0.0], 'fov': 28
 LOOK_CLIP = {'style': 'realistic', 'skin': 'medium', 'motion_blur': 3, 'arm': {'sleeve': '#262a33', 'length': 0.12}}
 DIG = ('thumb', 'index', 'middle', 'ring', 'pinky')
 
-shut = head_shut()
+from mouth2 import shut_clear
+# The folded fingers interlaced and cleared of each other, the hands 6 mm apart front to back.
+shut = shut_clear(0.006, 'clip_shut')[0]
 
 
 def start():
     out = {}
     # The right hand on the right (as in the head): palm to the viewer, its thumb points out.
     for side, s in (('right', 1), ('left', -1)):
-        out[side] = {'place': {'wrist': [s * 0.075, -0.01, 0.0], 'palm_facing': [0, 0, 1], 'fingers_toward': [-s * 0.15, 1, 0],
+        out[side] = {'place': {'wrist': [s * 0.075, -0.01, 0.0], 'palm_facing': [0, 0, 1], 'fingers_toward': [s * 0.1, 1, 0],
                                'forearm_toward': [s * 0.3, -1, -0.4]},
                      'thumb': {'cmc_flex': -15, 'cmc_abd': 0, 'cmc_rot': 0, 'mcp_flex': 0, 'ip_flex': 0}}
         for d, a in (('index', 8), ('middle', 2), ('ring', 6), ('pinky', 12)):
@@ -57,11 +59,24 @@ for s in fold:
     fold[s]['index'] = {'mcp_abd': 0, 'mcp_flex': 5, 'pip_flex': 8, 'dip_flex': 4}
     fold[s]['thumb'] = {'cmc_flex': 0, 'cmc_abd': 10, 'cmc_rot': 10, 'mcp_flex': 0, 'ip_flex': 0}
 turn = blend(s0, fold, 0.55)
+# The hands turn in with the fingers still open; they fold only once the hands are in place.
+for s in turn:
+    for d in ('middle', 'ring', 'pinky'):
+        turn[s][d] = {'mcp_abd': 0, 'mcp_flex': 10, 'pip_flex': 15, 'dip_flex': 8}
+
+def cleared(hands, tag):
+    """The pose with the solver pushing every finger out of the other hand and its own."""
+    goal = {'vary': ['%s.%s.*' % (s, d) for s in ('right', 'left') for d in ('index', 'middle', 'ring', 'pinky')]}
+    return solve(tag, {'version': 1, 'hands': hands, 'goals': [goal]})[2]['hands']
+
+
+turn, fold = cleared(turn, 'clip_turn'), cleared(fold, 'clip_fold')
 
 keys = [
     {'t': 0.0, 'hands': me(s0)},
     {'t': 1.6, 'hands': me(turn), 'move': 1.2, 'ease': 'smooth'},
-    {'t': 3.2, 'hands': me(fold), 'move': 1.2, 'ease': 'smooth'},
+    # The fingers fold in one after another, little finger first, as the tutorial weaves them.
+    {'t': 3.2, 'hands': me(fold), 'move': 1.2, 'ease': 'smooth', 'cascade': 0.12},
     {'t': 3.2, 'camera': CAM},
     {'t': 4.4, 'camera': HEAD_CAM, 'move': 1.2, 'ease': 'smooth'},
     {'t': 4.4, 'hands': me(shut), 'move': 0.9, 'ease': 'smooth'},
@@ -71,7 +86,21 @@ keys = [
     {'t': 7.0, 'hands': me(moved(shut, -0.005, 0.045)), 'move': 0.14, 'ease': 'snappy'},
     {'t': 7.6, 'hands': me(shut), 'move': 0.5},
 ]
-clip = {'version': 1, 'fps': 30, 'duration': 8.0, 'size': [1920, 1080], 'idle': {'amount': 0.1}, 'collide': False,
+def held(goals):
+    """Goals for a clip key: the head's touches on me's hands (held, so collisions keep them)."""
+    out = []
+    for g in goals:
+        g = json.loads(json.dumps(g).replace('"right.', '"me.right.').replace('"left.', '"me.left.'))
+        out.append(g)
+    return out
+
+
+SHUT_HELD, OPEN_HELD = held([ARCH] + SHUT), held([ARCH])
+for k in keys:
+    if 'hands' in k and k['t'] >= 4.4:
+        k['goals'] = OPEN_HELD if k['t'] in (5.4, 6.7) else SHUT_HELD
+
+clip = {'version': 1, 'fps': 30, 'duration': 8.0, 'size': [1920, 1080], 'idle': {'amount': 0.1},
         'camera': CAM, 'look': LOOK_CLIP, 'keys': keys}
 path = os.path.join(HERE, 'clip.json')
 dump(path, clip)
