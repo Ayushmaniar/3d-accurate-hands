@@ -127,3 +127,22 @@ fn vary_one_joint_on_every_digit() {
     assert!(r.changes.iter().all(|(k, _, _)| k.ends_with("mcp_abd")), "{:?}", r.changes);
     assert!(r.goals[0].met, "{}", r.goals[0].line());
 }
+
+#[test]
+fn place_position_moves_without_turning() {
+    let curl = json!({"mcp_flex": 80, "pip_flex": 90});
+    let (out, r) = run(json!({
+        "version": 1,
+        "hands": {
+            "right": {
+                "place": {"wrist": [0.12, 0, 0.1], "palm_facing": [-1, 0, 0.3], "fingers_toward": [0, 1, 0]},
+                "middle": curl, "ring": curl, "pinky": curl,
+            },
+            "left": {"mirror": "right"},
+        },
+        "goals": [{"touch": ["right.index.tip", "left.index.tip"], "vary": ["right.place.position", "right.index.*"]}],
+    }));
+    all_met(&r);
+    assert_eq!(out["hands"]["right"]["place"]["palm_facing"], json!([-1, 0, 0.3]));
+    assert!(r.changes.iter().all(|(k, _, _)| k.contains("place.wrist") || k.contains(".index.")), "{:?}", r.changes);
+}

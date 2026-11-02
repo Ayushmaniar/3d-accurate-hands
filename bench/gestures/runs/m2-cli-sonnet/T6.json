@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "thumb": { "cmc_flex": -15.7, "cmc_abd": 33.0, "cmc_rot": 44.3, "mcp_flex": 25.4, "ip_flex": 42.2 },
+      "index": { "mcp_flex": 38.7, "pip_flex": 55.0, "dip_flex": 51.7, "mcp_roll": 13.7, "mcp_abd": -9.0 },
+      "middle": { "mcp_abd": -3 },
+      "ring": { "mcp_abd": 3 },
+      "pinky": { "mcp_abd": 10 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.tip", "right.index.tip"] }],
+  "camera": { "position": [0, 0.1, 0.6], "target": [0, 0.1, 0], "fov": 35 }
+}

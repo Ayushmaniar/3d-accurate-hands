@@ -82,9 +82,10 @@ the hand.
       names, plus palm_cup for ring and pinky and the wrist for palm sites; for aim, the wrist
       and that finger's knuckle). Patterns: right.thumb.* (one digit), right.index.pip_flex
       (one value), right.*.mcp_abd (that joint on every digit), right.wrist (twist, wrist_flex,
-      wrist_dev), right.palm_cup, right.place (the
-      hand's placement), right.* (everything on the hand). A hand that mirrors the other varies
-      the other's values, so the pair stays a mirror.
+      wrist_dev), right.palm_cup, right.place (the hand's placement; right.place.position
+      only moves it, right.place.rotation only turns it), right.* (everything on the hand).
+      Placement is never varied unless named. A hand that mirrors the other varies the
+      other's values, so the pair stays a mirror.
   Shapes that read right: OK circle = thumb.pad ~ index.tip; flat pinch = thumb.pad ~
   index.pad; finger heart = thumb.pad ~ index.dip_radial. Start from roughly the right shape:
   the solver finds the nearest solution, not the most natural one.

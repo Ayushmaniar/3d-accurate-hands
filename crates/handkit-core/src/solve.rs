@@ -388,8 +388,14 @@ fn collect_params(raw: &Value, resolved: &Value, solved: &Solved, work: &mut Val
         if resolved.get("hands").and_then(|h| h.get(side)).is_none() {
             return Err(format!("vary \"{pat}\": there is no {side} hand"));
         }
-        if rest == "place" {
-            for p in place_params(raw, resolved, side, work) {
+        if let Some(part) = rest.strip_prefix("place") {
+            let part = match part {
+                "" => None,
+                ".position" => Some(0),
+                ".rotation" => Some(1),
+                _ => return Err(format!("vary \"{pat}\": use {side}.place, {side}.place.position (move only) or {side}.place.rotation (turn only)")),
+            };
+            for p in place_params(raw, resolved, side, work, part) {
                 if !out.iter().any(|q| q.path == p.path) {
                     out.push(p);
                 }
@@ -442,7 +448,8 @@ fn owner_side<'a>(raw: &'a Value, side: &'a str, key: Option<&str>) -> &'a str {
     if own { side } else if other == "right" { "right" } else { "left" }
 }
 
-fn place_params(raw: &Value, resolved: &Value, side: &str, work: &mut Value) -> Vec<Param> {
+/// The placement's values: its position (`part` 0), its orientation (1), or both.
+fn place_params(raw: &Value, resolved: &Value, side: &str, work: &mut Value, part: Option<usize>) -> Vec<Param> {
     let owner = owner_side(raw, side, None);
     let hand = &resolved["hands"][owner];
     let mut groups: Vec<(&str, Vec<&str>, f64)> = Vec::new();
@@ -461,7 +468,10 @@ fn place_params(raw: &Value, resolved: &Value, side: &str, work: &mut Value) -> 
         groups.push(("place", vec!["forearm_rotation_deg"], 10.0));
     }
     let mut out = Vec::new();
-    for (prefix, keys, scale) in groups {
+    for (n, (prefix, keys, scale)) in groups.into_iter().enumerate() {
+        if part.is_some_and(|k| k != n) {
+            continue;
+        }
         for key in keys {
             let mut arr = vec![json!("hands"), json!(owner)];
             if !prefix.is_empty() {
