@@ -138,7 +138,11 @@ pub(crate) fn render<'p, 'a, 'media: 'a, TVideo: Video + Sync + Send, TBackend: 
     }: Pipeline<'p, 'a, 'media, TVideo, TBackend>,
 ) -> FFramesRendererResult<()> {
     let workers = pipeline_config.encoder_threads.max(1);
-    let gpu_contexts = pipeline_config.gpu_contexts();
+    // One context per queue at most: contexts sharing a queue corrupt frames.
+    let gpu_contexts = pipeline_config
+        .gpu_contexts()
+        .min(skia.gpu_queues().unwrap_or(usize::MAX))
+        .max(1);
     let queue_size = pipeline_config.buffer_queue_size.max(1);
 
     let extension = output

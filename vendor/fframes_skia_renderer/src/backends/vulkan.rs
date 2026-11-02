@@ -121,7 +121,7 @@ impl SkiaVulkanCtx {
                     FFramesRendererError::Skia(format!("Failed to enumerate physical devices: {e}"))
                 })?;
 
-                physical_devices.iter().copied().next().ok_or_else(|| {
+                pick_physical_device(&instance, &physical_devices).ok_or_else(|| {
                     FFramesRendererError::Skia("No Vulkan physical devices found".to_string())
                 })?
             };
@@ -501,6 +501,15 @@ impl SkiaBackend for SkiaVulkanCtx {
         self.shared_gpu.as_ref().map(fframes::SharedGpu::id)
     }
 
+    fn gpu_queues(&self) -> Option<usize> {
+        // a device shared with wgpu uses the wgpu queue only, see `create_context`
+        #[cfg(feature = "wgpu")]
+        if self.shared_gpu.is_some() {
+            return Some(1);
+        }
+        Some(self.queues.len())
+    }
+
     fn create_skia_surface(&self) -> FFramesRendererResult<(Surface, Option<DirectContext>)> {
         let context = self.create_skia_context()?;
         Ok((context.surface, context.gpu))
@@ -658,6 +667,50 @@ unsafe fn extension_names(names: *const *const c_char, count: i32) -> Vec<String
                 .into_owned()
         })
         .collect()
+}
+
+/// The device to render on: `FFRAMES_VULKAN_DEVICE` (part of a device name) when set, else a
+/// discrete GPU before an integrated, virtual or software one, and among those the one with
+/// the most graphics queues (a native driver over a layered one such as Microsoft's D3D12
+/// translation). The first device the instance lists is often the integrated GPU of a laptop,
+/// with one queue for every GPU context to share and a fraction of the speed.
+unsafe fn pick_physical_device(
+    instance: &ash::Instance,
+    devices: &[vk::PhysicalDevice],
+) -> Option<vk::PhysicalDevice> {
+    let name = |device: vk::PhysicalDevice| unsafe {
+        instance
+            .get_physical_device_properties(device)
+            .device_name_as_c_str()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default()
+    };
+    if let Ok(wanted) = std::env::var("FFRAMES_VULKAN_DEVICE")
+        && let Some(device) = devices.iter().copied().find(|device| {
+            name(*device)
+                .to_lowercase()
+                .contains(&wanted.to_lowercase())
+        })
+    {
+        return Some(device);
+    }
+
+    let rank = |device: vk::PhysicalDevice| unsafe {
+        let kind = match instance.get_physical_device_properties(device).device_type {
+            vk::PhysicalDeviceType::DISCRETE_GPU => 3,
+            vk::PhysicalDeviceType::INTEGRATED_GPU => 2,
+            vk::PhysicalDeviceType::VIRTUAL_GPU => 1,
+            _ => 0,
+        };
+        let graphics_queues = instance
+            .get_physical_device_queue_family_properties(device)
+            .iter()
+            .find(|family| family.queue_flags.contains(vk::QueueFlags::GRAPHICS))
+            .map_or(0, |family| family.queue_count);
+        (kind, graphics_queues)
+    };
+    // `max_by_key` takes the last of equals: keep the instance's order among them.
+    devices.iter().copied().rev().max_by_key(|device| rank(*device))
 }
 
 fn queue_locks(queues: &[vk::Queue]) -> Vec<super::QueueLock> {
