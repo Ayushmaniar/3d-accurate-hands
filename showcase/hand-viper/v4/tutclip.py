@@ -28,6 +28,15 @@ print('head', [l.strip()[:80] for l in text.splitlines() if 'MISS' in l or 'pene
 head = sol['hands']
 
 
+def opened(amount, tag):
+    """The mouth open by `amount`, solved so the knot keeps clear of the lifted index fingers."""
+    code, text, sol = solve(tag, {'version': 1, 'hands': head_open(head, amount), 'goals': [ARCH, clear('middle', 'ring', 'pinky')]})
+    return sol['hands']
+
+
+open07, open10 = opened(0.7, 'tut_open07'), opened(1.0, 'tut_open10')
+
+
 def me(h):
     return {'me.' + s: copy.deepcopy(v) for s, v in h.items()}
 
@@ -53,16 +62,12 @@ keys += [
     {'t': 6.2, 'camera': HEAD_CAM, 'move': 1.2, 'ease': 'smooth'},
     # The head poses are solved clear of each other: from here the clip keeps them as solved.
     {'t': 6.2, 'hands': me(head), 'move': 0.9, 'ease': 'smooth'},
-    {'t': 7.1, 'hands': me(head_open(head, 0.7)), 'move': 0.3, 'ease': 'snappy'},
+    {'t': 7.1, 'hands': me(open07), 'move': 0.3, 'ease': 'snappy'},
     {'t': 7.6, 'hands': me(head), 'move': 0.25, 'ease': 'snappy'},
-    {'t': 8.5, 'hands': me(moved(head_open(head, 1.0), 0.01, -0.035)), 'move': 0.5, 'ease': 'smooth'},
+    {'t': 8.5, 'hands': me(moved(open10, 0.01, -0.035)), 'move': 0.5, 'ease': 'smooth'},
     {'t': 8.8, 'hands': me(moved(head, -0.005, 0.045)), 'move': 0.16, 'ease': 'smooth'},
     {'t': 9.4, 'hands': me(head), 'move': 0.5},
 ]
-for k in keys:
-    if 'hands' in k and k['t'] >= 7.1:
-        k['collide'] = False
-
 clip = {'version': 1, 'fps': 30, 'duration': 10.0, 'size': [1920, 1080], 'idle': {'amount': 0.1}, 'follow': 0,
         'camera': CAM, 'look': LOOK_CLIP, 'keys': keys}
 path = os.path.join(HERE, 'tut_clip.json')

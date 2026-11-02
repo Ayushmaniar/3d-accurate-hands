@@ -952,17 +952,17 @@
       "ip_flex": 51.8
      },
      "middle": {
-      "mcp_abd": -5.3,
-      "mcp_roll": 2.5,
-      "mcp_flex": 48.8,
-      "pip_flex": 51.8,
-      "dip_flex": 27.3
+      "mcp_abd": -4.1,
+      "mcp_roll": 0.0,
+      "mcp_flex": 52.6,
+      "pip_flex": 57.2,
+      "dip_flex": 31.4
      },
      "ring": {
-      "mcp_abd": 12.5,
-      "mcp_roll": 3.7,
-      "mcp_flex": 69.5,
-      "pip_flex": 69.9,
+      "mcp_abd": 12.4,
+      "mcp_roll": 3.6,
+      "mcp_flex": 69.7,
+      "pip_flex": 70.1,
       "dip_flex": 38.0
      },
      "pinky": {
@@ -970,14 +970,14 @@
       "mcp_flex": 88.2,
       "pip_flex": 94.8,
       "dip_flex": 44.7,
-      "mcp_roll": -7.4
+      "mcp_roll": -7.5
      },
      "index": {
-      "mcp_abd": -0.9,
-      "mcp_roll": -6.4,
-      "mcp_flex": 47.4,
-      "pip_flex": 36.0,
-      "dip_flex": 24.7
+      "mcp_abd": 19.1,
+      "mcp_roll": -6.7,
+      "mcp_flex": 62.4,
+      "pip_flex": 34.4,
+      "dip_flex": 17.4
      }
     },
     "me.left": {
@@ -1011,38 +1011,37 @@
       "ip_flex": 52.0
      },
      "middle": {
-      "mcp_abd": 6.2,
-      "mcp_roll": -2.9,
-      "mcp_flex": 43.0,
-      "pip_flex": 73.1,
-      "dip_flex": 54.0
+      "mcp_abd": 6.5,
+      "mcp_roll": -3.5,
+      "mcp_flex": 42.5,
+      "pip_flex": 73.4,
+      "dip_flex": 55.2
      },
      "ring": {
-      "mcp_abd": 0.7,
+      "mcp_abd": 0.2,
       "mcp_roll": 19.8,
       "mcp_flex": 69.0,
-      "pip_flex": 85.2,
+      "pip_flex": 85.7,
       "dip_flex": 45.1
      },
      "pinky": {
-      "mcp_abd": 32.9,
+      "mcp_abd": 33.0,
       "mcp_flex": 88.2,
       "pip_flex": 89.8,
       "dip_flex": 46.9,
       "mcp_roll": 30.0
      },
      "index": {
-      "mcp_abd": -1.6,
-      "mcp_roll": -6.4,
-      "mcp_flex": 46.7,
-      "pip_flex": 38.0,
-      "dip_flex": 22.8
+      "mcp_abd": 19.1,
+      "mcp_roll": -6.5,
+      "mcp_flex": 62.0,
+      "pip_flex": 32.7,
+      "dip_flex": 21.7
      }
     }
    },
    "move": 0.3,
-   "ease": "snappy",
-   "collide": false
+   "ease": "snappy"
   },
   {
    "t": 7.6,
@@ -1167,8 +1166,7 @@
     }
    },
    "move": 0.25,
-   "ease": "snappy",
-   "collide": false
+   "ease": "snappy"
   },
   {
    "t": 8.5,
@@ -1204,17 +1202,17 @@
       "ip_flex": 48.8
      },
      "middle": {
-      "mcp_abd": -5.3,
-      "mcp_roll": 2.5,
-      "mcp_flex": 48.8,
-      "pip_flex": 51.8,
-      "dip_flex": 27.3
+      "mcp_abd": -5.7,
+      "mcp_roll": -1.0,
+      "mcp_flex": 51.1,
+      "pip_flex": 54.3,
+      "dip_flex": 28.0
      },
      "ring": {
-      "mcp_abd": 12.5,
-      "mcp_roll": 3.7,
+      "mcp_abd": 12.3,
+      "mcp_roll": 3.4,
       "mcp_flex": 69.5,
-      "pip_flex": 69.9,
+      "pip_flex": 70.4,
       "dip_flex": 38.0
      },
      "pinky": {
@@ -1222,14 +1220,14 @@
       "mcp_flex": 88.2,
       "pip_flex": 94.8,
       "dip_flex": 44.7,
-      "mcp_roll": -7.4
+      "mcp_roll": -7.5
      },
      "index": {
-      "mcp_abd": -0.9,
-      "mcp_roll": -6.4,
-      "mcp_flex": 42.9,
+      "mcp_abd": 4.1,
+      "mcp_roll": -6.8,
+      "mcp_flex": 64.0,
       "pip_flex": 31.5,
-      "dip_flex": 24.7
+      "dip_flex": 4.2
      }
     },
     "me.left": {
@@ -1263,38 +1261,37 @@
       "ip_flex": 49.0
      },
      "middle": {
-      "mcp_abd": 6.2,
-      "mcp_roll": -2.9,
-      "mcp_flex": 43.0,
-      "pip_flex": 73.1,
-      "dip_flex": 54.0
+      "mcp_abd": 6.6,
+      "mcp_roll": -4.3,
+      "mcp_flex": 41.5,
+      "pip_flex": 74.0,
+      "dip_flex": 55.8
      },
      "ring": {
-      "mcp_abd": 0.7,
+      "mcp_abd": 0.0,
       "mcp_roll": 19.8,
-      "mcp_flex": 69.0,
-      "pip_flex": 85.2,
+      "mcp_flex": 69.1,
+      "pip_flex": 86.4,
       "dip_flex": 45.1
      },
      "pinky": {
-      "mcp_abd": 32.9,
+      "mcp_abd": 33.0,
       "mcp_flex": 88.2,
       "pip_flex": 89.8,
       "dip_flex": 46.9,
       "mcp_roll": 30.0
      },
      "index": {
-      "mcp_abd": -1.6,
-      "mcp_roll": -6.4,
-      "mcp_flex": 42.2,
-      "pip_flex": 33.5,
-      "dip_flex": 22.8
+      "mcp_abd": 19.2,
+      "mcp_roll": -6.5,
+      "mcp_flex": 59.2,
+      "pip_flex": 27.2,
+      "dip_flex": 30.8
      }
     }
    },
    "move": 0.5,
-   "ease": "smooth",
-   "collide": false
+   "ease": "smooth"
   },
   {
    "t": 8.8,
@@ -1419,8 +1416,7 @@
     }
    },
    "move": 0.16,
-   "ease": "smooth",
-   "collide": false
+   "ease": "smooth"
   },
   {
    "t": 9.4,
@@ -1544,8 +1540,7 @@
      }
     }
    },
-   "move": 0.5,
-   "collide": false
+   "move": 0.5
   }
  ]
 }
