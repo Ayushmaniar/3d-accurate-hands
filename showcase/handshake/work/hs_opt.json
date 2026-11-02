@@ -1,0 +1,169 @@
+{
+ "version": 1,
+ "hands": {
+  "dad.right": {
+   "palm_cup": 6.0,
+   "thumb": {
+    "cmc_flex": -10.3,
+    "cmc_abd": 2.7,
+    "cmc_rot": 12.2,
+    "mcp_flex": 11.9,
+    "ip_flex": 5.9
+   },
+   "index": {
+    "mcp_flex": 38.2239488,
+    "pip_flex": 51.6304,
+    "dip_flex": 30.97824,
+    "mcp_abd": -0.1,
+    "mcp_roll": 0.0
+   },
+   "middle": {
+    "mcp_flex": 42.2239488,
+    "pip_flex": 56.6304,
+    "dip_flex": 33.97824,
+    "mcp_abd": -3.4,
+    "mcp_roll": -1.6
+   },
+   "ring": {
+    "mcp_flex": 46.2239488,
+    "pip_flex": 61.6304,
+    "dip_flex": 36.97824,
+    "mcp_abd": 3.4,
+    "mcp_roll": -2.4
+   },
+   "pinky": {
+    "mcp_flex": 50.2239488,
+    "pip_flex": 66.63040000000001,
+    "dip_flex": 39.97824000000001,
+    "mcp_abd": 1.1,
+    "mcp_roll": -1.9
+   },
+   "place": {
+    "wrist": [
+     -0.075,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     0.0,
+     0.0,
+     -1.0
+    ],
+    "fingers_toward": [
+     1.0,
+     -0.4,
+     0.0
+    ],
+    "forearm_toward": [
+     -1.0,
+     0.0,
+     0.25
+    ]
+   }
+  },
+  "kid.right": {
+   "palm_cup": 6.0,
+   "thumb": {
+    "cmc_flex": -18.0,
+    "cmc_abd": 4.6,
+    "cmc_rot": 10.4,
+    "mcp_flex": 9.5,
+    "ip_flex": 5.0
+   },
+   "index": {
+    "mcp_flex": 6.09756928,
+    "pip_flex": 32.296,
+    "dip_flex": 19.377599999999997,
+    "mcp_abd": -3.1,
+    "mcp_roll": -0.9
+   },
+   "middle": {
+    "mcp_flex": 11.09756928,
+    "pip_flex": 40.296,
+    "dip_flex": 24.177599999999998,
+    "mcp_abd": -3.8,
+    "mcp_roll": -2.7
+   },
+   "ring": {
+    "mcp_flex": 16.097569280000002,
+    "pip_flex": 48.296,
+    "dip_flex": 28.9776,
+    "mcp_abd": 2.3,
+    "mcp_roll": -2.5
+   },
+   "pinky": {
+    "mcp_flex": 21.097569280000002,
+    "pip_flex": 56.296,
+    "dip_flex": 33.7776,
+    "mcp_abd": 0.9,
+    "mcp_roll": -1.9
+   },
+   "place": {
+    "wrist": [
+     0.08277760000000002,
+     -0.026000000000000002,
+     -0.04599999999999999
+    ],
+    "palm_facing": [
+     0.20777600000000002,
+     -0.05,
+     1
+    ],
+    "fingers_toward": [
+     -0.9449444748290065,
+     -0.3272307129383384,
+     0.0
+    ],
+    "forearm_toward": [
+     0.92,
+     0.3,
+     -0.24
+    ]
+   }
+  }
+ },
+ "people": {
+  "dad": {},
+  "kid": {
+   "scale": 0.75
+  }
+ },
+ "goals": [
+  {
+   "touch": [
+    "kid.right.palm_center",
+    "dad.right.middle.metacarpal"
+   ]
+  },
+  {
+   "touch": [
+    "dad.right.thumb.distal",
+    "kid.right.index.metacarpal"
+   ]
+  },
+  {
+   "touch": [
+    "kid.right.thumb.distal",
+    "dad.right.index.metacarpal"
+   ]
+  },
+  {
+   "touch": [
+    "dad.right.middle.distal",
+    "kid.right.pinky.metacarpal"
+   ]
+  },
+  {
+   "touch": [
+    "dad.right.ring.distal",
+    "kid.right.pinky.metacarpal"
+   ]
+  },
+  {
+   "touch": [
+    "kid.right.middle.distal",
+    "dad.right.pinky.metacarpal"
+   ]
+  }
+ ]
+}

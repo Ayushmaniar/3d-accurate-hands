@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "hands": {
+    "dad.right": {
+      "palm_cup": 6.0,
+      "thumb": { "cmc_flex": 4.5, "cmc_abd": 7.6, "cmc_rot": 17.0, "mcp_flex": 18.2, "ip_flex": 7.8 },
+      "index": { "mcp_flex": 1.8, "pip_flex": 7.7, "dip_flex": 4.8, "mcp_abd": 2.6, "mcp_roll": 0.1 },
+      "middle": { "mcp_flex": 14.9, "pip_flex": 52.7, "dip_flex": 80.1, "mcp_abd": 7.5, "mcp_roll": 15.5 },
+      "ring": {
+        "mcp_flex": 34.434400000000004,
+        "pip_flex": 73.02354048000001,
+        "dip_flex": 80,
+        "mcp_abd": 3.4,
+        "mcp_roll": -2.4
+      },
+      "pinky": {
+        "mcp_flex": 18.92,
+        "pip_flex": 78.25820288000001,
+        "dip_flex": 80,
+        "mcp_abd": 1.1,
+        "mcp_roll": -1.9
+      },
+      "place": {
+        "wrist": [-0.075, 0.0, 0.0],
+        "palm_facing": [0.0, 0.0, -1.0],
+        "fingers_toward": [1.0, -0.4, 0.0],
+        "forearm_toward": [-1.0, 0.0, 0.25]
+      }
+    },
+    "kid.right": {
+      "palm_cup": 7.1,
+      "thumb": { "cmc_flex": -19.0, "cmc_abd": 1.5, "cmc_rot": 13.3, "mcp_flex": 25.0, "ip_flex": 11.6 },
+      "index": { "mcp_flex": 3.9, "pip_flex": 4.9, "dip_flex": 15.5, "mcp_abd": -3.4, "mcp_roll": -0.9 },
+      "middle": {
+        "mcp_flex": 5.16,
+        "pip_flex": 21.760000000000005,
+        "dip_flex": 32.120000000000005,
+        "mcp_abd": -3.8,
+        "mcp_roll": -2.7
+      },
+      "ring": {
+        "mcp_flex": 6.72,
+        "pip_flex": 31.440000000000005,
+        "dip_flex": 23.800000000000004,
+        "mcp_abd": 2.3,
+        "mcp_roll": -2.5
+      },
+      "pinky": { "mcp_flex": 13.8, "pip_flex": 23.1, "dip_flex": 29.3, "mcp_abd": -7.5, "mcp_roll": 0.4 },
+      "place": {
+        "wrist": [0.05669766400000001, -0.0068000000000000005, -0.027279533824],
+        "palm_facing": [0.410368, -0.025, 1],
+        "fingers_toward": [-0.9457504451734804, -0.3533441600680042, 0],
+        "forearm_toward": [0.92, 0.3, -0.24]
+      }
+    }
+  },
+  "people": { "dad": {}, "kid": { "scale": 0.75 } },
+  "goals": [
+    { "touch": ["dad.right.middle.distal", "kid.right.pinky.metacarpal"] },
+    { "touch": ["dad.right.thumb.distal", "kid.right.index.metacarpal"] },
+    { "touch": ["kid.right.thumb.distal", "dad.right.index.metacarpal"] },
+    { "touch": ["kid.right.palm_center", "dad.right.middle.metacarpal"] }
+  ]
+}

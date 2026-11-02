@@ -1,0 +1,572 @@
+{
+ "version": 1,
+ "name": "handshake",
+ "description": "Ana and Ben reach in, take hands, shake three times (Ana pumps, Ben's arm trails a few frames behind), and let go.",
+ "fps": 30,
+ "duration": 5.4,
+ "size": [
+  1920,
+  1080
+ ],
+ "camera": {
+  "position": [
+   0.0,
+   0.1,
+   0.62
+  ],
+  "target": [
+   0.0,
+   -0.015,
+   0.0
+  ],
+  "fov": 26
+ },
+ "people": {
+  "ana": {
+   "look": {
+    "skin": "brown"
+   }
+  },
+  "ben": {
+   "look": {
+    "skin": "light"
+   },
+   "scale": 0.75
+  }
+ },
+ "keys": [
+  {
+   "t": 0,
+   "hands": {
+    "ana.right": {
+     "from": "relaxed",
+     "place": {
+      "wrist": [
+       -0.3,
+       -0.07,
+       0.04
+      ],
+      "palm_facing": [
+       0.2,
+       0.3,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.6,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       0.1,
+       0.3
+      ]
+     }
+    },
+    "ben.right": {
+     "from": "relaxed",
+     "place": {
+      "wrist": [
+       0.31,
+       -0.08,
+       -0.07
+      ],
+      "palm_facing": [
+       -0.2,
+       0.3,
+       1
+      ],
+      "fingers_toward": [
+       -1,
+       -0.6,
+       0
+      ],
+      "forearm_toward": [
+       1,
+       0.1,
+       -0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 0.95,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "from": "open_palm",
+     "thumb": {
+      "cmc_flex": -25,
+      "cmc_abd": 40,
+      "cmc_rot": 0,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "place": {
+      "wrist": [
+       -0.12,
+       -0.005,
+       0.04
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.42,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       0.03,
+       0.25
+      ]
+     }
+    },
+    "ben.right": {
+     "from": "open_palm",
+     "thumb": {
+      "cmc_flex": -25,
+      "cmc_abd": 40,
+      "cmc_rot": 0,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "place": {
+      "wrist": [
+       0.13,
+       -0.02,
+       -0.08
+      ],
+      "palm_facing": [
+       0.006,
+       -0.025,
+       1
+      ],
+      "fingers_toward": [
+       -0.964,
+       -0.3,
+       0
+      ],
+      "forearm_toward": [
+       0.92,
+       0.3,
+       -0.24
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 1.4,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.0,
+       0.0
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.4,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       0,
+       0.25
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  },
+  {
+   "t": 1.75,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.03,
+       0.0
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.3,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       -0.05,
+       0.25
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  },
+  {
+   "t": 2.05,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       -0.025,
+       0.0
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.5,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       0.05,
+       0.25
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  },
+  {
+   "t": 2.35,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.028,
+       0.0
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.3,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       -0.05,
+       0.25
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  },
+  {
+   "t": 2.65,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       -0.022,
+       0.0
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.5,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       0.05,
+       0.25
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  },
+  {
+   "t": 2.95,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.02,
+       0.0
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.33,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       -0.03,
+       0.25
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  },
+  {
+   "t": 3.35,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.0,
+       0.0
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.4,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       0,
+       0.25
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  },
+  {
+   "t": 3.8,
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.right"
+     ],
+     "style": "handshake"
+    }
+   ]
+  },
+  {
+   "t": 4.25,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "from": "open_palm",
+     "thumb": {
+      "cmc_flex": -25,
+      "cmc_abd": 40,
+      "cmc_rot": 0,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "place": {
+      "wrist": [
+       -0.12,
+       -0.005,
+       0.045
+      ],
+      "palm_facing": [
+       0,
+       0,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.42,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       0.03,
+       0.25
+      ]
+     }
+    },
+    "ben.right": {
+     "from": "open_palm",
+     "thumb": {
+      "cmc_flex": -25,
+      "cmc_abd": 40,
+      "cmc_rot": 0,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "place": {
+      "wrist": [
+       0.13,
+       -0.02,
+       -0.085
+      ],
+      "palm_facing": [
+       0.006,
+       -0.025,
+       1
+      ],
+      "fingers_toward": [
+       -0.964,
+       -0.3,
+       0
+      ],
+      "forearm_toward": [
+       0.92,
+       0.3,
+       -0.24
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 4.9,
+   "hands": {
+    "ana.right": {
+     "from": "relaxed",
+     "place": {
+      "wrist": [
+       -0.29,
+       -0.07,
+       0.04
+      ],
+      "palm_facing": [
+       0.2,
+       0.3,
+       -1
+      ],
+      "fingers_toward": [
+       1,
+       -0.6,
+       0
+      ],
+      "forearm_toward": [
+       -1,
+       0.1,
+       0.3
+      ]
+     }
+    },
+    "ben.right": {
+     "from": "relaxed",
+     "place": {
+      "wrist": [
+       0.3,
+       -0.08,
+       -0.07
+      ],
+      "palm_facing": [
+       -0.2,
+       0.3,
+       1
+      ],
+      "fingers_toward": [
+       -1,
+       -0.6,
+       0
+      ],
+      "forearm_toward": [
+       1,
+       0.1,
+       -0.3
+      ]
+     }
+    }
+   }
+  }
+ ]
+}
