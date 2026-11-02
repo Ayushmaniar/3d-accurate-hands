@@ -114,11 +114,11 @@ const BLUR_MAX_SCALE: usize = 6;
 
 impl Styler {
     pub fn new(look: Look, width: u32, height: u32) -> Self {
-        let color = Renderer::new(width, height).cpu().tone_mapping(ToneMapping::Neutral).exposure(match look.style {
+        let color = Renderer::new(width, height).gpu().tone_mapping(ToneMapping::Neutral).exposure(match look.style {
             Style::Clay => 1.05,
             _ => 1.0,
         });
-        let flat = Renderer::new(width, height).cpu().tone_mapping(ToneMapping::Linear);
+        let flat = Renderer::new(width, height).gpu().tone_mapping(ToneMapping::Linear);
         Styler { look, width, height, color, flat, dressed: Vec::new(), tones: Vec::new() }
     }
 

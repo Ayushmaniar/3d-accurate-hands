@@ -8,6 +8,10 @@ description = "Plays a Handkit clip as an fframes video: copy this folder and re
 [features]
 # 1080x1920 instead of 1920x1080.
 portrait = []
+# Render the hands on the GPU (wgpu), about 4 times faster than the CPU; without a working
+# GPU it falls back to the CPU. `--no-default-features` renders on the CPU.
+default = ["gpu"]
+gpu = ["handkit-fframes/gpu"]
 
 [dependencies]
 fframes = { version = "=1.3.0", features = ["compile-time-svgtree", "cli"] }
