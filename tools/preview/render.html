@@ -55,7 +55,7 @@ async function addMeshes(scene, mesh) {
   const loader = new GLTFLoader();
   for (const [hand, side] of meshHands(mesh)) {
     const gltf = await loader.loadAsync(`/asset/${side}.glb`);
-    gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE); o.frustumCulled = false; } });
+    gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE, {}, o.material); o.frustumCulled = false; } });
     handRig(gltf.scene)(handBones(mesh.bones, hand));
     scene.add(gltf.scene);
   }
@@ -157,7 +157,7 @@ window.setupFrames = async (spec) => {
     const loader = new GLTFLoader();
     for (const [hand, side] of meshHands(spec.mesh)) {
       const gltf = await loader.loadAsync(`/asset/${side}.glb`);
-      gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE); o.frustumCulled = false; } });
+      gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE, {}, o.material); o.frustumCulled = false; } });
       const apply = handRig(gltf.scene);
       appliers.push((bones) => apply(handBones(bones, hand)));
       scene.add(gltf.scene);

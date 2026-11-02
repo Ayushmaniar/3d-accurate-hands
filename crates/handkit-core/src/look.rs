@@ -231,6 +231,22 @@ impl Look {
         }
     }
 
+    /// This look in a person's colours: the skin and nail of their own look
+    /// (`people.<person>.look`) over this one's; the style and everything else stay this look's.
+    /// A person who gives a skin and no nail gets the nail of their skin.
+    pub fn for_person(&self, people: Option<&Value>, person: &str) -> Look {
+        let mut l = self.clone();
+        let Some(v) = people.and_then(|p| p.get(person)).and_then(|p| p.get("look")) else { return l };
+        let Ok(own) = Look::from_value(v) else { return l };
+        if v.get("skin").is_some() {
+            (l.skin, l.nail) = (own.skin, own.nail);
+        }
+        if v.get("nail").is_some() {
+            l.nail = own.nail;
+        }
+        l
+    }
+
     /// The nail colour: given, or the skin lighter and pinker.
     pub fn nail_color(&self) -> [u8; 3] {
         self.nail.unwrap_or_else(|| {

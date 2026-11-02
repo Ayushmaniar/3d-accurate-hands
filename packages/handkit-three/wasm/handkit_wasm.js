@@ -36,6 +36,22 @@ export class Clip {
         }
     }
     /**
+     * The clip's camera (`{"position", "target", "fov"}`) as JSON text, `null` without one.
+     * @returns {string}
+     */
+    get camera() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.clip_camera(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
      * @returns {number}
      */
     get duration() {
@@ -48,6 +64,68 @@ export class Clip {
     get fps() {
         const ret = wasm.clip_fps(this.__wbg_ptr);
         return ret;
+    }
+    /**
+     * The clip's hands by name, as JSON: `["right", "left", "ana.right", ...]`.
+     * @returns {string}
+     */
+    get hands() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.clip_hands(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * The clip's `look` with defaults filled in (see `look`), JSON text.
+     * @returns {string}
+     */
+    get look() {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.clip_look(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Each hand's look by hand name, as JSON: the clip's `look` (see `look`) in the colours of
+     * the hand's person (`people.<person>.look` sets their skin and nail; the style is the
+     * clip's): `{"right": {..}, "ana.right": {"style": .., "skin": [r, g, b], ..}}`.
+     * @returns {string}
+     */
+    looks() {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.clip_looks(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
     }
     /**
      * @param {string} text
@@ -86,13 +164,30 @@ export class Clip {
             wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
         }
     }
+    /**
+     * The clip's `size` (`[width, height]`) as JSON text, `null` when it gives none (16:9).
+     * @returns {string}
+     */
+    get size() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.clip_size(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
 }
 if (Symbol.dispose) Clip.prototype[Symbol.dispose] = Clip.prototype.free;
 
 /**
  * Joint transforms and corrective shape weights for a pose file:
- * `{"joints": {"index_pip_R": {"t": [..], "r": [x, y, z, w]}}, "morph": {"skin_R": [..]}}`.
- * Apply them with `handRig(gltf.scene)` from `@handkit/three`.
+ * `{"joints": {"index_pip_R": {"t": [..], "r": [x, y, z, w]}}, "morph": {"skin_R": [..]},
+ * "hands": {"ana.right": {"joints": .., "morph": ..}}}`. Apply them with `handRig(gltf.scene)`
+ * from `@handkit/three` (one mesh per hand: `handBones(bones, name)`).
  * @param {string} pose
  * @returns {string}
  */
@@ -129,6 +224,36 @@ export function gesture(name) {
         const ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.gesture(ptr0, len0);
+        var ptr2 = ret[0];
+        var len2 = ret[1];
+        if (ret[3]) {
+            ptr2 = 0; len2 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred3_0 = ptr2;
+        deferred3_1 = len2;
+        return getStringFromWasm0(ptr2, len2);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+
+/**
+ * A `look` (an object or a bare style name, see `handkit explain looks`) checked and with
+ * every default filled in: `{"style": "toon", "skin": [r, g, b], "nail": [r, g, b],
+ * "nail_given": false, "outline": 3, "motion_blur": 1, "shutter": 180, "halftone": 8,
+ * "misregister": 3, "texture": 1, "subsurface": 0.35}` (colours sRGB bytes). `"null"` is the
+ * default look. `HandkitLook` in `@handkit/three` draws it.
+ * @param {string} value
+ * @returns {string}
+ */
+export function look(value) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passStringToWasm0(value, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.look(ptr0, len0);
         var ptr2 = ret[0];
         var len2 = ret[1];
         if (ret[3]) {

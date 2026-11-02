@@ -7,6 +7,8 @@
 
 pub mod glb;
 pub mod sdf;
+pub mod skin;
+pub mod uv;
 
 use glam::{DVec3, dvec3};
 use handkit_core::pose::Side;
@@ -43,17 +45,24 @@ pub struct HandMesh {
     pub targets: Vec<Vec<(u32, [f32; 3])>>,
     /// The bind skeleton (the rig's bones at the bind pose).
     pub skeleton: HandGeom,
+    /// Texture coordinates in the skin atlas (`uv`); vertices on chart borders are split.
+    pub uvs: Vec<[f32; 2]>,
+    /// The baked skin maps (`skin`), when `Options::textures` is not 0. With them the glTF
+    /// carries a textured material and no vertex colors.
+    pub maps: Option<skin::SkinMaps>,
 }
 
 pub struct Options {
     /// Grid spacing over the hand in meters (the forearm's grid is coarser along its length);
     /// 0.0012 gives about 130k triangles.
     pub voxel: f64,
+    /// Side of the baked colour and normal maps in texels (a power of two), or 0 for none.
+    pub textures: u32,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Options { voxel: 0.0012 }
+        Options { voxel: 0.0012, textures: 2048 }
     }
 }
 
@@ -76,9 +85,9 @@ pub fn generate(side: Side, opts: &Options) -> HandMesh {
     // the rig's own left bind skeleton, which is the same reflection.
     let right = bind_geom(Side::Right);
     let field = sdf::hand_field(&right);
-    let (positions, mut indices) = surface_nets(&field, &right, opts.voxel);
+    let (positions, indices) = surface_nets(&field, &right, opts.voxel);
     // Pull each vertex onto the surface.
-    let mut positions = par_map(&positions, |p| {
+    let positions = par_map(&positions, |p| {
         let mut p = *p;
         for _ in 0..3 {
             let d = field.eval(p);
@@ -99,12 +108,77 @@ pub fn generate(side: Side, opts: &Options) -> HandMesh {
         (j4, w4)
     });
     let (joints, weights): (Vec<_>, Vec<_>) = skin.into_iter().unzip();
+    let (joints, weights) = smooth_weights(&joints, &weights, &indices, &right);
     let nail: Vec<f32> = par_map(&positions, |p| field.nail_mask(*p) as f32);
+    let targets = correctives(&right, &positions);
+
+    // What the skin bake needs at each vertex: the palm side, the weight on the digits, ambient
+    // occlusion and how deep a crease cuts.
+    let digit_bone: Vec<bool> = right.bones.iter().map(|b| !["forearm", "hand", "thumb_cmc"].contains(&b.name.as_str())).collect();
+    let ids: Vec<usize> = (0..positions.len()).collect();
+    let attrs: Vec<[f32; 4]> = par_map(&ids, |&i| {
+        let (p, n) = (positions[i], normals[i]);
+        let (mut palmar, mut digit) = (0.0, 0.0);
+        for (j, w) in joints[i].iter().zip(weights[i]) {
+            palmar += w as f64 * n.dot(right.bones[*j as usize].frame.matrix3.z_axis.normalize());
+            if digit_bone[*j as usize] {
+                digit += w as f64;
+            }
+        }
+        let palmar = ((palmar / 0.7).clamp(-1.0, 1.0) * 0.5 + 0.5) as f32;
+        [palmar, digit as f32, occlusion(&field, p, n) as f32, (-field.eval_body(p)).max(0.0) as f32]
+    });
+
+    // UVs: each triangle goes to the bone with the most weight on its corners.
+    let bone_of: Vec<usize> = indices
+        .chunks(3)
+        .map(|t| {
+            let mut sum = vec![0f32; right.bones.len()];
+            for &v in t {
+                for (j, w) in joints[v as usize].iter().zip(weights[v as usize]) {
+                    sum[*j as usize] += w;
+                }
+            }
+            (0..sum.len()).max_by(|&a, &b| sum[a].total_cmp(&sum[b])).unwrap()
+        })
+        .collect();
+    let frames: Vec<_> = right.bones.iter().map(|b| b.frame).collect();
+    // The forearm gets fewer texels, the fingers a few more (for close-ups).
+    let density: Vec<f64> = right.bones.iter().zip(&digit_bone).map(|(b, d)| if b.name == "forearm" { 0.4 } else if *d { 1.15 } else { 1.0 }).collect();
+    let atlas_size = if opts.textures > 0 { opts.textures } else { 2048 };
+    let gutter = (atlas_size / 512).max(2);
+    let atlas = uv::unwrap(&positions, &indices, &bone_of, &frames, &density, atlas_size, gutter);
+    let copy = |values: &[_]| atlas.source.iter().map(|i| values[*i as usize]).collect::<Vec<_>>();
+    let mut positions: Vec<DVec3> = copy(&positions);
+    let normals: Vec<DVec3> = copy(&normals);
+    let joints: Vec<[u16; 4]> = atlas.source.iter().map(|i| joints[*i as usize]).collect();
+    let weights: Vec<[f32; 4]> = atlas.source.iter().map(|i| weights[*i as usize]).collect();
+    let nail: Vec<f32> = atlas.source.iter().map(|i| nail[*i as usize]).collect();
+    let attrs: Vec<[f32; 4]> = atlas.source.iter().map(|i| attrs[*i as usize]).collect();
+    let mut indices = atlas.indices;
+    // Each corrective moves every copy of the vertices it moved (sparse indices increase).
+    let mut copies: Vec<Vec<u32>> = vec![Vec::new(); ids.len()];
+    for (new, old) in atlas.source.iter().enumerate() {
+        copies[*old as usize].push(new as u32);
+    }
+    let mut targets: Vec<Vec<(u32, [f32; 3])>> = targets
+        .into_iter()
+        .map(|t| {
+            let mut out: Vec<(u32, [f32; 3])> = t.iter().flat_map(|(v, d)| copies[*v as usize].iter().map(move |c| (*c, *d))).collect();
+            out.sort_by_key(|x| x.0);
+            out
+        })
+        .collect();
+
+    // The skin maps, baked on the right hand (the left's mirrored UVs read them the same way).
+    let maps = (opts.textures > 0).then(|| {
+        let surface = skin::Surface { positions: &positions, normals: &normals, uvs: &atlas.uvs, indices: &indices, attrs: &attrs };
+        skin::bake(&right, &field, &surface, opts.textures, gutter, atlas.texels_per_meter)
+    });
+
     // glTF vertex colors are linear.
     let linear = |c: f32| if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) };
     let colors = nail.iter().map(|&m| std::array::from_fn(|i| linear(SKIN[i] + (NAIL[i] - SKIN[i]) * m))).collect();
-
-    let mut targets = correctives(&right, &positions);
 
     let skeleton = if side == Side::Left {
         for t in targets.iter_mut().flatten() {
@@ -132,7 +206,90 @@ pub fn generate(side: Side, opts: &Options) -> HandMesh {
         indices,
         targets,
         skeleton,
+        uvs: atlas.uvs,
+        maps,
     }
+}
+
+/// Diffuses the skin weights over the mesh, so no edge joins two vertices that move very
+/// differently: hard switches (between two fingers at a web, between the palm and a finger
+/// at a knuckle) turn triangles over when the fingers bend.
+fn smooth_weights(joints: &[[u16; 4]], weights: &[[f32; 4]], indices: &[u32], h: &HandGeom) -> (Vec<[u16; 4]>, Vec<[f32; 4]>) {
+    // About 5 mm of diffusion: enough to join the fingers' webs, not to soften the joints.
+    let iterations = 30;
+    let bones = h.bones.len();
+    // The finger joints past the knuckles keep their own (sharper) blends.
+    let distal: Vec<bool> = h.bones.iter().map(|b| b.name.ends_with("_pip") || b.name.ends_with("_dip") || b.name.ends_with("_ip")).collect();
+    let n = joints.len();
+    let locked: Vec<bool> = (0..n).map(|v| (0..4).any(|k| weights[v][k] > 0.02 && distal[joints[v][k] as usize])).collect();
+    let mut dense = vec![0f32; n * bones];
+    for v in 0..n {
+        for k in 0..4 {
+            dense[v * bones + joints[v][k] as usize] += weights[v][k];
+        }
+    }
+    let mut nbrs: Vec<Vec<u32>> = vec![Vec::new(); n];
+    for t in indices.chunks(3) {
+        for (a, b) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
+            if !nbrs[a as usize].contains(&b) {
+                nbrs[a as usize].push(b);
+            }
+            if !nbrs[b as usize].contains(&a) {
+                nbrs[b as usize].push(a);
+            }
+        }
+    }
+    for _ in 0..iterations {
+        let next: Vec<f32> = (0..n * bones)
+            .map(|i| {
+                let (v, b) = (i / bones, i % bones);
+                let nb = &nbrs[v];
+                if nb.is_empty() || locked[v] {
+                    return dense[i];
+                }
+                let avg = nb.iter().map(|u| dense[*u as usize * bones + b]).sum::<f32>() / nb.len() as f32;
+                0.5 * dense[i] + 0.5 * avg
+            })
+            .collect();
+        dense = next;
+    }
+    let mut js = Vec::with_capacity(n);
+    let mut ws = Vec::with_capacity(n);
+    for v in 0..n {
+        let row = &dense[v * bones..(v + 1) * bones];
+        let mut order: Vec<usize> = (0..bones).collect();
+        order.sort_by(|a, b| row[*b].total_cmp(&row[*a]));
+        let top: Vec<usize> = order.into_iter().take(4).filter(|b| row[*b] > 0.01).collect();
+        let sum: f32 = top.iter().map(|b| row[*b]).sum();
+        let mut j4 = [0u16; 4];
+        let mut w4 = [0f32; 4];
+        for (k, b) in top.iter().enumerate() {
+            j4[k] = *b as u16;
+            w4[k] = row[*b] / sum;
+        }
+        js.push(j4);
+        ws.push(w4);
+    }
+    (js, ws)
+}
+
+/// Ambient occlusion from the shape: how much of the space around a point, along its normal
+/// and six directions around it, the skin fills (1 open, 0 closed in).
+fn occlusion(field: &sdf::Field, p: DVec3, n: DVec3) -> f64 {
+    let (a, b) = n.any_orthonormal_pair();
+    let mut dirs = vec![n];
+    for k in 0..6 {
+        let ang = k as f64 * std::f64::consts::TAU / 6.0;
+        dirs.push((n * 0.6 + (a * ang.cos() + b * ang.sin()) * 0.8).normalize());
+    }
+    let steps = [0.0015, 0.003, 0.005, 0.008, 0.012, 0.018];
+    let mut occ = 0.0;
+    for d in &dirs {
+        for t in steps {
+            occ += ((t * d.dot(n) - field.eval_body(p + *d * t)) / t).clamp(0.0, 1.0);
+        }
+    }
+    (1.0 - 1.6 * occ / (dirs.len() * steps.len()) as f64).clamp(0.0, 1.0)
 }
 
 /// Each corrective shape: around the joint, the back of the finger bulges out and the palm

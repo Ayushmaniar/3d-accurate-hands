@@ -7,7 +7,7 @@ use handkit_fframes::look::{Look, Style, Styler};
 use handkit_fframes::three_d::*;
 
 fn coarse_hand() -> HandModel {
-    let mesh = handkit_mesh::generate(Side::Right, &handkit_mesh::Options { voxel: 0.004 });
+    let mesh = handkit_mesh::generate(Side::Right, &handkit_mesh::Options { voxel: 0.004, textures: 0 });
     HandModel::from_glb(&handkit_mesh::glb::to_glb(&mesh)).unwrap()
 }
 
@@ -75,4 +75,46 @@ fn motion_blur_spreads_a_moving_hand() {
     let a = soft(&render(&still, &still_hand, &solved, 0.03));
     let b = soft(&render(&blurred, &blurred_hand, &solved, 0.03));
     assert!(b > a * 2, "partly covered pixels: {a} still, {b} blurred");
+}
+
+#[test]
+fn every_style_shows_each_persons_skin() {
+    let hand = coarse_hand();
+    let solved = spread();
+    let (w, h) = (240u32, 160u32);
+    let (dark, light) = ([0x5e, 0x3e, 0x30], [0xf0, 0xc8, 0xb2]);
+    for style in Style::ALL {
+        let mut look = Look::of(style);
+        look.outline *= 1080.0 / h as f64;
+        let mut styler = Styler::new(look, w, h);
+        // Two people's hands side by side: dark on the left, light on the right.
+        let left = styler.dress_in(&hand, dark, None);
+        let right = styler.dress_in(&hand, light, None);
+        let px = styler.render(|_| {
+            let mut scene = styler.stage();
+            for (model, x) in [(&left, -0.075), (&right, 0.075)] {
+                let hi = model.add_to(&mut scene);
+                hi.pose(&mut scene, &solved);
+                scene[hi.instance.root].position.x += x;
+            }
+            (scene, Camera::perspective(40.0).at(0.0, 0.1, 0.5).look_at(vec3(0.0, 0.09, 0.0)))
+        });
+        let rgba = px.to_straight_rgba();
+        let mean = |x0: u32, x1: u32| {
+            let (mut sum, mut n) = (0.0, 0);
+            for y in 0..h {
+                for x in x0..x1 {
+                    let p = &rgba[((y * w + x) * 4) as usize..][..4];
+                    if p[3] > 200 && p.iter().take(3).any(|c| *c > 40) {
+                        sum += f64::from(p[0]) + f64::from(p[1]) + f64::from(p[2]);
+                        n += 1;
+                    }
+                }
+            }
+            assert!(n > 300, "{}: {n} pixels", style.name());
+            sum / n as f64
+        };
+        let (l, r) = (mean(0, w / 2), mean(w / 2, w));
+        assert!(r > l + 120.0, "{}: left (dark) {l:.0}, right (light) {r:.0}", style.name());
+    }
 }

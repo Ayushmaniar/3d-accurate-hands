@@ -14,6 +14,7 @@ pub mod pose;
 pub mod query;
 pub mod rig;
 pub mod solve;
+pub mod spell;
 
 use glam::DVec3;
 use serde_json::{Value, json};

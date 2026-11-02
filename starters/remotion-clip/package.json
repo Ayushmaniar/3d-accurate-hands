@@ -1,0 +1,21 @@
+{
+  "name": "handkit-remotion-clip",
+  "private": true,
+  "description": "Plays a Handkit clip in Remotion: <HandkitClip clip={...} look={...} /> for @remotion/three",
+  "type": "module",
+  "scripts": {
+    "assets": "node scripts/assets.mjs",
+    "studio": "remotion studio src/index.jsx",
+    "render": "remotion render src/index.jsx HandkitDemo out/demo.mp4"
+  },
+  "dependencies": {
+    "@handkit/three": "file:../../packages/handkit-three",
+    "@react-three/fiber": "9.8.1",
+    "@remotion/cli": "4.0.536",
+    "@remotion/three": "4.0.536",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.536",
+    "three": "0.186.1"
+  }
+}

@@ -55,6 +55,13 @@ enum Cmd {
         /// Grid spacing in millimeters (smaller = finer, slower).
         #[arg(long, default_value_t = 1.2)]
         voxel_mm: f64,
+        /// Side of the baked skin colour and normal maps (0 for none: vertex colors instead).
+        #[arg(long, default_value_t = 2048)]
+        textures: u32,
+        /// Also write the skin maps as files to this folder (skin_color.jpg, skin_normal.jpg,
+        /// skin_orm.jpg, skin_masks.jpg), e.g. assets/skin.
+        #[arg(long)]
+        skin_dir: Option<PathBuf>,
     },
     /// A multi-view PNG preview (needs node; uses tools/preview).
     Render {
@@ -107,6 +114,26 @@ enum Cmd {
         /// Background color as hex, e.g. "#2b2e33" (match the video player's).
         #[arg(long)]
         background: Option<String>,
+    },
+    /// Fingerspell a word in ASL as a clip (the asl_a ... asl_z gestures, J and Z traced).
+    Spell {
+        /// Letters and spaces, e.g. HELLO or "HI THERE".
+        text: String,
+        /// Output clip (default: print it).
+        #[arg(short, long)]
+        out: Option<PathBuf>,
+        /// Letters per second (natural: 3 to 4).
+        #[arg(long, default_value_t = 3.5)]
+        rate: f64,
+        /// The fraction of each letter's time it is held still.
+        #[arg(long, default_value_t = 0.4)]
+        hold: f64,
+        /// The clip's look, as the player's flag: realistic, toon, clay, toon,skin=tan,outline=4 ...
+        #[arg(long)]
+        look: Option<String>,
+        /// Video size, WIDTHxHEIGHT.
+        #[arg(long, default_value = "1920x1080")]
+        size: String,
     },
     /// A quick MP4 of a clip from the three.js preview (needs node and ffmpeg).
     Preview {
@@ -338,6 +365,20 @@ fn run() -> Result<()> {
             }
             emit(format!("wrote {} ({} frames; sampling {:.1} s, total {:.1} s)\n", out.display(), times.len(), sampled, start.elapsed().as_secs_f64()));
         }
+        Cmd::Spell { text, out, rate, hold, look, size } => {
+            let (w, h) = parse_size(&size)?;
+            let look = look.map(|l| handkit_core::look::Look::parse_flag(&l)).transpose().map_err(|e| anyhow!(e))?;
+            let o = handkit_core::spell::SpellOptions { rate, hold, look, size: [w, h], ..Default::default() };
+            let clip = handkit_core::spell::spell(&text, &o).map_err(|e| anyhow!(e))?;
+            let text = handkit_core::pose::to_text(&clip);
+            match out {
+                Some(path) => {
+                    std::fs::write(&path, &text)?;
+                    emit(format!("wrote {} ({:.1} s)\n", path.display(), clip["duration"].as_f64().unwrap_or(0.0)));
+                }
+                None => emit(text),
+            }
+        }
         Cmd::Gestures => {
             for (name, desc) in handkit_core::gestures::list() {
                 emit(format!("{name}: {desc}\n"));
@@ -354,16 +395,25 @@ fn run() -> Result<()> {
         },
         Cmd::Bones { pose } => emit(serde_json::to_string(&load(&pose)?.bones())? + "
 "),
-        Cmd::Mesh { side, out, voxel_mm } => {
+        Cmd::Mesh { side, out, voxel_mm, textures, skin_dir } => {
             let side = match side.as_str() {
                 "right" => handkit_core::pose::Side::Right,
                 "left" => handkit_core::pose::Side::Left,
                 _ => bail!("--side is right or left"),
             };
             let start = std::time::Instant::now();
-            let mesh = handkit_mesh::generate(side, &handkit_mesh::Options { voxel: voxel_mm / 1000.0 });
+            let mesh = handkit_mesh::generate(side, &handkit_mesh::Options { voxel: voxel_mm / 1000.0, textures });
             let glb = handkit_mesh::glb::to_glb(&mesh);
             std::fs::write(&out, &glb)?;
+            if let (Some(dir), Some(maps)) = (&skin_dir, &mesh.maps) {
+                std::fs::create_dir_all(dir)?;
+                for (name, data) in [("skin_color.jpg", &maps.albedo), ("skin_normal.jpg", &maps.normal), ("skin_orm.jpg", &maps.orm), ("skin_masks.jpg", &maps.masks)] {
+                    std::fs::write(dir.join(name), data)?;
+                }
+            }
+            if let Some(maps) = &mesh.maps {
+                eprintln!("skin maps {}px: charts cover {:.0}% of the atlas ({} texels overlap)", maps.size, maps.covered * 100.0, maps.overlap);
+            }
             emit(format!(
                 "wrote {} ({} vertices, {} triangles, {} joints, {:.0} KB, {:.1} s)
 ",

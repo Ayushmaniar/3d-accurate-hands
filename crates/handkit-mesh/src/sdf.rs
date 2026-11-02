@@ -428,16 +428,20 @@ pub fn hand_field(h: &HandGeom) -> Field {
     // Group 0: the forearm, round and muscular near the elbow, flat and narrow at the wrist,
     // with the head of the ulna on the back of the pinky side.
     let wrist_y = h.bones[hand].origin.y;
+    // The forearm's end tapers inside the heel of the palm, so its rim never shows as a step
+    // around the wrist.
+    let len = wrist_y + 0.010;
     prims.push(Prim {
         shape: Shape::Limb {
             to_local: DAffine3::IDENTITY,
-            len: wrist_y + 0.006,
+            len,
             keys: vec![
                 [0.0, 0.036, 0.032, 2.0],
-                [0.22, 0.039, 0.0335, 2.0],
-                [0.5, 0.0355, 0.0275, 2.1],
-                [0.8, 0.031, 0.0212, 2.3],
-                [1.0, 0.0265, 0.0158, 2.6],
+                [0.22 * wrist_y / len, 0.039, 0.0335, 2.0],
+                [0.5 * wrist_y / len, 0.0355, 0.0275, 2.1],
+                [0.8 * wrist_y / len, 0.031, 0.0212, 2.3],
+                [(wrist_y - 0.006) / len, 0.0262, 0.016, 2.6],
+                [1.0, 0.0215, 0.0132, 2.6],
             ],
         },
         bone: forearm,
@@ -460,8 +464,8 @@ pub fn hand_field(h: &HandGeom) -> Field {
         knuckles: mcp_local.iter().map(|m| dvec2(m.x, m.y)).collect(),
     };
     let outline: Vec<DVec2> = vec![
-        dvec2(-0.022, -0.008),
-        dvec2(0.022, -0.008),
+        dvec2(-0.0215, -0.03),
+        dvec2(0.0205, -0.03),
         dvec2(0.0335, 0.045),
         dvec2(0.0385, 0.080),
         dvec2(mcp_local[0].x, mcp_local[0].y + 0.004),
@@ -544,7 +548,7 @@ pub fn hand_field(h: &HandGeom) -> Field {
         let b = t.frame.transform_point3(dvec3(0.0, 0.1 * t.len, 0.0));
         prims.push(Prim { shape: Shape::RoundCone { a, b, ra: 0.0085, rb: 0.0062 }, bone: hand, group: 1, k: 0.008 });
     }
-    groups.push(0.008);
+    groups.push(0.006);
 
     // One group per digit.
     let mut nails = Vec::new();

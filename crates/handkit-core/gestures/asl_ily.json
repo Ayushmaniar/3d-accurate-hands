@@ -1,0 +1,22 @@
+{
+  "name": "asl_ily",
+  "description": "ASL I-LOVE-YOU: thumb, index and pinky stretched out, middle and ring curled into the palm; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 4.6,
+      "thumb": { "cmc_flex": -18, "cmc_abd": 12, "cmc_rot": 5, "mcp_flex": 8, "ip_flex": 10 },
+      "index": { "mcp_abd": -9.0, "mcp_flex": 6.6, "pip_flex": 6.9, "mcp_roll": -5.5, "dip_flex": 4.6 },
+      "middle": { "mcp_abd": 2.6, "mcp_flex": 86.4, "pip_flex": 101.3, "dip_flex": 72.1, "mcp_roll": -0.7 },
+      "ring": { "mcp_abd": -1.7, "mcp_flex": 83.3, "pip_flex": 100.4, "dip_flex": 73.0, "mcp_roll": -0.9 },
+      "pinky": { "mcp_abd": -3.3, "mcp_flex": 5.2, "pip_flex": 7.3, "mcp_roll": 4.7, "dip_flex": 4.8 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.middle.tip", "right.middle.metacarpal"] },
+    { "touch": ["right.ring.tip", "right.ring.metacarpal"] },
+    { "touch": ["right.index.tip", "right.pinky.tip"], "gap_mm": 60 }
+  ],
+  "camera": { "position": [0.0, 0.11, 0.42], "target": [0.0, 0.085, 0.02], "fov": 34 }
+}

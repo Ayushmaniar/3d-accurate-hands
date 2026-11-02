@@ -1,11 +1,9 @@
 //! The post-process of each look, over the passes of one moment (straight linear colour).
 
-use std::f32::consts::TAU;
-
 use fframes_three_d::{Vec2, Vec3};
 use rayon::prelude::*;
 
-use super::img::{self, Layer, Rect, Tile, smoothstep};
+use super::img::{self, Layer, Rect, smoothstep};
 use super::{Look, Style};
 
 pub(crate) struct Inputs<'a> {
@@ -23,11 +21,17 @@ pub(crate) struct Inputs<'a> {
     /// View-space normals: x right, y up, z toward the camera (stylized looks).
     pub normal: Vec<Vec3>,
     pub nail: Vec<f32>,
-    /// Object-space noise in 0..1, stuck to the skin.
-    pub noise: Vec<f32>,
+    /// The cores of the main creases, 0..1.
+    pub cavity: Vec<f32>,
+    /// The data map's G, stuck to the skin: the palm (toon, spiderverse) or the brush strokes'
+    /// warm / cool shift, 0.5 neutral (arcane).
+    pub detail: Vec<f32>,
     /// Distance from the camera in meters.
     pub depth: Vec<f32>,
-    pub brush: Option<&'a Tile>,
+    /// The skin and nail colours (sRGB) of the hands' people; none: the look's.
+    pub tones: &'a [([u8; 3], [u8; 3])],
+    /// Each pixel's index in `tones` (stylized looks with more than one tone; else all 0).
+    pub tone: Vec<u8>,
 }
 
 /// The key light of the stylized looks in view space: up and to the left, in front.
@@ -118,6 +122,31 @@ impl Palette {
     }
 }
 
+/// A person's colours in a stylized look: the cel palettes of skin and nails, and the palm.
+struct Tone {
+    ps: Palette,
+    pn: Palette,
+    /// The palm's colour relative to the back (much lighter on darker skin), from the same
+    /// model as the realistic skin.
+    palm_ratio: Vec3,
+    skin: Vec3,
+}
+
+impl Tone {
+    fn new(style: Style, skin_rgb: [u8; 3], nail_rgb: [u8; 3]) -> Tone {
+        let (skin, nail) = (img::srgb(skin_rgb), img::srgb(nail_rgb));
+        let (ps, pn) = match style {
+            Style::Arcane => (Palette::arcane(skin), Palette::arcane(nail)),
+            _ => (Palette::toon(skin), Palette::toon(nail)),
+        };
+        let t = handkit_mesh::skin::linear(skin_rgb);
+        let back = handkit_mesh::skin::tone_base(t, t, [0.0; 4]);
+        let palm = handkit_mesh::skin::tone_base(t, t, [0.0, 0.0, 0.0, 1.0]);
+        let palm_ratio = Vec3::new(palm[0] / back[0].max(1e-4), palm[1] / back[1].max(1e-4), palm[2] / back[2].max(1e-4));
+        Tone { ps, pn, palm_ratio, skin }
+    }
+}
+
 /// Toon, spiderverse and arcane, from the normals and data passes.
 pub(crate) fn stylized(inp: &Inputs) -> Layer {
     let look = inp.look;
@@ -125,17 +154,22 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
     let s = inp.scale;
     let (sil_d, int_d) = edges(inp);
     let int_d = int_d.unwrap();
-    let skin = img::srgb(look.skin);
-    let nail = img::srgb(look.nail_color());
     let style = look.style;
-    let (ps, pn) = match style {
-        Style::Arcane => (Palette::arcane(skin), Palette::arcane(nail)),
-        _ => (Palette::toon(skin), Palette::toon(nail)),
+    let own = [(look.skin, look.nail_color())];
+    let tones = if inp.tones.is_empty() { &own[..] } else { inp.tones };
+    let tones: Vec<Tone> = tones.iter().map(|(s, n)| Tone::new(style, *s, *n)).collect();
+    let tone_at = |i: usize| &tones[inp.tone.get(i).map_or(0, |t| *t as usize).min(tones.len() - 1)];
+    // Crease ink: the main creases only (palm lines, finger joints), thin.
+    let crease_ink = match style {
+        Style::Toon => 0.7,
+        Style::Spiderverse => 0.85,
+        Style::Arcane => 0.75,
+        _ => 0.0,
     };
     let tex = look.texture.unwrap_or(1.0) as f32;
     let r = look.outline as f32 * 0.5 * s;
-    let ink = match style {
-        Style::Arcane => skin * Vec3::new(0.09, 0.045, 0.045),
+    let ink = |t: &Tone| match style {
+        Style::Arcane => t.skin * Vec3::new(0.09, 0.045, 0.045),
         Style::Toon => Vec3::new(0.02, 0.012, 0.01),
         _ => Vec3::splat(0.004),
     };
@@ -151,6 +185,13 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
     // Screen position in meters at the hand, for textures that follow it.
     let meters = |x: usize, y: usize| (Vec2::new(x as f32, y as f32) - inp.anchor) / inp.ppm.max(1.0);
 
+    // A crease's ink: the crease lines of the data map (they stay on the skin), fading where
+    // the surface turns away (a crease seen edge-on is a line already).
+    let crease = |i: usize| -> f32 {
+        let c = inp.cavity.get(i).copied().unwrap_or(0.0);
+        let facing = smoothstep(0.15, 0.45, inp.normal[i].z);
+        smoothstep(0.15, 0.6, c) * facing * (1.0 - inp.nail[i])
+    };
     // Ink coverage first (spiderverse reuses it, offset, for the misregistration).
     let lines: Vec<f32> = (0..w * h)
         .into_par_iter()
@@ -164,14 +205,14 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
                     let n = inp.normal[i];
                     let shade = if inp.alpha[i] > 0.0 { (1.0 - n.dot(l)).clamp(0.0, 2.0) * 0.3 } else { 0.3 };
                     let rr = r * wobble * (0.85 + shade);
-                    cover(sil_d[i], rr).max(cover(int_d[i], rr * 0.55))
+                    cover(sil_d[i], rr).max(cover(int_d[i], rr * 0.55)).max(crease(i) * crease_ink)
                 }
                 Style::Arcane => {
                     let q = meters(x, y);
                     let wobble = img::noise2(q.x * 140.0, q.y * 140.0 + 7.0) * 0.7 + 0.5;
-                    cover(sil_d[i], r * wobble).max(cover(int_d[i], r * 0.8 * wobble) * 0.85)
+                    cover(sil_d[i], r * wobble).max(cover(int_d[i], r * 0.8 * wobble) * 0.85).max(crease(i) * crease_ink)
                 }
-                _ => cover(sil_d[i], r).max(cover(int_d[i], r * 0.6)),
+                _ => cover(sil_d[i], r).max(cover(int_d[i], r * 0.6)).max(crease(i) * crease_ink),
             }
         })
         .collect();
@@ -194,6 +235,8 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
             let (x, y) = (i % w, i / w);
             let a = inp.alpha[i];
             let line = lines[i];
+            let tone = tone_at(i);
+            let Tone { ps, pn, palm_ratio, skin } = tone;
             let mut out = [0f32; 4];
             if a > 0.0 {
                 let n = inp.normal[i];
@@ -201,26 +244,21 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
                 let m = inp.nail[i];
                 let col = match style {
                     Style::Arcane => {
-                        let q = meters(x, y);
-                        let tile = inp.brush.map(|t| {
-                            // About 7 cm of skin per tile, turned so strokes run diagonally.
-                            let (u, v) = (q.x * 0.8 + q.y * 0.6, -q.x * 0.6 + q.y * 0.8);
-                            (t.sample(u / 0.09, v / 0.09), t.mean)
-                        });
-                        let rel = tile.map_or(Vec3::ONE, |(c, mean)| c / mean);
-                        // Brush luminance breaks the band edges; object noise moves them.
-                        nl += (luminance(rel) - 1.0) * 0.7 * tex + (inp.noise[i] - 0.5) * 0.2 * tex;
-                        let soft = 0.09;
+                        // Each brush stroke on the skin moves the band edges its own way, so
+                        // they break along strokes.
+                        let stroke = inp.detail[i] - 0.5;
+                        nl += stroke * 0.14 * tex;
+                        let soft = 0.17;
                         let t0 = smoothstep(-0.5 - soft, -0.5 + soft, nl);
                         let t1 = smoothstep(-0.1 - soft, -0.1 + soft, nl);
                         let t2 = smoothstep(0.42 - soft, 0.42 + soft, nl);
                         let band = |p: &Palette| p.deep.lerp(p.shadow, t0).lerp(p.mid, t1).lerp(p.light, t2);
-                        let mut c = band(&ps).lerp(band(&pn), m);
-                        // Brush colour: the tile's warm/cool variation.
-                        c *= Vec3::ONE.lerp(rel, 0.5 * tex);
+                        let mut c = band(ps).lerp(band(pn), m);
+                        // The stroke's colour: warmer and lighter, or cooler and darker.
+                        c *= (Vec3::ONE + Vec3::new(0.16, 0.06, -0.1) * stroke * tex).max(Vec3::splat(0.2));
                         // Warm bounce on the shadow side's rim.
                         let rim = smoothstep(0.45, 0.95, 1.0 - n.z.max(0.0)) * (1.0 - t1);
-                        c += Vec3::new(0.22, 0.09, 0.03) * rim * luminance(skin) * 1.4;
+                        c += Vec3::new(0.22, 0.09, 0.03) * rim * luminance(*skin) * 1.4;
                         c
                     }
                     _ => {
@@ -228,7 +266,8 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
                         let t1 = smoothstep(0.18 - aa, 0.18 + aa, nl);
                         let t2 = smoothstep(0.72 - aa, 0.72 + aa, nl);
                         let band = |p: &Palette| p.shadow.lerp(p.mid, t1).lerp(p.light, t2);
-                        let mut c = band(&ps).lerp(band(&pn), m);
+                        let palm = inp.detail.get(i).copied().unwrap_or(0.0);
+                        let mut c = (band(ps) * Vec3::ONE.lerp(*palm_ratio, palm)).min(Vec3::ONE).lerp(band(pn), m);
                         if halftone > 0.0 {
                             // Ben-Day dots on a 45 degree grid, larger where it is darker.
                             let q = (Vec2::new(x as f32, y as f32) - inp.anchor) / halftone;
@@ -249,6 +288,7 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
             }
             // Ink over the fill, out to the line's own edge.
             let la = line.max(0.0);
+            let ink = ink(tone);
             for k in 0..3 {
                 out[k] = out[k] * (1.0 - la) + ink[k] * la;
             }
@@ -301,9 +341,9 @@ fn finish(inp: &Inputs, col: impl Fn(usize) -> Vec3 + Sync, ink: Vec3) -> Layer 
 /// hand's alpha, mixed in) and warmer shadows.
 pub(crate) fn realistic(inp: &Inputs) -> Layer {
     let Rect { w, h, .. } = inp.rect;
-    let mix = inp.look.subsurface.unwrap_or(0.5) as f32;
+    let mix = inp.look.subsurface.unwrap_or(0.35) as f32;
     // Scattering distances of skin per channel (meters), red the farthest.
-    let reach = [0.0032f32, 0.0013, 0.0008];
+    let reach = [0.0024f32, 0.001, 0.0006];
     let blurred: Vec<Vec<f32>> = (0..3)
         .into_par_iter()
         .map(|k| {
@@ -315,7 +355,7 @@ pub(crate) fn realistic(inp: &Inputs) -> Layer {
             c.iter().zip(&a).map(|(c, a)| if *a > 1e-3 { c / a } else { 0.0 }).collect()
         })
         .collect();
-    let warm = Vec3::new(1.2, 0.92, 0.82);
+    let warm = Vec3::new(1.15, 0.95, 0.88);
     finish(
         inp,
         |i| {
@@ -323,72 +363,14 @@ pub(crate) fn realistic(inp: &Inputs) -> Layer {
             let b = Vec3::new(blurred[0][i], blurred[1][i], blurred[2][i]);
             let mut c = c.lerp(b, mix);
             let dark = 1.0 - smoothstep(0.0, 0.2, luminance(c));
-            c *= Vec3::ONE.lerp(warm, dark * 0.85);
+            c *= Vec3::ONE.lerp(warm, dark * 0.45);
             c
         },
         Vec3::splat(0.01),
     )
 }
 
-/// A thumbprint's ridges at `q` (meters on the screen at the hand), in -1..1, 0 where there is
-/// none.
-fn thumbprints(q: Vec2, ridge: f32) -> f32 {
-    let cell = 0.02;
-    let c = (q / cell).floor();
-    let (mut best, mut h) = (0.0, 0.0);
-    for dy in -1..=1 {
-        for dx in -1..=1 {
-            let (ix, iy) = (c.x as i32 + dx, c.y as i32 + dy);
-            if img::hash(ix, iy, 11) < 0.3 {
-                continue;
-            }
-            let centre = Vec2::new(ix as f32 + img::hash(ix, iy, 12), iy as f32 + img::hash(ix, iy, 13)) * cell;
-            let radius = cell * (0.38 + 0.25 * img::hash(ix, iy, 14));
-            let (sa, ca) = (img::hash(ix, iy, 15) * TAU).sin_cos();
-            let d = q - centre;
-            let e = Vec2::new(d.x * ca + d.y * sa, (-d.x * sa + d.y * ca) * 1.35);
-            let dist = e.length();
-            let weight = (1.0 - smoothstep(radius * 0.15, radius, dist)) * (0.5 + 0.5 * img::hash(ix, iy, 17));
-            if weight > best {
-                best = weight;
-                let warp = img::noise2(e.x / ridge * 0.35 + ix as f32 * 7.0, e.y / ridge * 0.35) * 2.5;
-                h = ((dist / ridge + warp) * TAU + img::hash(ix, iy, 16) * 6.0).sin() * weight;
-            }
-        }
-    }
-    h
-}
-
-/// Matte clay: the lit render (lumpy normals come from `dress`) with thumbprints pressed in
-/// and a fine grain.
+/// Matte clay: the lit render (its lumps and fingerprints are in the normal map).
 pub(crate) fn clay(inp: &Inputs) -> Layer {
-    let Rect { w, h, .. } = inp.rect;
-    let tex = inp.look.texture.unwrap_or(1.0) as f32;
-    let ridge = (0.0011f32).max(4.0 / inp.ppm.max(1.0));
-    let field: Vec<f32> = (0..w * h)
-        .into_par_iter()
-        .map(|i| {
-            if inp.alpha[i] <= 0.0 {
-                return 0.0;
-            }
-            let q = (Vec2::new((i % w) as f32, (i / w) as f32) - inp.anchor) / inp.ppm.max(1.0);
-            thumbprints(q, ridge)
-        })
-        .collect();
-    let at = |x: usize, y: usize| field[y.min(h - 1) * w + x.min(w - 1)];
-    // Light from the upper left on the screen (x right, y down).
-    let light = Vec2::new(-0.6, -0.8);
-    finish(
-        inp,
-        |i| {
-            let (x, y) = (i % w, i / w);
-            let gx = at(x + 1, y) - at(x.saturating_sub(1), y);
-            let gy = at(x, y + 1) - at(x, y.saturating_sub(1));
-            // A ridge facing the light is lighter, its far side darker.
-            let emboss = -(gx * light.x + gy * light.y) * 0.11 * tex;
-            let grain = (img::hash(x as i32, y as i32, 5) - 0.5) * 0.035 * tex;
-            inp.color[i] * (1.0 + emboss + grain).max(0.0)
-        },
-        Vec3::splat(0.01),
-    )
+    finish(inp, |i| inp.color[i], Vec3::splat(0.01))
 }
