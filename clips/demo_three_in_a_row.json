@@ -1,0 +1,819 @@
+{
+ "version": 1,
+ "name": "three in a row",
+ "description": "Ana, Ben and a child, Cal, walk hand in hand: two interlaced holds in a chain, Ben in the middle, the swings out of step.",
+ "fps": 30,
+ "duration": 5.8,
+ "size": [
+  1920,
+  1080
+ ],
+ "camera": {
+  "position": [
+   0.0,
+   0.0,
+   1.05
+  ],
+  "target": [
+   0.0,
+   0.03,
+   0.0
+  ],
+  "fov": 27
+ },
+ "look": {
+  "style": "realistic",
+  "arm": "fade",
+  "motion_blur": 4
+ },
+ "people": {
+  "ana": {
+   "look": {
+    "skin": "dark"
+   }
+  },
+  "ben": {
+   "look": {
+    "skin": "tan"
+   }
+  },
+  "cal": {
+   "look": {
+    "skin": "light"
+   },
+   "scale": 0.75
+  }
+ },
+ "keys": [
+  {
+   "t": 0,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.0,
+       0
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.0
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.0
+      ]
+     }
+    },
+    "ben.left": {},
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.0,
+       0
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.0
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.0
+      ]
+     }
+    },
+    "cal.left": {}
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 0.6,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       -0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 1.15,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       -0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 1.7,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       -0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 2.25,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       -0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 2.8,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       -0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 3.35,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       -0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 3.9,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       -0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 4.45,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       -0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 5.0,
+   "pass": true,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.016,
+       0.085
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.17
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.016,
+       -0.07
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       0.26
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       -0.17
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  },
+  {
+   "t": 5.3,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.26,
+       0.0,
+       0
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.0
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.0
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       0.24,
+       0.0,
+       0
+      ],
+      "palm_facing": [
+       1,
+       0,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -1,
+       -0.0
+      ],
+      "forearm_toward": [
+       -0.35,
+       1,
+       0.0
+      ]
+     }
+    }
+   },
+   "goals": [
+    {
+     "grip": [
+      "ana.right",
+      "ben.left"
+     ],
+     "style": "interlaced"
+    },
+    {
+     "grip": [
+      "ben.right",
+      "cal.left"
+     ],
+     "style": "interlaced"
+    }
+   ]
+  }
+ ]
+}

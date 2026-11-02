@@ -576,7 +576,10 @@ impl Clip {
                 merged["people"] = p.clone();
             }
             // A grip the previous key held too keeps its hold: the follower goes where the
-            // previous key's grip puts it relative to the leader, fingers as they were.
+            // previous key's grip puts it relative to the leader, fingers as they were. It is
+            // not solved again: a hold that is not quite met (a child's hand in an adult's)
+            // would otherwise be placed afresh in every key, a little differently each time.
+            let mut kept = Vec::new();
             if let Some(p) = keys.last() {
                 for g in merged.get("goals").and_then(Value::as_array).cloned().unwrap_or_default() {
                     let Some(id) = grip_id(&g) else { continue };
@@ -596,10 +599,18 @@ impl Clip {
                         }
                         h.insert("place".into(), place);
                     }
+                    kept.push(g);
                 }
             }
-            let has_goals = merged.get("goals").and_then(Value::as_array).is_some_and(|g| !g.is_empty());
-            let solved_raw = if has_goals { crate::solve::solve_goals(&merged).map_err(at)?.0 } else { merged.clone() };
+            let mut to_solve = merged.clone();
+            if let Some(goals) = to_solve.get_mut("goals").and_then(Value::as_array_mut) {
+                goals.retain(|g| !kept.contains(g));
+            }
+            let has_goals = to_solve.get("goals").and_then(Value::as_array).is_some_and(|g| !g.is_empty());
+            let mut solved_raw = if has_goals { crate::solve::solve_goals(&to_solve).map_err(at)?.0 } else { to_solve };
+            if !kept.is_empty() {
+                solved_raw["goals"] = merged["goals"].clone();
+            }
             let (resolved, _) = pose::resolve(solved_raw.clone()).map_err(at)?;
             let solved = crate::solve_value(&solved_raw).map_err(at)?;
             let version = solved.pose.version;
