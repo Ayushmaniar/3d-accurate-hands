@@ -16,7 +16,9 @@ npx remotion render src/index.jsx HandkitDemo out/spider.mp4 --props='{"look":"s
 
 - `clip`: a clip object or its JSON text; `look`: a look (`{ "style": "toon", "skin": "tan" }` or a
   style name, `handkit explain looks`), default the clip's own; `assets`: the glb files under
-  `public/`. The canvas is transparent: put the backdrop behind it.
+  `public/` by side. The canvas is transparent: put the backdrop behind it.
+- Every hand of the clip is drawn (`right`, `left`, `ana.right`, ...: one glb each, posed from
+  `handBones(bones, name)`), each person in their own skin and nails from the clip's `"people"`.
 - The look needs WebGL2: `--gl=angle` uses the GPU (set in `remotion.config.js`); `swiftshader`
   works without one, slower. `--browser-executable` can point at a local Chrome Headless Shell.
 - A 1920x1080 frame of the demo renders in about 0.1 s here (156 frames in 24 s with bundling).

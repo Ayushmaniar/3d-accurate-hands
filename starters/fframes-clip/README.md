@@ -34,6 +34,16 @@ fframes-clip --clip clip.json --assets ../../assets render -o out.mp4
   "realistic;toon;spiderverse;arcane;clay" --look-every 2 render -o looks.mp4`.
   A 1080p frame takes about 80 ms (stylized) to 110 ms (realistic) on the CPU (16 threads),
   times N with motion blur.
+- With an elbow in view, end the forearm with the look's `"arm"`: `--look realistic,arm=fade`,
+  or `--look-json '{"arm": {"sleeve": "#2c3d66", "length": 0.09}}'` for a rolled-up sleeve
+  (also per person, in `people.<name>.look`; `clips/demo_arms.json`).
+- Something on screen that reacts to the hand: `self.clip.site_on_screen(t, "right.index.tip")`
+  gives the site's `screen` (fractions of the frame, as `place.screen`), `depth` and `world`
+  position at `t`, through the clip's camera (`handkit track` prints the same per frame).
+- Any number of hands: a clip with `ana.right`, `ben.left` (`handkit explain`, "Hands and
+  people") draws one mesh per hand, each in its person's skin and nails (`"people": {"ana":
+  {"look": {"skin": "brown"}}}`; every style shows it, the realistic skin maps toned per
+  person). `clips/demo_four_hands.json` is two people stacking four hands.
 - `fframes-clip --help` lists these flags and the standard fframes commands.
 - The video runs at 30 fps; write clips at 30 fps.
 

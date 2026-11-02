@@ -40,7 +40,7 @@
       // from clip.bones(t) for the time HyperFrames asks for (`hf-seek`), never from the frame before.
       import * as THREE from "three";
       import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-      import { handRig } from "@handkit/three";
+      import { handBones, handRig, handSide } from "@handkit/three";
       import { init, Clip } from "@handkit/three/core.js";
       import { HandkitLook } from "@handkit/three/look.js";
 
@@ -61,18 +61,25 @@
         await init();
         const text = await (await fetch("./clip.json")).text();
         const clip = new Clip(text);
-        // Every hand of a clip is in its first key.
-        const sides = Object.keys(JSON.parse(text).keys[0].hands);
+        // One mesh per hand of the clip ("right", "ana.left", ...), each person in their own
+        // skin and nails when the clip's "people" gives them a look.
+        const parsed = JSON.parse(text);
+        const names = JSON.parse(clip.hands);
+        const looks = JSON.parse(clip.looks());
         const loader = new GLTFLoader();
-        const gltfs = await Promise.all(sides.map((s) => loader.loadAsync(`./assets/hand_${s === "left" ? "L" : "R"}.glb`)));
+        const gltfs = await Promise.all(names.map((h) => loader.loadAsync(`./assets/hand_${handSide(h) === "left" ? "L" : "R"}.glb`)));
         gltfs.forEach((g) => scene.add(g.scene));
         const styled = new HandkitLook(renderer, look ?? JSON.parse(clip.look));
-        for (const g of gltfs) await styled.dress(g);
+        for (const [i, g] of gltfs.entries()) {
+          const person = names[i].includes(".") ? names[i].slice(0, names[i].lastIndexOf(".")) : "";
+          await styled.dress(g, parsed.people?.[person]?.look ? looks[names[i]] : null);
+        }
         const c = JSON.parse(clip.camera) ?? { position: [0, 0.1, 0.6], target: [0, 0.05, 0], fov: 35 };
         const camera = new THREE.PerspectiveCamera(c.fov ?? 35, W / H, 0.01, 50);
         camera.position.set(...c.position);
         camera.lookAt(new THREE.Vector3(...c.target));
-        state = { clip, rigs: gltfs.map((g) => handRig(g.scene)), look: styled, camera };
+        const rigs = gltfs.map((g, i) => { const apply = handRig(g.scene); return (bones) => apply(handBones(bones, names[i])); });
+        state = { clip, rigs, look: styled, camera };
       }
 
       function renderAt(time) {

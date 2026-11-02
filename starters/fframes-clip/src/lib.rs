@@ -4,10 +4,11 @@
 //!
 //! Copy this folder for a video and restyle `render_frame`: the background, a spotlight,
 //! titles. The hands come from `clip.sample(t)`, a pure function of time, so frames can
-//! render in any order on any thread.
+//! render in any order on any thread. Every hand of the clip is drawn (several people: one
+//! model instance per hand, each person in their own skin from the clip's `people`).
 use fframes::{AudioMap, Color, Duration, FFramesContext, Frame, Svgr, Video, include_media_dir};
 use handkit_core::clip::Clip;
-use handkit_core::pose::Side;
+use handkit_core::pose::{HandId, Side};
 use handkit_fframes::HandModel;
 use handkit_fframes::look::{Look, Style, Styler, TONES};
 use handkit_fframes::three_d::*;
@@ -40,10 +41,10 @@ pub struct LookArgs {
     pub look_every: f64,
 }
 
-/// One look, ready to render: its styler and the hands dressed for it.
+/// One look, ready to render: its styler and each hand of the clip dressed for it.
 struct Dressed {
     styler: Styler,
-    hands: Vec<HandModel>,
+    hands: Vec<(HandId, HandModel)>,
     /// Its name in the looks demo: the style and the skin tone, e.g. "toon · tan".
     label: String,
 }
@@ -116,12 +117,8 @@ impl<'a> FframesClipVideo<'a> {
             }
         };
         let clip = Clip::parse(clip)?;
-        let first = clip.sample(0.0)?;
-        let sides: Vec<Side> = [("right", Side::Right), ("left", Side::Left)]
-            .into_iter()
-            .filter(|(name, _)| first.pose["hands"].get(*name).is_some())
-            .map(|(_, side)| side)
-            .collect();
+        let ids: Vec<HandId> = clip.hands().to_vec();
+        let sides: Vec<Side> = [Side::Right, Side::Left].into_iter().filter(|s| ids.iter().any(|h| h.side == *s)).collect();
         let models = std::thread::scope(|s| {
             let jobs: Vec<_> = sides
                 .iter()
@@ -146,7 +143,15 @@ impl<'a> FframesClipVideo<'a> {
                 );
                 let label = format!("{} · {tone}", look.style.name());
                 let mut styler = Styler::new(look, WIDTH as u32, HEIGHT as u32);
-                let hands = models.iter().map(|m| styler.dress(m)).collect();
+                let hands = ids
+                    .iter()
+                    .map(|id| {
+                        let model = &models[sides.iter().position(|s| *s == id.side).unwrap()];
+                        // Each person in their own skin, nails and arm (`people.<person>.look`).
+                        let own = styler.look.for_person(clip.people.as_ref(), &id.person);
+                        (id.clone(), styler.dress_as(model, &own))
+                    })
+                    .collect();
                 Dressed { styler, hands, label }
             })
             .collect();
@@ -174,8 +179,8 @@ impl<'a> FframesClipVideo<'a> {
             let at = (t + dt as f64 / FPS as f64).clamp(0.0, self.clip.duration);
             let Ok(frame) = self.clip.sample(at) else { return (scene, Camera::perspective(35.0)) };
             if let Ok(solved) = handkit_core::solve_value(&frame.pose) {
-                for model in &look.hands {
-                    model.add_to(&mut scene).pose(&mut scene, &solved);
+                for (id, model) in &look.hands {
+                    model.add_as(&mut scene, id).pose(&mut scene, &solved);
                 }
             }
             let cam = frame.pose.get("camera").cloned().unwrap_or(serde_json::json!({ "position": [0.0, 0.1, 0.6], "target": [0.0, 0.05, 0.0], "fov": 35 }));

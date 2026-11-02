@@ -2,6 +2,7 @@
 //   import { init, bones } from '@handkit/three/core.js';
 //   await init();
 //   handRig(gltf.scene)(JSON.parse(bones(poseText)));
+//   // more people: one mesh per hand, handRig(meshOf[name])(handBones(b, name)) for name of handNames(b)
 import initWasm, * as wasm from './wasm/handkit_wasm.js';
 
 let ready;

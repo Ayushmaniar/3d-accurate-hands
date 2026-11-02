@@ -1,0 +1,28 @@
+{
+  "name": "holding_hands",
+  "description": "Holding hands side by side without interlacing: one person's right hand lies palm in the other's left palm; the outer hand's fingers curl round its pinky edge onto its back and the outer thumb closes over it; seen from the back of the inner hand.",
+  "version": 1,
+  "hands": {
+    "ana.right": {
+      "place": { "wrist": [-0.013, 0.0, 0.0], "palm_facing": [1, 0, 0], "fingers_toward": [0, -1, 0], "forearm_toward": [-0.6, 1, 0] },
+      "palm_cup": 6.0,
+      "thumb": { "cmc_flex": -24.9, "cmc_abd": -5.2, "cmc_rot": 1.7, "mcp_flex": 11.3, "ip_flex": 0.0 },
+      "index": { "mcp_flex": 55.3, "pip_flex": 60.1, "dip_flex": 40.8, "mcp_abd": -1.0, "mcp_roll": 2.7 },
+      "middle": { "mcp_flex": 60.1, "pip_flex": 62.4, "dip_flex": 44.3, "mcp_abd": 0.2, "mcp_roll": 1.1 },
+      "ring": { "mcp_flex": 42.1, "pip_flex": 63.9, "dip_flex": 49.0, "mcp_abd": -1.2, "mcp_roll": 3.0 },
+      "pinky": { "mcp_flex": 15.4, "pip_flex": 27.1, "dip_flex": 15.0, "mcp_abd": -3.8, "mcp_roll": -0.9 }
+    },
+    "ben.left": {
+      "palm_cup": 10.0,
+      "thumb": { "cmc_flex": -13.5, "cmc_abd": 17.2, "cmc_rot": 15.9, "mcp_flex": 27.7, "ip_flex": 22.6 },
+      "index": { "mcp_flex": -3.8, "pip_flex": 26.5, "dip_flex": 17.9, "mcp_abd": 6.6, "mcp_roll": 1.7 },
+      "middle": { "mcp_flex": 12.0, "pip_flex": 41.3, "dip_flex": 63.6, "mcp_abd": 0.4, "mcp_roll": 0.3 },
+      "ring": { "mcp_flex": 12.7, "pip_flex": 43.1, "dip_flex": 67.3, "mcp_abd": 3.1, "mcp_roll": -2.6 },
+      "pinky": { "mcp_flex": 8.2, "pip_flex": 39.6, "dip_flex": 23.1, "mcp_abd": 2.5, "mcp_roll": -1.3 },
+      "place": { "wrist": [0.0393, -0.0258, 0.0859], "palm_facing": [-0.952, -0.115, 0.076], "fingers_toward": [-0.117, -0.358, -0.919], "forearm_toward": [0.54391, 0.59336, 0.59336] }
+    }
+  },
+  "people": { "ana": { "look": { "skin": "brown" } }, "ben": { "look": { "skin": "light" } } },
+  "goals": [{ "grip": ["ana.right", "ben.left"], "style": "cupped" }],
+  "camera": { "position": [-0.241, -0.107, 0.176], "target": [0.009, -0.077, 0.006], "fov": 30 }
+}

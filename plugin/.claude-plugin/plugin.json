@@ -1,0 +1,5 @@
+{
+  "name": "handkit",
+  "description": "Anatomically accurate, agent-drivable 3D hands for code-made video: poses, natural motion, contacts, grips between people, and swappable looks, rendered in fframes, three.js (HyperFrames) or Remotion.",
+  "version": "0.5.0"
+}

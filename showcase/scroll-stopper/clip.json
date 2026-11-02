@@ -1,0 +1,315 @@
+{
+ "version": 1,
+ "fps": 30,
+ "duration": 7.0,
+ "camera": {
+  "position": [
+   0,
+   0.1,
+   0.6
+  ],
+  "target": [
+   0,
+   0.1,
+   0
+  ],
+  "fov": 32
+ },
+ "look": {
+  "style": "realistic",
+  "skin": "medium",
+  "motion_blur": 4
+ },
+ "keys": [
+  {
+   "t": -0.25,
+   "hands": {
+    "right": {
+     "from": "relaxed",
+     "place": {
+      "screen": [
+       0.56,
+       1.05
+      ],
+      "depth": 0.5,
+      "palm_facing": [
+       -1,
+       0,
+       1
+      ],
+      "fingers_toward": [
+       -0.25,
+       1,
+       0
+      ],
+      "elbow_screen": [
+       0.72,
+       1.6
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 0.6,
+   "hands": {
+    "right": {
+     "from": "snap_ready",
+     "place": {
+      "screen": [
+       0.5,
+       0.62
+      ],
+      "depth": 0.45,
+      "palm_facing": [
+       -1,
+       0,
+       1
+      ],
+      "fingers_toward": [
+       0,
+       1,
+       0
+      ],
+      "elbow_screen": [
+       0.7,
+       1.4
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 1.0,
+   "move": 0.07,
+   "ease": "snappy",
+   "hands": {
+    "right": {
+     "thumb": {
+      "cmc_abd": 30,
+      "cmc_flex": 10,
+      "cmc_rot": 55,
+      "mcp_flex": -15,
+      "ip_flex": -15
+     },
+     "middle": {
+      "mcp_flex": 95,
+      "pip_flex": 95,
+      "dip_flex": 60
+     }
+    }
+   }
+  },
+  {
+   "t": 1.38,
+   "move": 0.25,
+   "hands": {
+    "right": {
+     "from": "snap_ready"
+    }
+   }
+  },
+  {
+   "t": 2.0,
+   "move": 0.07,
+   "ease": "snappy",
+   "hands": {
+    "right": {
+     "thumb": {
+      "cmc_abd": 30,
+      "cmc_flex": 10,
+      "cmc_rot": 55,
+      "mcp_flex": -15,
+      "ip_flex": -15
+     },
+     "middle": {
+      "mcp_flex": 95,
+      "pip_flex": 95,
+      "dip_flex": 60
+     }
+    }
+   }
+  },
+  {
+   "t": 2.38,
+   "move": 0.25,
+   "hands": {
+    "right": {
+     "from": "snap_ready"
+    }
+   }
+  },
+  {
+   "t": 2.9,
+   "move": 0.07,
+   "ease": "snappy",
+   "hands": {
+    "right": {
+     "thumb": {
+      "cmc_abd": 30,
+      "cmc_flex": 10,
+      "cmc_rot": 55,
+      "mcp_flex": -15,
+      "ip_flex": -15
+     },
+     "middle": {
+      "mcp_flex": 95,
+      "pip_flex": 95,
+      "dip_flex": 60
+     }
+    }
+   }
+  },
+  {
+   "t": 3.28,
+   "move": 0.25,
+   "hands": {
+    "right": {
+     "from": "snap_ready"
+    }
+   }
+  },
+  {
+   "t": 3.6,
+   "move": 0.07,
+   "ease": "snappy",
+   "hands": {
+    "right": {
+     "thumb": {
+      "cmc_abd": 30,
+      "cmc_flex": 10,
+      "cmc_rot": 55,
+      "mcp_flex": -15,
+      "ip_flex": -15
+     },
+     "middle": {
+      "mcp_flex": 95,
+      "pip_flex": 95,
+      "dip_flex": 60
+     }
+    }
+   }
+  },
+  {
+   "t": 3.98,
+   "move": 0.25,
+   "hands": {
+    "right": {
+     "from": "snap_ready"
+    }
+   }
+  },
+  {
+   "t": 4.2,
+   "move": 0.07,
+   "ease": "snappy",
+   "hands": {
+    "right": {
+     "thumb": {
+      "cmc_abd": 30,
+      "cmc_flex": 10,
+      "cmc_rot": 55,
+      "mcp_flex": -15,
+      "ip_flex": -15
+     },
+     "middle": {
+      "mcp_flex": 95,
+      "pip_flex": 95,
+      "dip_flex": 60
+     }
+    }
+   }
+  },
+  {
+   "t": 4.58,
+   "move": 0.25,
+   "hands": {
+    "right": {
+     "from": "snap_ready"
+    }
+   }
+  },
+  {
+   "t": 4.75,
+   "move": 0.07,
+   "ease": "snappy",
+   "hands": {
+    "right": {
+     "thumb": {
+      "cmc_abd": 30,
+      "cmc_flex": 10,
+      "cmc_rot": 55,
+      "mcp_flex": -15,
+      "ip_flex": -15
+     },
+     "middle": {
+      "mcp_flex": 95,
+      "pip_flex": 95,
+      "dip_flex": 60
+     }
+    }
+   }
+  },
+  {
+   "t": 5.13,
+   "move": 0.25,
+   "hands": {
+    "right": {
+     "from": "snap_ready"
+    }
+   }
+  },
+  {
+   "t": 5.3,
+   "move": 0.07,
+   "ease": "snappy",
+   "hands": {
+    "right": {
+     "thumb": {
+      "cmc_abd": 30,
+      "cmc_flex": 10,
+      "cmc_rot": 55,
+      "mcp_flex": -15,
+      "ip_flex": -15
+     },
+     "middle": {
+      "mcp_flex": 95,
+      "pip_flex": 95,
+      "dip_flex": 60
+     }
+    }
+   }
+  },
+  {
+   "t": 6.0,
+   "move": 0.4,
+   "ease": "snappy",
+   "hands": {
+    "right": {
+     "from": "spread_palm",
+     "place": {
+      "screen": [
+       0.5,
+       0.8
+      ],
+      "depth": 0.52,
+      "palm_facing": [
+       -0.3,
+       0,
+       1
+      ],
+      "fingers_toward": [
+       0,
+       1,
+       0
+      ],
+      "elbow_screen": [
+       0.66,
+       1.4
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

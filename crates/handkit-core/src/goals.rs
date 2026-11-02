@@ -75,14 +75,15 @@ impl Solved {
         if let Some(c) = capsule(name) {
             return Ok(Target { a: c.a, b: c.b, r: c.r, site: None });
         }
-        Err(format!("unknown site or segment \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>. Segments are <hand>.<digit>.<metacarpal|proximal|middle|distal> (the thumb has metacarpal, proximal, distal) and <hand>.forearm. The hand must be in the file"))
+        Err(format!("unknown site or segment \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>. Segments are <hand>.<digit>.<metacarpal|proximal|middle|distal> (the thumb has metacarpal, proximal, distal) and <hand>.forearm; <hand> is right, left, or <person>.right / <person>.left. The hand must be in the file"))
     }
 
     /// A finger's pointing line: from its knuckle through its tip.
     pub fn finger_ray(&self, name: &str) -> Result<(DVec3, DVec3), String> {
-        let (side, digit) = name.split_once('.').ok_or(format!("aim \"{name}\": write <hand>.<digit>, e.g. right.index"))?;
+        let (id, digit) = crate::pose::split_hand(name).filter(|(_, d)| !d.is_empty()).ok_or(format!("aim \"{name}\": write <hand>.<digit>, e.g. right.index"))?;
         let d = Digit::ALL.into_iter().find(|d| d.name() == digit).ok_or(format!("aim \"{name}\": unknown digit"))?;
-        let h = self.hands.iter().find(|h| h.side.name() == side).ok_or(format!("aim \"{name}\": no {side} hand in the file"))?;
+        let side = id.name();
+        let h = self.hands.iter().find(|h| h.id == id).ok_or(format!("aim \"{name}\": no {side} hand in the file"))?;
         let base = h.capsules.iter().find(|c| c.digit == Some(d) && c.seg == Seg::Proximal).unwrap().a;
         let tip = h.sites.iter().find(|s| s.name == format!("{side}.{digit}.tip")).unwrap().pos;
         Ok((base, (tip - base).normalize()))
@@ -92,6 +93,15 @@ impl Solved {
 /// The residual components of one goal (meters) and its status. A touch asks for the surfaces
 /// to meet (or to stay `gap_mm` apart) and, for each named site, for the contact to land there.
 pub fn evaluate(goal: &Goal, s: &Solved) -> Result<(Vec<f64>, GoalStatus), String> {
+    if goal.grip.is_some() {
+        if goal.touch.is_some() || goal.aim.is_some() {
+            return Err("a grip is its own goal: write { \"grip\": [a, b], \"style\": .. } without touch or aim".into());
+        }
+        return crate::grip::evaluate(goal, s);
+    }
+    if goal.style.is_some() {
+        return Err("\"style\" goes with \"grip\": [a, b]".into());
+    }
     match (&goal.touch, &goal.aim) {
         (Some([a, b]), None) => {
             let want = goal.gap_mm.unwrap_or(0.0) / 1000.0;
@@ -153,7 +163,7 @@ pub fn evaluate(goal: &Goal, s: &Solved) -> Result<(Vec<f64>, GoalStatus), Strin
             let mm = deepest * 1000.0;
             Ok((Vec::new(), GoalStatus { label: format!("clear {}", goal.vary.join(", ")), value: (mm * 10.0).round() / 10.0, unit: "mm", met: mm >= -CLEAR_TOL_MM, note: String::new() }))
         }
-        _ => Err("each goal needs either \"touch\": [a, b], \"aim\": \"<hand>.<digit>\" with \"at\", or only \"vary\" (keep those parts from passing through anything)".into()),
+        _ => Err("each goal needs either \"touch\": [a, b], \"aim\": \"<hand>.<digit>\" with \"at\", \"grip\": [a, b] with \"style\", or only \"vary\" (keep those parts from passing through anything)".into()),
     }
 }
 

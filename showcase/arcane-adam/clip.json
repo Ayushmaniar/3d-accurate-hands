@@ -1,0 +1,30 @@
+{ "version": 1, "fps": 30, "duration": 8.9, "size": [1080, 1920],
+  "camera": { "position": [0, 0, 1.6], "target": [0, 0, 0], "fov": 40 },
+  "look": { "style": "arcane", "motion_blur": 3 },
+  "keys": [
+    { "t": -0.5, "hands": {
+        "left": { "from": "relaxed",
+          "index": { "mcp_flex": 8, "pip_flex": 12, "dip_flex": 6 },
+          "middle": { "mcp_flex": 35, "pip_flex": 50 },
+          "thumb": { "cmc_abd": 35 },
+          "place": { "screen": [0.26, 0.98], "depth": 1.75, "palm_facing": [0, -0.3, 1], "fingers_toward": [1, 0.35, 0], "elbow_screen": [-0.2, 1.15] } },
+        "right": { "from": "relaxed",
+          "index": { "mcp_flex": 10, "pip_flex": 15, "dip_flex": 8 },
+          "middle": { "mcp_flex": 45, "pip_flex": 60 },
+          "place": { "screen": [1.2, 0.48], "depth": 1.75, "palm_facing": [-0.2, -0.4, -1], "fingers_toward": [-0.9, -0.6, 0], "elbow_screen": [1.4, 0.3] } } } },
+    { "t": 0.45, "pass": true, "hands": {
+        "left": { "place": { "screen": [0.3, 0.68], "depth": 1.75, "palm_facing": [0, -0.3, 1], "fingers_toward": [1, 0.45, 0], "elbow_screen": [-0.15, 0.85] } },
+        "right": { "place": { "screen": [0.86, 0.37], "depth": 1.75, "palm_facing": [-0.2, -0.4, -1], "fingers_toward": [-0.9, -0.5, 0], "elbow_screen": [1.2, 0.15] } } } },
+    { "t": 1.4, "ease": "smooth", "hands": {
+        "left": { "place": { "screen": [0.28, 0.555], "depth": 1.75, "palm_facing": [0, -0.3, 1], "fingers_toward": [1, 0.5, 0], "elbow_screen": [-0.15, 0.7] } },
+        "right": { "place": { "screen": [0.69, 0.33], "depth": 1.75, "palm_facing": [-0.2, -0.4, -1], "fingers_toward": [-0.85, -0.6, 0], "elbow_screen": [1.15, 0.12] } } } },
+    { "t": 3.6, "hands": {
+        "left": { "index": { "mcp_flex": 4 }, "place": { "screen": [0.285, 0.55], "depth": 1.75, "palm_facing": [0, -0.3, 1], "fingers_toward": [1, 0.52, 0], "elbow_screen": [-0.15, 0.7] } },
+        "right": { "index": { "mcp_flex": 14 }, "place": { "screen": [0.68, 0.335], "depth": 1.75, "palm_facing": [-0.2, -0.4, -1], "fingers_toward": [-0.85, -0.6, 0], "elbow_screen": [1.15, 0.12] } } } },
+    { "t": 6.0, "hands": {
+        "left": { "index": { "mcp_flex": 10 }, "place": { "screen": [0.28, 0.56], "depth": 1.75, "palm_facing": [0, -0.3, 1], "fingers_toward": [1, 0.48, 0], "elbow_screen": [-0.15, 0.7] } },
+        "right": { "index": { "mcp_flex": 8 }, "place": { "screen": [0.685, 0.33], "depth": 1.75, "palm_facing": [-0.2, -0.4, -1], "fingers_toward": [-0.86, -0.58, 0], "elbow_screen": [1.15, 0.12] } } } },
+    { "t": 8.4, "hands": {
+        "left": { "index": { "mcp_flex": 6 }, "place": { "screen": [0.285, 0.553], "depth": 1.75, "palm_facing": [0, -0.3, 1], "fingers_toward": [1, 0.5, 0], "elbow_screen": [-0.15, 0.7] } },
+        "right": { "index": { "mcp_flex": 12 }, "place": { "screen": [0.68, 0.333], "depth": 1.75, "palm_facing": [-0.2, -0.4, -1], "fingers_toward": [-0.85, -0.6, 0], "elbow_screen": [1.15, 0.12] } } } }
+  ] }

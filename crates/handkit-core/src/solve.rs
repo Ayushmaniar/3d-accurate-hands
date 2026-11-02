@@ -81,6 +81,14 @@ pub fn solve_goals_with(raw: &Value, round: bool) -> Result<(Value, SolveReport)
 /// `solve_goals_with`; `own_hand` keeps only each hand's own parts apart, not one hand from
 /// the other.
 pub fn solve_goals_in(raw: &Value, round: bool, own_hand: bool) -> Result<(Value, SolveReport), String> {
+    // A grip that does not hold starts from the style's placement and shape.
+    let prepared;
+    let raw = if raw.get("goals").is_some_and(|g| g.to_string().contains("\"grip\"")) {
+        prepared = crate::grip::prepare(raw)?;
+        &prepared
+    } else {
+        raw
+    };
     let (resolved, _) = resolve(raw.clone())?;
     let first = solve_value(raw)?;
     if first.pose.goals.is_empty() {
@@ -234,7 +242,7 @@ fn near_pairs(s: &Solved, own_hand: bool) -> Vec<(usize, usize)> {
     for i in 0..caps.len() {
         for j in i + 1..caps.len() {
             let (a, b) = (caps[i], caps[j]);
-            if query::collides(a, b) && (!own_hand || a.side == b.side) && seg_dist(a.a, a.b, b.a, b.b) - a.r - b.r < 0.005 {
+            if query::collides(a, b) && (!own_hand || a.hand == b.hand) && seg_dist(a.a, a.b, b.a, b.b) - a.r - b.r < 0.005 {
                 out.push((i, j));
             }
         }
@@ -273,10 +281,8 @@ fn residuals(s: &Solved, pairs: &[(usize, usize)], u: &[f64], u0: &[f64], reg: f
 
 /// pip_flex of "<hand>.<finger>." as the file currently has it.
 fn pip_value(s: &Solved, prefix: &str) -> f64 {
-    let mut parts = prefix.trim_end_matches('.').split('.');
-    let (side, finger) = (parts.next().unwrap_or(""), parts.next().unwrap_or(""));
-    let hand = if side == "left" { &s.pose.hands.left } else { &s.pose.hands.right };
-    let f = hand.as_ref().and_then(|h| match finger {
+    let Some((id, finger)) = crate::pose::split_hand(prefix.trim_end_matches('.')) else { return 0.0 };
+    let f = s.pose.hands.get(&id).and_then(|h| match finger {
         "index" => h.index.as_ref(),
         "middle" => h.middle.as_ref(),
         "ring" => h.ring.as_ref(),
@@ -354,21 +360,23 @@ fn set_value(v: &mut Value, path: &[Value], x: Value) {
     }
 }
 
-const SIDES: [&str; 2] = ["right", "left"];
-
 /// The variables named by every goal's `vary` (or its defaults), deduplicated. A hand that
 /// mirrors the other varies the other's values unless it overrides them itself.
 fn collect_params(raw: &Value, resolved: &Value, solved: &Solved, work: &mut Value) -> Result<Vec<Param>, String> {
     let mut patterns: Vec<String> = Vec::new();
     for g in &solved.pose.goals {
+        if g.grip.is_some() && g.vary.is_empty() {
+            patterns.extend(crate::grip::vary(g)?);
+            continue;
+        }
         if !g.vary.is_empty() {
             patterns.extend(g.vary.iter().cloned());
             continue;
         }
         if let Some([a, b]) = &g.touch {
             for name in [a, b] {
-                let mut parts = name.split('.');
-                let (side, part) = (parts.next().unwrap_or(""), parts.next().unwrap_or(""));
+                let (side, rest) = crate::pose::split_hand(name).map(|(id, r)| (id.name(), r)).unwrap_or_default();
+                let part = rest.split('.').next().unwrap_or("");
                 match part {
                     "thumb" | "index" | "middle" => patterns.push(format!("{side}.{part}.*")),
                     "ring" | "pinky" => {
@@ -380,7 +388,7 @@ fn collect_params(raw: &Value, resolved: &Value, solved: &Solved, work: &mut Val
             }
         }
         if let Some(f) = &g.aim {
-            let (side, digit) = f.split_once('.').unwrap_or((f, ""));
+            let (side, digit) = crate::pose::split_hand(f).map(|(id, d)| (id.name(), d)).unwrap_or((f.clone(), ""));
             patterns.push(format!("{side}.wrist"));
             if digit == "thumb" {
                 patterns.push(format!("{side}.thumb.*"));
@@ -394,10 +402,12 @@ fn collect_params(raw: &Value, resolved: &Value, solved: &Solved, work: &mut Val
     let coupled = solved.pose.version.unwrap_or(0) >= 1;
     let mut out: Vec<Param> = Vec::new();
     for pat in patterns {
-        let (side, rest) = pat.split_once('.').ok_or(format!("vary \"{pat}\": write <hand>.<what>, e.g. right.thumb.*"))?;
-        if !SIDES.contains(&side) {
-            return Err(format!("vary \"{pat}\": the hand must be right or left"));
+        if !pat.contains('.') {
+            return Err(format!("vary \"{pat}\": write <hand>.<what>, e.g. right.thumb.*"));
         }
+        let (id, rest) = crate::pose::split_hand(&pat).ok_or(format!("vary \"{pat}\": the hand must be right, left, or <person>.right / <person>.left"))?;
+        let side_name = id.name();
+        let side = side_name.as_str();
         if resolved.get("hands").and_then(|h| h.get(side)).is_none() {
             return Err(format!("vary \"{pat}\": there is no {side} hand"));
         }
@@ -458,7 +468,7 @@ fn owner_side<'a>(raw: &'a Value, side: &'a str, key: Option<&str>) -> &'a str {
         Some(k) => get(hand.unwrap(), &k.split('.').map(|s| json!(s)).collect::<Vec<_>>()).is_some(),
         None => ["place", "elbow", "forearm_rotation_deg"].iter().any(|k| hand.unwrap().get(*k).is_some()),
     };
-    if own { side } else if other == "right" { "right" } else { "left" }
+    if own { side } else { other }
 }
 
 /// The placement's values: its position (`part` 0), its orientation (1), or both.
@@ -473,7 +483,8 @@ fn place_params(raw: &Value, resolved: &Value, side: &str, work: &mut Value, par
         groups.push(("", vec!["elbow"], 0.02));
         groups.push(("", vec!["forearm_rotation_deg"], 10.0));
     } else {
-        let x = if owner == "left" { -0.1 } else { 0.1 };
+        let left = crate::pose::split_hand(owner).is_some_and(|(id, _)| id.side == crate::pose::Side::Left);
+        let x = if left { -0.1 } else { 0.1 };
         let elbow = hand.pointer("/place/elbow").filter(|v| !v.is_null()).cloned().unwrap_or(json!([x, -0.3, 0.0]));
         let rot = hand.pointer("/place/forearm_rotation_deg").filter(|v| !v.is_null()).cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
         work["hands"][owner]["place"] = json!({"elbow": elbow, "forearm_rotation_deg": rot});

@@ -15,6 +15,12 @@
 //! Everything textured is in the hand's UV atlas, so it moves with the skin; only spiderverse's
 //! halftone dots stay on the screen, as print does.
 //!
+//! The look's `arm` ends the forearm at the elbow (`arm.rs`): a fading arm renders one more flat
+//! pass, each vertex's opacity, and multiplies every layer by it after the post-process (ink
+//! included); a sleeve is a cloth mesh on the forearm joint, lit as matte cloth in the lit looks
+//! and shaded in its own cel palette in the stylized ones, its end past the elbow fading out
+//! the same way.
+//!
 //! ```rust,ignore
 //! let mut styler = Styler::new(Look::from_value(&look_json)?, 1920, 1080);
 //! let hands: Vec<HandModel> = models.iter().map(|m| styler.dress(m)).collect();
@@ -22,11 +28,12 @@
 //! let image = styler.render(|dt| build_scene_at(t + dt / fps)).into_image();
 //! ```
 
+mod arm;
 mod img;
 mod shade;
 mod surface;
 
-pub use handkit_core::look::{Look, Style, TONES};
+pub use handkit_core::look::{Arm, Look, Style, TONES};
 
 use std::sync::Arc;
 
@@ -46,11 +53,21 @@ pub struct Styler {
     pub height: u32,
     color: Renderer,
     flat: Renderer,
-    /// The dressed hands.
+    /// The dressed hands (and sleeves).
     dressed: Vec<Dressed>,
+    /// The colours the hands are dressed in, one entry per person's tone or sleeve.
+    tones: Vec<Paint>,
 }
 
-/// What the flat passes draw for a dressed hand.
+/// A colour the stylized looks shade in: a person's skin and nails, or a sleeve's cloth (sRGB).
+#[derive(Clone, Copy, PartialEq)]
+pub(crate) struct Paint {
+    pub skin: [u8; 3],
+    pub nail: [u8; 3],
+    pub cloth: bool,
+}
+
+/// What the flat passes draw for a dressed hand or sleeve.
 struct Dressed {
     /// The geometry of the colour pass, which identifies the hand in a scene.
     color: Arc<Geometry>,
@@ -59,6 +76,25 @@ struct Dressed {
     data_map: Option<Arc<Texture>>,
     /// The normals pass' normal map (arcane's strokes).
     normal_map: Option<Arc<Texture>>,
+    /// Its skin and nail colours: an index in `Styler::tones`.
+    tone: usize,
+    /// The geometry without vertex colours, for the tone pass.
+    plain: Arc<Geometry>,
+    /// A fading arm (or a sleeve's end): the geometry with each vertex's opacity in its colours.
+    fade: Option<Arc<Geometry>>,
+}
+
+/// The flat passes of the stylized looks.
+#[derive(Clone, Copy)]
+enum Flat {
+    /// View normals (with the normal map).
+    Normals,
+    /// The data map, fading to blue from near to far.
+    Data(f32, f32),
+    /// Each hand in its skin colour, unlit: which tone a pixel shows, with more than one.
+    Tone,
+    /// Each hand's opacity (a fading arm, a sleeve's end), unlit; everything else opaque.
+    Fade,
 }
 
 /// Fog runs from near to this fraction of the data pass's depth range, so the colour channels
@@ -72,7 +108,7 @@ impl Styler {
             _ => 1.0,
         });
         let flat = Renderer::new(width, height).cpu().tone_mapping(ToneMapping::Linear);
-        Styler { look, width, height, color, flat, dressed: Vec::new() }
+        Styler { look, width, height, color, flat, dressed: Vec::new(), tones: Vec::new() }
     }
 
     fn stylized(&self) -> bool {
@@ -80,26 +116,42 @@ impl Styler {
     }
 
     /// A copy of `model` dressed for the look: its material, the colour map of the skin tone
-    /// (realistic), the maps of the stylized passes and clay. Textures are built once per hand
-    /// and look and shared. Add the dressed model to the scenes you render.
+    /// (realistic), the maps of the stylized passes and clay. Textures are built once per hand,
+    /// look and tone, and shared. Add the dressed model to the scenes you render.
     pub fn dress(&mut self, model: &HandModel) -> HandModel {
+        let own = self.look.clone();
+        self.dress_as(model, &own)
+    }
+
+    /// `dress` in another skin and nail colour (sRGB; no nail: the one the style gives the
+    /// skin), with the look's arm.
+    pub fn dress_in(&mut self, model: &HandModel, skin: [u8; 3], nail: Option<[u8; 3]>) -> HandModel {
+        let own = Look { skin, nail, ..self.look.clone() };
+        self.dress_as(model, &own)
+    }
+
+    /// `dress` in a person's look (`Look::for_person`): its skin, nail and arm; the style and
+    /// everything else are this look's. Every style shows them: realistic builds a colour map
+    /// for each tone, the stylized looks shade each hand (and sleeve) in its own palette.
+    pub fn dress_as(&mut self, model: &HandModel, own: &Look) -> HandModel {
+        let (skin_rgb, nail) = (own.skin, own.nail);
         let mut out = model.clone();
         let Some(id) = out.mesh() else { return out };
         let style = self.look.style;
         let mesh = out.model.scene[id].mesh_mut().unwrap();
         let loaded = mesh.material.clone();
-        let skin = img::srgb(self.look.skin);
-        let nail_rgb = self.look.nail.unwrap_or_else(|| match style {
+        let nail_rgb = nail.unwrap_or_else(|| match style {
             // Realistic nails follow the tone's own nail colour (lighter on darker skin).
-            Style::Realistic => handkit_mesh::skin::nail_color(handkit_mesh::skin::linear(self.look.skin)).map(|c| (img::linear_to_srgb(c) * 255.0).round() as u8),
-            _ => self.look.nail_color(),
+            Style::Realistic => handkit_mesh::skin::nail_color(handkit_mesh::skin::linear(skin_rgb)).map(|c| (img::linear_to_srgb(c) * 255.0).round() as u8),
+            _ => Look { skin: skin_rgb, nail: None, ..self.look.clone() }.nail_color(),
         });
+        let skin = img::srgb(skin_rgb);
         let nail = img::srgb(nail_rgb);
         let mask = |i: usize| model.nail.get(i).copied().unwrap_or(0.0);
         let mut g = (*mesh.geometry).clone();
         let textured = |kind| surface::texture(model, kind);
         mesh.material = match style {
-            Style::Realistic => match textured(surface::Kind::Tone(self.look.skin, nail_rgb)) {
+            Style::Realistic => match textured(surface::Kind::Tone(skin_rgb, nail_rgb)) {
                 Some(map) => {
                     g.colors.clear();
                     let mut m = Material::standard(Rgb::WHITE).roughness(1.0).clearcoat(0.1).map(map);
@@ -148,10 +200,61 @@ impl Styler {
                 })
                 .collect(),
         };
+        // A fading arm: each vertex's opacity, for the fade pass.
+        let fade = match (own.arm, arm::Forearm::of(model)) {
+            (Arm::Fade, Some(forearm)) => {
+                let mut f = g.clone();
+                f.colors = f.positions.iter().map(|p| Vec3::splat(forearm.fade(*p)).extend(1.0)).collect();
+                Some(Arc::new(f))
+            }
+            _ => None,
+        };
         let g = Arc::new(g);
         mesh.geometry = Arc::clone(&g);
-        self.dressed.push(Dressed { color: g, data: Arc::new(d), data_map, normal_map });
+        let tone = self.tone_of(Paint { skin: skin_rgb, nail: nail_rgb, cloth: false });
+        let d = Arc::new(d);
+        let plain = match (d.colors.is_empty(), g.colors.is_empty()) {
+            (true, _) => Arc::clone(&d),
+            (_, true) => Arc::clone(&g),
+            _ => {
+                let mut p = (*g).clone();
+                p.colors.clear();
+                Arc::new(p)
+            }
+        };
+        self.dressed.push(Dressed { color: g, data: d, data_map, normal_map, tone, plain, fade });
+        if let Arm::Sleeve { color, length } = own.arm {
+            self.add_sleeve(&mut out, model, color, length);
+        }
         out
+    }
+
+    /// The index of a paint in `tones`, added when new.
+    fn tone_of(&mut self, paint: Paint) -> usize {
+        self.tones.iter().position(|t| *t == paint).unwrap_or_else(|| {
+            self.tones.push(paint);
+            self.tones.len() - 1
+        })
+    }
+
+    /// Puts a rolled-up sleeve of `color` (sRGB) on the dressed hand's forearm joint, `length`
+    /// meters from the elbow: matte cloth, with no nails, creases or palm in the data pass, its
+    /// end past the elbow fading out in the fade pass.
+    fn add_sleeve(&mut self, out: &mut HandModel, model: &HandModel, color: [u8; 3], length: f64) {
+        let (Some(forearm), Some(mesh)) = (arm::Forearm::of(model), model.mesh()) else { return };
+        let Some(skin) = model.model.scene[mesh].as_mesh() else { return };
+        let (g, opacity) = forearm.sleeve(&skin.geometry.positions, length as f32);
+        let mut fade = g.clone();
+        fade.colors = opacity.iter().map(|a| Vec3::splat(*a).extend(1.0)).collect();
+        let mut d = g.clone();
+        let arcane = self.look.style == Style::Arcane;
+        d.colors = d.positions.iter().map(|p| Vec4::new(surface::pack_nail(0.0), if arcane { img::fbm3(*p * 70.0) } else { 0.0 }, 0.0, 1.0)).collect();
+        let c = img::srgb(color);
+        let material = Material::standard(Rgb::linear(c.x, c.y, c.z)).roughness(1.0).env_intensity(0.6);
+        let g = Arc::new(g);
+        out.model.scene.add_to(forearm.joint, Node::mesh(Arc::clone(&g), material).named("sleeve"));
+        let tone = self.tone_of(Paint { skin: color, nail: color, cloth: true });
+        self.dressed.push(Dressed { color: Arc::clone(&g), data: Arc::new(d), data_map: None, normal_map: None, tone, plain: g, fade: Some(Arc::new(fade)) });
     }
 
     /// An empty scene for the look: transparent, no lights (`render` adds the look's lights
@@ -206,13 +309,50 @@ impl Styler {
         let projected = camera.project(anchor_world, self.width as f32, self.height as f32).unwrap_or(Vec3::new(self.width as f32 * 0.5, self.height as f32 * 0.5, 1.0));
         let ppm = camera.pixel_size(anchor_world, 1.0, self.height as f32);
         let (forward, right, up) = (camera.forward(), camera.right(), camera.up_vector());
+        let fades = self.dressed.iter().any(|d| d.fade.is_some());
+        // A fading arm or sleeve: every layer times each pixel's opacity, carried out past the
+        // silhouette so the ink and plates around a faded forearm fade with it.
+        let faded = |layer: Layer, px: Option<Pixels>| -> Layer {
+            let Some(px) = px else { return layer };
+            let Rect { w, h, .. } = layer.rect;
+            let (rgb, a) = img::decode(&px, layer.rect);
+            let mut num: Vec<f32> = rgb.iter().zip(&a).map(|(c, a)| c.x * a).collect();
+            let mut den = a.clone();
+            let sigma = margin as f32 * 0.5;
+            rayon::join(|| img::blur(&mut num, w, h, sigma), || img::blur(&mut den, w, h, sigma));
+            let rgba = (layer.rgba.par_iter(), rgb.par_iter(), a.par_iter(), num.par_iter(), den.par_iter())
+                .into_par_iter()
+                .map(|(p, c, a, num, den)| {
+                    let around = if *den > 1e-4 { num / den } else { 1.0 };
+                    let m = c.x * a + around * (1.0 - a);
+                    p.map(|v| v * m)
+                })
+                .collect();
+            Layer { rect: layer.rect, rgba }
+        };
         if self.stylized() {
             let (near, far) = depth_range(scene, camera);
             let fog_far = near + (far - near) / FOG_SPAN;
-            let (normals, data) = rayon::join(|| self.flat_pass(scene, camera, None), || self.flat_pass(scene, camera, Some((near, fog_far))));
+            let several = self.tones.len() > 1;
+            let ((normals, opacity), (data, tones)) = rayon::join(
+                || rayon::join(|| self.flat_pass(scene, camera, Flat::Normals), || fades.then(|| self.flat_pass(scene, camera, Flat::Fade))),
+                || rayon::join(|| self.flat_pass(scene, camera, Flat::Data(near, fog_far)), || several.then(|| self.flat_pass(scene, camera, Flat::Tone))),
+            );
             let rect = Rect::around(&normals, margin)?;
             let (nrgb, alpha) = img::decode(&normals, rect);
             let (drgb, _) = img::decode(&data, rect);
+            // Each pixel's tone: the nearest of the hands' skin colours.
+            let tone: Vec<u8> = match &tones {
+                Some(px) => {
+                    let skins: Vec<Vec3> = self.tones.iter().map(|p| img::srgb(p.skin)).collect();
+                    img::decode(px, rect)
+                        .0
+                        .par_iter()
+                        .map(|c| (0..skins.len()).min_by(|a, b| (skins[*a] - *c).length_squared().total_cmp(&(skins[*b] - *c).length_squared())).unwrap_or(0) as u8)
+                        .collect()
+                }
+                None => Vec::new(),
+            };
             // The normals, softened a little inside the alpha (the mesh's facets and bumps
             // would make the band edges ragged).
             let mut ch: Vec<Vec<f32>> = (0..3).map(|k| nrgb.iter().zip(&alpha).map(|(c, a)| (c[k] * 2.0 - 1.0) * a).collect()).collect();
@@ -238,12 +378,14 @@ impl Styler {
                 cavity: Vec::new(),
                 detail: drgb.iter().map(|c| (c.y / fade(c)).clamp(0.0, 1.0)).collect(),
                 depth: drgb.iter().map(|c| near + c.z * (fog_far - near)).collect(),
+                tones: &self.tones,
+                tone,
             };
             let (nail, cavity): (Vec<f32>, Vec<f32>) = drgb.iter().map(|c| surface::unpack((c.x / fade(c)).clamp(0.0, 1.0))).unzip();
             let inputs = shade::Inputs { nail, cavity, ..inputs };
-            Some(shade::stylized(&inputs))
+            Some(faded(shade::stylized(&inputs), opacity))
         } else {
-            let px = self.color_pass(scene, camera);
+            let (px, opacity) = rayon::join(|| self.color_pass(scene, camera), || fades.then(|| self.flat_pass(scene, camera, Flat::Fade)));
             let rect = Rect::around(&px, margin)?;
             let (color, alpha) = img::decode(&px, rect);
             let inputs = shade::Inputs {
@@ -259,11 +401,14 @@ impl Styler {
                 cavity: Vec::new(),
                 detail: Vec::new(),
                 depth: Vec::new(),
+                tones: &self.tones,
+                tone: Vec::new(),
             };
-            Some(match look.style {
+            let layer = match look.style {
                 Style::Clay => shade::clay(&inputs),
                 _ => shade::realistic(&inputs),
-            })
+            };
+            Some(faded(layer, opacity))
         }
     }
 
@@ -297,14 +442,17 @@ impl Styler {
         }
     }
 
-    /// The normals pass, or with `fog` the data pass: the data map (or vertex colours) unlit,
-    /// fading to blue with the distance from the camera.
-    fn flat_pass(&self, scene: &Scene, camera: &Camera, fog: Option<(f32, f32)>) -> Pixels {
+    /// A flat pass: the normals, the data map (or vertex colours) unlit fading to blue with
+    /// the distance from the camera, each hand's skin colour, or its opacity.
+    fn flat_pass(&self, scene: &Scene, camera: &Camera, pass: Flat) -> Pixels {
         let mut s = scene.clone();
         s.background = Background::Transparent;
         s.environment = Environment::None;
         s.reflector = None;
-        s.fog = fog.map(|(near, far)| Fog::Linear { color: Rgb::linear(0.0, 0.0, 1.0), near, far });
+        s.fog = match pass {
+            Flat::Data(near, far) => Some(Fog::Linear { color: Rgb::linear(0.0, 0.0, 1.0), near, far }),
+            _ => None,
+        };
         let ids: Vec<NodeId> = s.nodes().map(|(id, _)| id).collect();
         for id in ids {
             let node = &mut s[id];
@@ -320,15 +468,15 @@ impl Styler {
             }
             mesh.cast_shadow = false;
             let dressed = self.dressed.iter().find(|d| Arc::ptr_eq(&d.color, &mesh.geometry));
-            mesh.material = match (fog, dressed) {
-                (None, Some(d)) => {
+            mesh.material = match (pass, dressed) {
+                (Flat::Normals, Some(d)) => {
                     let mut m = Material::normals();
                     m.normal_map = d.normal_map.clone();
                     m.normal_scale = self.look.texture.unwrap_or(1.0) as f32;
                     m
                 }
-                (None, None) => Material::normals(),
-                (Some(_), Some(d)) => {
+                (Flat::Normals, None) => Material::normals(),
+                (Flat::Data(..), Some(d)) => {
                     mesh.geometry = Arc::clone(&d.data);
                     let m = Material::unlit(Rgb::WHITE);
                     match &d.data_map {
@@ -336,7 +484,26 @@ impl Styler {
                         None => m,
                     }
                 }
-                (Some(_), None) => Material::unlit(Rgb::BLACK),
+                (Flat::Data(..), None) => Material::unlit(Rgb::BLACK),
+                (Flat::Tone, d) => {
+                    if let Some(d) = d {
+                        mesh.geometry = Arc::clone(&d.plain);
+                    }
+                    let c = img::srgb(self.tones[d.map_or(0, |d| d.tone)].skin);
+                    Material::unlit(Rgb::linear(c.x, c.y, c.z))
+                }
+                (Flat::Fade, d) => {
+                    match d {
+                        Some(d) => mesh.geometry = Arc::clone(d.fade.as_ref().unwrap_or(&d.plain)),
+                        None if !mesh.geometry.colors.is_empty() => {
+                            let mut g = (*mesh.geometry).clone();
+                            g.colors.clear();
+                            mesh.geometry = Arc::new(g);
+                        }
+                        None => {}
+                    }
+                    Material::unlit(Rgb::WHITE)
+                }
             };
         }
         self.flat.render_pixels(&s, camera)

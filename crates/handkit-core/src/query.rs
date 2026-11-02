@@ -65,8 +65,8 @@ pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
     for t in caps.iter().filter(|c| c.digit == Some(Digit::Thumb) && c.seg == Seg::Distal) {
         let best = caps
             .iter()
-            .filter(|c| c.digit != Some(Digit::Thumb) || c.side != t.side)
-            .filter(|c| c.is_phalanx() || c.side != t.side)
+            .filter(|c| c.digit != Some(Digit::Thumb) || c.hand != t.hand)
+            .filter(|c| c.is_phalanx() || c.hand != t.hand)
             .map(|c| (c, (seg_dist(t.a, t.b, c.a, c.b) - t.r - c.r) * 1000.0))
             .min_by(|x, y| x.1.total_cmp(&y.1));
         if let Some((c, gap)) = best {
@@ -82,7 +82,7 @@ pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
         if let Some(c) = caps.iter().find(|c| c.label() == name) {
             return Ok((c.a, c.b, c.r));
         }
-        Err(format!("unknown site or segment \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>. Segments are <hand>.<digit>.<metacarpal|proximal|middle|distal> (the thumb has metacarpal, proximal, distal) and <hand>.forearm. The hand must be in the file"))
+        Err(format!("unknown site or segment \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>. Segments are <hand>.<digit>.<metacarpal|proximal|middle|distal> (the thumb has metacarpal, proximal, distal) and <hand>.forearm; <hand> is right, left, or <person>.right / <person>.left. The hand must be in the file"))
     };
     let mut checks = Vec::new();
     for [a, b] in &pose.checks {
@@ -97,12 +97,12 @@ pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
         for h in hands {
             for d in Digit::ALL {
                 let Some(base) = h.capsules.iter().find(|c| c.digit == Some(d) && c.seg == Seg::Proximal) else { continue };
-                let tip = h.sites.iter().find(|s| s.name == format!("{}.{}.tip", h.side.name(), d.name())).unwrap().pos;
+                let tip = h.sites.iter().find(|s| s.name == format!("{}.{}.tip", h.name, d.name())).unwrap().pos;
                 let ray = (tip - base.a).normalize();
                 let to = p - base.a;
                 let angle = ray.dot(to.normalize()).clamp(-1.0, 1.0).acos().to_degrees();
                 let miss = (to - ray * to.dot(ray)).length() * 1000.0;
-                probes.push(ProbeHit { probe: name.clone(), finger: format!("{}.{}", h.side.name(), d.name()), angle_deg: round1(angle), miss_mm: round1(miss) });
+                probes.push(ProbeHit { probe: name.clone(), finger: format!("{}.{}", h.name, d.name()), angle_deg: round1(angle), miss_mm: round1(miss) });
             }
         }
     }
@@ -132,7 +132,7 @@ pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
 /// Pairs that can collide: anything across hands; within a hand, different digits where at
 /// least one is a moving segment (a proximal phalanx always touches the palm at its knuckle).
 pub fn collides(a: &Capsule, b: &Capsule) -> bool {
-    if a.side != b.side {
+    if a.hand != b.hand {
         return true;
     }
     if a.part == b.part {
@@ -148,7 +148,7 @@ pub fn collides(a: &Capsule, b: &Capsule) -> bool {
 /// Contacts worth reporting: across hands, anything with the thumb, and fingertips on the palm.
 /// Neighbouring fingers lying side by side are left out.
 fn worth_listing(a: &Capsule, b: &Capsule) -> bool {
-    a.side != b.side
+    a.hand != b.hand
         || a.digit == Some(Digit::Thumb)
         || b.digit == Some(Digit::Thumb)
         || (a.seg == Seg::Distal && !b.is_phalanx())

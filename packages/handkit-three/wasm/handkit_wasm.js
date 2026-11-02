@@ -66,6 +66,22 @@ export class Clip {
         return ret;
     }
     /**
+     * The clip's hands by name, as JSON: `["right", "left", "ana.right", ...]`.
+     * @returns {string}
+     */
+    get hands() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.clip_hands(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
      * The clip's `look` with defaults filled in (see `look`), JSON text.
      * @returns {string}
      */
@@ -74,6 +90,30 @@ export class Clip {
         let deferred2_1;
         try {
             const ret = wasm.clip_look(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Each hand's look by hand name, as JSON: the clip's `look` (see `look`) in the colours of
+     * the hand's person (`people.<person>.look` sets their skin, nail and arm; the style is the
+     * clip's): `{"right": {..}, "ana.right": {"style": .., "skin": [r, g, b], ..}}`.
+     * @returns {string}
+     */
+    looks() {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.clip_looks(this.__wbg_ptr);
             var ptr1 = ret[0];
             var len1 = ret[1];
             if (ret[3]) {
@@ -125,6 +165,36 @@ export class Clip {
         }
     }
     /**
+     * Where a site (`right.index.tip`, `ana.left.palm_center`) is at `t`, as JSON:
+     * `{"screen": [x, y], "depth": d, "world": [x, y, z]}`, screen in fractions of the frame
+     * (x from the left, y from the top, as `place.screen`) through the clip's camera and size,
+     * depth in meters along the view (both null without a camera).
+     * @param {number} t
+     * @param {string} name
+     * @returns {string}
+     */
+    site(t, name) {
+        let deferred4_0;
+        let deferred4_1;
+        try {
+            const val2 = +t;
+            const ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len0 = WASM_VECTOR_LEN;
+            const ret = wasm.clip_site(this.__wbg_ptr, val2, ptr0, len0);
+            var ptr3 = ret[0];
+            var len3 = ret[1];
+            if (ret[3]) {
+                ptr3 = 0; len3 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred4_0 = ptr3;
+            deferred4_1 = len3;
+            return getStringFromWasm0(ptr3, len3);
+        } finally {
+            wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+        }
+    }
+    /**
      * The clip's `size` (`[width, height]`) as JSON text, `null` when it gives none (16:9).
      * @returns {string}
      */
@@ -145,8 +215,9 @@ if (Symbol.dispose) Clip.prototype[Symbol.dispose] = Clip.prototype.free;
 
 /**
  * Joint transforms and corrective shape weights for a pose file:
- * `{"joints": {"index_pip_R": {"t": [..], "r": [x, y, z, w]}}, "morph": {"skin_R": [..]}}`.
- * Apply them with `handRig(gltf.scene)` from `@handkit/three`.
+ * `{"joints": {"index_pip_R": {"t": [..], "r": [x, y, z, w]}}, "morph": {"skin_R": [..]},
+ * "hands": {"ana.right": {"joints": .., "morph": ..}}}`. Apply them with `handRig(gltf.scene)`
+ * from `@handkit/three` (one mesh per hand: `handBones(bones, name)`).
  * @param {string} pose
  * @returns {string}
  */
@@ -201,7 +272,8 @@ export function gesture(name) {
  * A `look` (an object or a bare style name, see `handkit explain looks`) checked and with
  * every default filled in: `{"style": "toon", "skin": [r, g, b], "nail": [r, g, b],
  * "nail_given": false, "outline": 3, "motion_blur": 1, "shutter": 180, "halftone": 8,
- * "misregister": 3, "texture": 1, "subsurface": 0.35}` (colours sRGB bytes). `"null"` is the
+ * "misregister": 3, "texture": 1, "subsurface": 0.35, "arm": "bare"}` (colours sRGB bytes;
+ * arm is "bare", "fade" or `{"sleeve": [r, g, b], "length": 0.08}`). `"null"` is the
  * default look. `HandkitLook` in `@handkit/three` draws it.
  * @param {string} value
  * @returns {string}

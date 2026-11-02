@@ -9,17 +9,18 @@
 //! two neighbouring keys share are re-solved every frame, so a held contact stays closed while
 //! the hand moves.
 
-use glam::{DQuat, DVec3, EulerRot};
+use glam::{DAffine3, DQuat, DVec3, EulerRot};
 use serde_json::{Value, json};
 
+use crate::collide;
 use crate::params::PARAMS;
-use crate::pose::{self, Side};
-use crate::rig::FOREARM;
+use crate::pose::{self, HandId, Side};
+use crate::rig::{Digit, FOREARM, HandGeom, Seg};
 
-const SIDES: [(Side, &str); 2] = [(Side::Right, "right"), (Side::Left, "left")];
 const DIGITS: [&str; 5] = ["thumb", "index", "middle", "ring", "pinky"];
-/// Key fields that are about timing, not the pose. All but `t` can also go on a hand.
-const TIMING: [&str; 7] = ["t", "move", "ease", "spring", "cascade", "anticipate", "pass"];
+/// Key fields that are about timing (and collisions), not the pose. All but `t` can also go on
+/// a hand.
+const TIMING: [&str; 8] = ["t", "move", "ease", "spring", "cascade", "anticipate", "pass", "collide"];
 
 #[derive(Clone, Copy, Debug)]
 struct Spring {
@@ -183,23 +184,102 @@ struct HandKey {
     rot: DQuat,
 }
 
+/// Per hand, in the clip's hand order (`Clip::hands`).
 #[derive(Clone, Debug)]
 struct Key {
     t: f64,
-    hands: [Option<HandKey>; 2],
+    hands: Vec<Option<HandKey>>,
     goals: Vec<Value>,
     camera: Option<Value>,
     /// The step into this key, per joint group (see `group_of`), per hand.
-    steps: [Vec<Step>; 2],
+    steps: Vec<Vec<Step>>,
     /// The step for each hand's placement.
-    place_steps: [Step; 2],
+    place_steps: Vec<Step>,
     /// The step for the camera.
     cam_step: Step,
     /// Per hand: the hand moves through this key without stopping.
-    pass: [bool; 2],
+    pass: Vec<bool>,
     cam_pass: bool,
     /// The hands this key writes (a hand it leaves out moves on between its own keys).
-    named: [bool; 2],
+    named: Vec<bool>,
+    /// Per hand: whether it collides with other hands during the move into this key and while
+    /// it holds it.
+    collide: Vec<bool>,
+    /// Per hand: its hand frame at this key (`grip::hand_frame`).
+    frames: Vec<DAffine3>,
+}
+
+/// A grip held by a run of keys: the follower moves with the leader.
+struct Hold {
+    /// The grip's identity (`grip_id`).
+    id: (Value, Value),
+    leader: usize,
+    follower: usize,
+    first: usize,
+    last: usize,
+    /// Per key of the run: the follower's hand frame in the leader's.
+    offsets: Vec<DAffine3>,
+    /// The follower is joined to the leader from `join.1` on (fading in from `join.0`) and lets
+    /// go from `part.0` (gone at `part.1`); infinite when the run starts or ends the clip.
+    join: (f64, f64),
+    part: (f64, f64),
+    /// When the gripping fingers start to open (the grip is held until then).
+    release: f64,
+    /// While the pair does not collide.
+    exempt: (f64, f64),
+    /// Per hand (leader, follower): the joint values (PARAMS indices) of its gripping digits.
+    closing: [Vec<usize>; 2],
+}
+
+/// How fast a gripped follower's forearm follows its hand (Hz, critically damped): the elbow
+/// trails a pull by about 2 / (2 pi TRAIL_HZ) s, a few frames.
+const TRAIL_HZ: f64 = 3.0;
+/// Seconds over which gripping fingers close before a grip's key, and open as it ends; the
+/// hands start apart this long after the fingers start opening.
+const GRIP_CLOSE: f64 = 0.3;
+const GRIP_OPEN: f64 = 0.25;
+const GRIP_PART_DELAY: f64 = 0.2;
+
+impl Hold {
+    /// How joined the follower is at `t`, 0 to 1.
+    fn weight(&self, t: f64) -> f64 {
+        let ramp = |t: f64, (a, b): (f64, f64)| if t >= b { 1.0 } else if t <= a { 0.0 } else { smooth((t - a) / (b - a)) };
+        ramp(t, self.join) * (1.0 - ramp(t, self.part))
+    }
+}
+
+/// Between two hand frames: positions straight, orientations along the shortest turn.
+fn blend(a: DAffine3, b: DAffine3, w: f64) -> DAffine3 {
+    if w <= 0.0 {
+        return a;
+    }
+    if w >= 1.0 {
+        return b;
+    }
+    let (qa, qb) = (DQuat::from_mat3(&a.matrix3.into()), DQuat::from_mat3(&b.matrix3.into()));
+    let qb = if qa.dot(qb) < 0.0 { -qb } else { qb };
+    DAffine3::from_rotation_translation(qa.slerp(qb, w), a.translation.lerp(b.translation, w))
+}
+
+/// The wrist's rotation (twist, deviation, flexion) of a hand, as the rig builds it.
+fn wrist_rot(side: Side, values: &[f64]) -> DQuat {
+    let idx = |k: &str| PARAMS.iter().position(|p| p.key == k).unwrap();
+    let (twist, dev, flex) = (values[idx("twist")], values[idx("wrist_dev")], values[idx("wrist_flex")]);
+    let local = DQuat::from_rotation_y(twist.to_radians()) * DQuat::from_rotation_z(-dev.to_radians()) * DQuat::from_rotation_x(flex.to_radians());
+    // The left hand is built mirrored in x: M R M keeps x rotations and flips y and z.
+    if side == Side::Left { DQuat::from_xyzw(local.x, -local.y, -local.z, local.w) } else { local }
+}
+
+/// A hand's frame from its forearm placement and joint values.
+fn hand_frame(side: Side, values: &[f64], wrist: DVec3, rot: DQuat) -> DAffine3 {
+    DAffine3::from_rotation_translation(rot * wrist_rot(side, values), wrist)
+}
+
+/// The direction from the wrist toward the elbow, in the hand's frame, for these wrist angles.
+fn forearm_dir(side: Side, dev: f64, flex: f64) -> DVec3 {
+    let (d, f) = (dev.to_radians(), flex.to_radians());
+    let x = if side == Side::Left { -d.sin() } else { d.sin() };
+    DVec3::new(x, -d.cos() * f.cos(), d.cos() * f.sin())
 }
 
 impl Key {
@@ -209,7 +289,7 @@ impl Key {
 
     /// When the move into this key begins (for goals).
     fn begin(&self) -> f64 {
-        (0..2).filter(|si| self.named[*si]).map(|si| self.place_steps[si].begin()).fold(self.cam_step.begin().min(self.t), f64::min)
+        (0..self.named.len()).filter(|si| self.named[*si]).map(|si| self.place_steps[si].begin()).fold(self.cam_step.begin().min(self.t), f64::min)
     }
 }
 
@@ -278,18 +358,80 @@ pub struct Clip {
     pub size: Option<Value>,
     /// How to draw the hands (`look::Look`), copied into every sampled pose.
     pub look: Option<Value>,
+    /// Per person: { "ana": { "look": {..} } }, copied into every sampled pose.
+    pub people: Option<Value>,
     keys: Vec<Key>,
     idle: f64,
     seed: u64,
     follow: f64,
-    /// The hands in the clip.
-    present: [bool; 2],
+    /// The hands in the clip (all in the first key): the default person's right and left, then
+    /// other people's hands in the order the first key lists them.
+    ids: Vec<HandId>,
+    /// Each hand's channel of the idle noise (the default hands keep the ones they always had).
+    chan: Vec<usize>,
+    /// How far collisions with the other hands push each hand, over time.
+    track: collide::Track,
+    /// Grips held over runs of keys.
+    holds: Vec<Hold>,
+}
+
+/// A grip goal's identity: its two hands and style.
+fn grip_id(g: &Value) -> Option<(Value, Value)> {
+    Some((g.get("grip")?.clone(), g.get("style").cloned().unwrap_or(Value::Null)))
 }
 
 /// A sampled frame: the pose and the goals held at that time.
 pub struct Frame {
     pub pose: Value,
     pub goals: Vec<Value>,
+}
+
+/// Where a site is in a frame: in the world, and through the clip's camera on screen.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SiteOnScreen {
+    pub world: DVec3,
+    /// Fractions of the frame, x from the left and y from the top (as `place.screen`); none
+    /// without a camera, or behind it.
+    pub screen: Option<[f64; 2]>,
+    /// Meters from the camera along its view; none without a camera.
+    pub depth: Option<f64>,
+}
+
+impl SiteOnScreen {
+    /// `{"screen": [x, y], "depth": d, "world": [x, y, z]}`, null where there is none.
+    pub fn json(&self) -> Value {
+        let r = |x: f64| (x * 1e5).round() / 1e5 + 0.0;
+        json!({
+            "screen": self.screen.map(|s| [r(s[0]), r(s[1])]),
+            "depth": self.depth.map(r),
+            "world": [r(self.world.x), r(self.world.y), r(self.world.z)],
+        })
+    }
+}
+
+impl Frame {
+    /// Where sites (`right.index.tip`, `ana.left.palm_center`; a segment gives its middle) are
+    /// in this frame, with the frame's camera and size.
+    pub fn sites_on_screen(&self, names: &[&str]) -> Result<Vec<SiteOnScreen>, String> {
+        let solved = crate::solve_value(&self.pose)?;
+        let view = self.pose.get("camera").and_then(pose::View::of);
+        let aspect = pose::aspect(&self.pose);
+        names
+            .iter()
+            .map(|name| {
+                let target = solved.target(name)?;
+                let world = target.site.map_or((target.a + target.b) / 2.0, |s| s.1);
+                let (screen, depth) = match &view {
+                    Some(v) => {
+                        let (s, d) = v.project(aspect, world);
+                        (s, Some(d))
+                    }
+                    None => (None, None),
+                };
+                Ok(SiteOnScreen { world, screen, depth })
+            })
+            .collect()
+    }
 }
 
 fn num(v: &Value, k: &str) -> Result<Option<f64>, String> {
@@ -328,8 +470,8 @@ impl Clip {
     pub fn from_value(v: &Value) -> Result<Clip, String> {
         let obj = v.as_object().ok_or("a clip is a JSON object")?;
         for k in obj.keys() {
-            if !["version", "name", "description", "duration", "fps", "camera", "idle", "follow", "keys", "size", "look"].contains(&k.as_str()) {
-                return Err(format!("unknown clip field \"{k}\" (fields: version, name, description, duration, fps, size, camera, look, idle, follow, keys)"));
+            if !["version", "name", "description", "duration", "fps", "camera", "idle", "follow", "keys", "size", "look", "people", "collide"].contains(&k.as_str()) {
+                return Err(format!("unknown clip field \"{k}\" (fields: version, name, description, duration, fps, size, camera, look, people, idle, follow, collide, keys)"));
             }
         }
         if let Some(ver) = num(v, "version")? {
@@ -350,6 +492,15 @@ impl Clip {
         if let Some(l) = &look {
             crate::look::Look::from_value(l)?;
         }
+        let people = v.get("people").cloned();
+        if let Some(p) = &people {
+            pose::check_people(p)?;
+        }
+        let collide_default = match v.get("collide") {
+            None => true,
+            Some(Value::Bool(b)) => *b,
+            Some(_) => return Err("\"collide\" is true (hands do not pass through each other; the default) or false".into()),
+        };
         if let Some(s) = &size {
             let ok = s.as_array().is_some_and(|a| a.len() == 2 && a.iter().all(|x| x.as_f64().is_some_and(|x| x > 0.0)));
             if !ok {
@@ -366,9 +517,9 @@ impl Clip {
         let mut camera = v.get("camera").cloned();
         // The camera as of the key being read, for screen placements.
         let mut cam_now = camera.clone();
-        let mut present = [false; 2];
+        let mut ids: Vec<HandId> = Vec::new();
         // When each hand's last own key was.
-        let mut last_t = [0.0; 2];
+        let mut last_t: Vec<f64> = Vec::new();
         for (i, raw) in raw_keys.iter().enumerate() {
             let at = |e: String| format!("keys[{i}]: {e}");
             let t = num(raw, "t").map_err(at)?.ok_or_else(|| at("needs \"t\" (seconds)".into()))?;
@@ -382,21 +533,26 @@ impl Clip {
                 pose_part.as_object_mut().ok_or_else(|| at("a key is a JSON object".into()))?.remove(k);
             }
             // A hand's own timing fields, over the key's.
-            let mut hand_timing = [json!({}), json!({})];
-            for (si, (_, name)) in SIDES.iter().enumerate() {
-                for k in TIMING {
-                    if let Some(x) = raw.get(k) {
-                        hand_timing[si][k] = x.clone();
-                    }
+            let mut key_timing = json!({});
+            for k in TIMING {
+                if let Some(x) = raw.get(k) {
+                    key_timing[k] = x.clone();
                 }
-                let Some(h) = pose_part.get_mut("hands").and_then(|h| h.get_mut(*name)).and_then(Value::as_object_mut) else { continue };
-                if h.contains_key("t") {
-                    return Err(at(format!("hands.{name}: t belongs to the key; a hand can have its own move, ease, spring, cascade, anticipate and pass")));
-                }
-                for k in &TIMING[1..] {
-                    if let Some(x) = h.remove(*k) {
-                        hand_timing[si][*k] = x;
+            }
+            let mut own_timing: Vec<(String, Value)> = Vec::new();
+            if let Some(hs) = pose_part.get_mut("hands").and_then(Value::as_object_mut) {
+                for (name, h) in hs.iter_mut() {
+                    let Some(h) = h.as_object_mut() else { continue };
+                    if h.contains_key("t") {
+                        return Err(at(format!("hands.{name}: t belongs to the key; a hand can have its own move, ease, spring, cascade, anticipate, pass and collide")));
                     }
+                    let mut tm = key_timing.clone();
+                    for k in &TIMING[1..] {
+                        if let Some(x) = h.remove(*k) {
+                            tm[*k] = x;
+                        }
+                    }
+                    own_timing.push((name.clone(), tm));
                 }
             }
             let mut merged = merge_key(prev.as_ref(), pose_part).map_err(at)?;
@@ -415,31 +571,51 @@ impl Clip {
             if let Some(s) = &size {
                 merged["size"] = s.clone();
             }
+            // A grip the previous key held too keeps its hold: the follower goes where the
+            // previous key's grip puts it relative to the leader, fingers as they were.
+            if let Some(p) = keys.last() {
+                for g in merged.get("goals").and_then(Value::as_array).cloned().unwrap_or_default() {
+                    let Some(id) = grip_id(&g) else { continue };
+                    if !p.goals.iter().any(|q| grip_id(q).as_ref() == Some(&id)) {
+                        continue;
+                    }
+                    let Ok(goal) = serde_json::from_value::<pose::Goal>(g.clone()) else { continue };
+                    let Some((la, lb)) = crate::grip::pair(&goal) else { continue };
+                    let (Some(a), Some(b)) = (ids.iter().position(|h| *h == la), ids.iter().position(|h| *h == lb)) else { continue };
+                    let s = crate::solve_value(&merged).map_err(at)?;
+                    let Some(l) = s.hands.iter().find(|h| h.id == la) else { continue };
+                    let f = crate::grip::hand_frame(l) * p.frames[a].inverse() * p.frames[b];
+                    let place = json!({ "wrist": [f.translation.x, f.translation.y, f.translation.z], "palm_facing": [f.matrix3.z_axis.x, f.matrix3.z_axis.y, f.matrix3.z_axis.z], "fingers_toward": [f.matrix3.y_axis.x, f.matrix3.y_axis.y, f.matrix3.y_axis.z] });
+                    if let Some(h) = merged["hands"].get_mut(lb.name()).and_then(Value::as_object_mut) {
+                        for k in ["elbow", "forearm_rotation_deg", "mirror"] {
+                            h.remove(k);
+                        }
+                        h.insert("place".into(), place);
+                    }
+                }
+            }
             let has_goals = merged.get("goals").and_then(Value::as_array).is_some_and(|g| !g.is_empty());
             let solved_raw = if has_goals { crate::solve::solve_goals(&merged).map_err(at)?.0 } else { merged.clone() };
             let (resolved, _) = pose::resolve(solved_raw.clone()).map_err(at)?;
             let solved = crate::solve_value(&solved_raw).map_err(at)?;
             let version = solved.pose.version;
             if i == 0 {
-                for (si, (side, _)) in SIDES.iter().enumerate() {
-                    present[si] = solved.hands.iter().any(|h| h.side == *side);
-                }
-                if !present.iter().any(|x| *x) {
+                ids = solved.hands.iter().map(|h| h.id.clone()).collect();
+                if ids.is_empty() {
                     return Err(at("the first key has no hands".into()));
                 }
+                last_t = vec![0.0; ids.len()];
             }
-            let mut hands: [Option<HandKey>; 2] = [None, None];
-            for (si, (side, name)) in SIDES.iter().enumerate() {
-                let Some(g) = solved.hands.iter().find(|h| h.side == *side) else {
-                    if present[si] {
-                        return Err(at(format!("the {name} hand is missing (a hand in the first key stays in every key)")));
-                    }
-                    continue;
+            let n = ids.len();
+            let mut hands: Vec<Option<HandKey>> = vec![None; n];
+            let mut frames = Vec::with_capacity(n);
+            for (si, id) in ids.iter().enumerate() {
+                let name = id.name();
+                let Some(g) = solved.hands.iter().find(|h| h.id == *id) else {
+                    return Err(at(format!("the {name} hand is missing (a hand in the first key stays in every key)")));
                 };
-                if !present[si] {
-                    return Err(at(format!("the {name} hand is not in the first key; every hand must start in keys[0]")));
-                }
-                let hand = &resolved["hands"][*name];
+                frames.push(crate::grip::hand_frame(g));
+                let hand = &resolved["hands"][&name];
                 let values = PARAMS
                     .iter()
                     .map(|p| match get_path(hand, p.key).and_then(Value::as_f64) {
@@ -458,10 +634,13 @@ impl Clip {
                 let wrist = g.world.transform_point3(DVec3::new(0.0, FOREARM, 0.0));
                 hands[si] = Some(HandKey { values, wrist, rot });
             }
+            if let Some(g) = solved.hands.iter().find(|h| !ids.contains(&h.id)) {
+                return Err(at(format!("the {} hand is not in the first key; every hand must start in keys[0]", g.name)));
+            }
             // The next key starts from this one, with every placement written out.
             let mut next = resolved.clone();
-            for (si, (_, name)) in SIDES.iter().enumerate() {
-                if let (Some(h), Some(obj)) = (&hands[si], next["hands"].get_mut(*name).and_then(Value::as_object_mut)) {
+            for (si, id) in ids.iter().enumerate() {
+                if let (Some(h), Some(obj)) = (&hands[si], next["hands"].get_mut(id.name()).and_then(Value::as_object_mut)) {
                     for k in ["place", "elbow", "forearm_rotation_deg", "mirror"] {
                         obj.remove(k);
                     }
@@ -487,16 +666,28 @@ impl Clip {
             // over the key's; its default move runs from that hand's last own key).
             let gap = keys.last().map(|p| t - p.t).unwrap_or(0.0);
             let cam = timing(raw, t, gap).map_err(at)?;
-            let mut named = [false; 2];
-            for (si, (_, name)) in SIDES.iter().enumerate() {
-                let in_goals = raw.get("goals").is_some_and(|g| g.to_string().contains(&format!("\"{name}.")));
-                named[si] = present[si] && (i == 0 || raw.get("from").is_some() || in_goals || raw.get("hands").and_then(|h| h.get(*name)).is_some());
+            let mut named = vec![false; n];
+            for (si, id) in ids.iter().enumerate() {
+                let name = id.name();
+                let in_goals = raw.get("goals").is_some_and(|g| {
+                    let text = g.to_string();
+                    text.contains(&format!("\"{name}.")) || text.contains(&format!("\"{name}\""))
+                });
+                named[si] = i == 0 || raw.get("from").is_some() || in_goals || raw.get("hands").and_then(|h| h.get(&name)).is_some();
             }
-            let mut steps: [Vec<Step>; 2] = [Vec::new(), Vec::new()];
-            let mut place_steps = [cam.base; 2];
-            let mut pass = [false; 2];
-            for si in 0..2 {
-                let tm = timing(&hand_timing[si], t, if named[si] { t - last_t[si] } else { gap }).map_err(|e| at(format!("hands.{}: {e}", SIDES[si].1)))?;
+            let mut steps: Vec<Vec<Step>> = vec![Vec::new(); n];
+            let mut place_steps = vec![cam.base; n];
+            let mut pass = vec![false; n];
+            let mut collide = vec![collide_default; n];
+            for si in 0..n {
+                let name = ids[si].name();
+                let fields = own_timing.iter().find(|(k, _)| *k == name).map(|(_, tm)| tm).unwrap_or(&key_timing);
+                collide[si] = match fields.get("collide") {
+                    None => collide_default,
+                    Some(Value::Bool(b)) => *b,
+                    Some(_) => return Err(at(format!("hands.{name}: collide is true or false"))),
+                };
+                let tm = timing(fields, t, if named[si] { t - last_t[si] } else { gap }).map_err(|e| at(format!("hands.{name}: {e}")))?;
                 if named[si] {
                     last_t[si] = t;
                 }
@@ -540,11 +731,11 @@ impl Clip {
             }
             let mut cam_step = cam.base;
             cam_step.spring = cam.spring.scaled(0.8);
-            keys.push(Key { t, hands, goals, camera: key_camera, steps, place_steps, cam_step, pass, cam_pass: cam.pass, named });
+            keys.push(Key { t, hands, goals, camera: key_camera, steps, place_steps, cam_step, pass, cam_pass: cam.pass, named, collide, frames });
         }
         // A pass key is a waypoint: its move runs on past it while the hand's next key starts
         // early, so the hand flows through it (near the key's pose) without slowing to a stop.
-        for si in 0..2 {
+        for si in 0..ids.len() {
             for i in 1..keys.len() {
                 if !keys[i].pass[si] {
                     continue;
@@ -568,9 +759,33 @@ impl Clip {
                 keys[i + 1].cam_step.dur += e;
             }
         }
+        let holds = holds_of(&mut keys, &ids)?;
         let last = keys.last().unwrap().t;
         let duration = num(v, "duration")?.unwrap_or(last + 0.5);
-        Ok(Clip { duration, fps, camera, size, look, keys, idle, seed, follow, present })
+        // The default hands keep the idle noise they always had; other hands get their own.
+        let chan = ids
+            .iter()
+            .scan(2, |next, id| {
+                Some(match (id.is_default(), id.side) {
+                    (true, Side::Right) => 0,
+                    (true, Side::Left) => 1,
+                    _ => {
+                        *next += 1;
+                        *next - 1
+                    }
+                })
+            })
+            .collect();
+        let mut clip = Clip { duration, fps, camera, size, look, people, keys, idle, seed, follow, ids, chan, track: collide::Track::none(), holds };
+        if clip.ids.len() > 1 && clip.keys.iter().any(|k| k.collide.iter().filter(|c| **c).count() > 1) {
+            clip.track = clip.collisions()?;
+        }
+        Ok(clip)
+    }
+
+    /// The clip's hands, in the order of `sample`'s pose and `track`.
+    pub fn hands(&self) -> &[HandId] {
+        &self.ids
     }
 
     pub fn frames(&self) -> usize {
@@ -580,6 +795,13 @@ impl Clip {
     /// The frame's width / height (from "size", default 16:9).
     pub fn aspect(&self) -> f64 {
         pose::aspect(&json!({ "size": self.size }))
+    }
+
+    /// Where a site is at `t` seconds: its world position, and its point on screen and depth
+    /// through the clip's camera, e.g. to make a UI behind the hand react to a fingertip. For
+    /// several sites at once, `sample(t)?.sites_on_screen(..)`.
+    pub fn site_on_screen(&self, t: f64, name: &str) -> Result<SiteOnScreen, String> {
+        Ok(self.sample(t)?.sites_on_screen(&[name])?[0])
     }
 
     /// The index of the last key at or before `t` (0 before the first).
@@ -630,7 +852,7 @@ impl Clip {
         let idx = |k: &str| PARAMS.iter().position(|p| p.key == k).unwrap();
         let (twist, dev, flex) = (values[idx("twist")], values[idx("wrist_dev")], values[idx("wrist_flex")]);
         let mut local = DQuat::from_rotation_y(twist.to_radians()) * DQuat::from_rotation_z(-dev.to_radians()) * DQuat::from_rotation_x(flex.to_radians());
-        if si == 1 {
+        if self.ids[si].side == Side::Left {
             // The left hand is built mirrored in x: M R M keeps x rotations and flips y and z.
             local = DQuat::from_xyzw(local.x, -local.y, -local.z, local.w);
         }
@@ -666,41 +888,217 @@ impl Clip {
         25.0 * (deg / 25.0).tanh()
     }
 
+    /// A hand as a pose file's hand: every joint value and the placement.
+    fn hand_value(values: &[f64], wrist: DVec3, rot: DQuat) -> Value {
+        let mut hand = json!({});
+        for (j, p) in PARAMS.iter().enumerate() {
+            set_path(&mut hand, p.key, json!(r6(values[j])));
+        }
+        hand["place"] = place_json(wrist, rot);
+        hand
+    }
+
+    /// Hand `si` at `t` with idle movement and joint limits, and with follow-through when
+    /// `follow` (before collisions and goals).
+    fn posed(&self, si: usize, t: f64, follow: bool) -> (Vec<f64>, DVec3, DQuat) {
+        let ch = self.chan[si];
+        let (mut values, mut wrist, rot) = self.base(si, t).unwrap();
+        let drag = if follow { self.follow_through(si, t) } else { 0.0 };
+        // Gripping fingers hold still: no idle or follow-through while a grip holds them.
+        let mut quiet = vec![1.0; PARAMS.len()];
+        for h in &self.holds {
+            for (who, hand) in [h.leader, h.follower].into_iter().enumerate() {
+                if hand == si {
+                    let w = h.weight(t);
+                    // The palm's hollow moves the ring and pinky knuckles: it holds still too.
+                    let cup = PARAMS.iter().position(|p| p.key == "palm_cup").filter(|_| !h.closing[who].is_empty());
+                    for &j in h.closing[who].iter().chain(cup.iter()) {
+                        quiet[j] = f64::min(quiet[j], 1.0 - w);
+                    }
+                }
+            }
+        }
+        for (j, p) in PARAMS.iter().enumerate() {
+            let (digit, _) = group_of(p.key);
+            let k = match (digit, p.key.split_once('.').map(|x| x.1)) {
+                (Some(0), Some("mcp_flex")) => 0.3,
+                (Some(d), Some("mcp_flex")) if d > 0 => 1.0,
+                (Some(d), Some("pip_flex")) if d > 0 => 0.6,
+                (Some(d), Some("dip_flex")) if d > 0 => 0.4,
+                _ => 0.0,
+            };
+            if k != 0.0 {
+                // Curled fingers are held, not loose.
+                let curl = (values[j] / 90.0).clamp(0.0, 1.0);
+                values[j] += k * drag * (1.0 - 0.7 * curl) * quiet[j];
+            }
+            values[j] += self.idle * idle(self.seed, ch, j, p.key, t) * quiet[j];
+            // A held grip keeps its solved values exactly, even near a limit.
+            let hard = values[j].clamp(p.min, p.max);
+            values[j] = hard + (soft_clamp(values[j], p.min, p.max) - hard) * quiet[j];
+        }
+        for (a, axis) in [(0, DVec3::X), (1, DVec3::Y), (2, DVec3::Z)] {
+            wrist += axis * self.idle * 0.0012 * noise(self.seed, ch * 100 + 90 + a, t, 0.2);
+        }
+        (values, wrist, rot)
+    }
+
+    /// Hand `si` at `t` as `posed`; while a grip holds it as the follower, its hand moves with
+    /// the leader's (the leader's frame times the grip's offset) and its forearm trails: the
+    /// elbow follows where the hand's own wrist angles would put it through a critically damped
+    /// spring, and the wrist bends to make up the difference.
+    fn attached(&self, si: usize, t: f64, follow: bool) -> (Vec<f64>, DVec3, DQuat) {
+        self.attached_at(si, t, follow, 0)
+    }
+
+    fn attached_at(&self, si: usize, t: f64, follow: bool, depth: usize) -> (Vec<f64>, DVec3, DQuat) {
+        let (mut values, wrist, rot) = self.posed(si, t, follow);
+        let Some(h) = self.holds.iter().find(|h| h.follower == si && h.weight(t) > 0.0).filter(|_| depth < 4) else { return (values, wrist, rot) };
+        let w = h.weight(t);
+        let side = self.ids[si].side;
+        let f = self.held_frame(h, t, depth);
+        let wn = std::f64::consts::TAU * TRAIL_HZ;
+        let span = 8.0 / wn;
+        let kernel = |s: f64| wn * wn * s * (-wn * s).exp();
+        let (m, half) = (span / 2.0, span / 2.0);
+        let mut elbow = DVec3::ZERO;
+        let mut norm = 0.0;
+        for (x, gw) in GL_X.iter().zip(GL_W) {
+            for s in [m - half * x, m + half * x] {
+                let k = gw * kernel(s);
+                elbow += self.elbow_of(h, t - s, depth) * k;
+                norm += k;
+            }
+        }
+        let d = (elbow / norm - f.translation).normalize_or(f.matrix3.y_axis * -1.0);
+        let mut v = DVec3::new(d.dot(f.matrix3.x_axis), d.dot(f.matrix3.y_axis), d.dot(f.matrix3.z_axis));
+        if side == Side::Left {
+            v.x = -v.x;
+        }
+        let trail = [("wrist_dev", v.x.clamp(-1.0, 1.0).asin().to_degrees()), ("wrist_flex", v.z.atan2(-v.y).to_degrees())];
+        for (k, x) in trail {
+            let j = PARAMS.iter().position(|p| p.key == k).unwrap();
+            values[j] = soft_clamp(values[j] + (x - values[j]) * w, PARAMS[j].min, PARAMS[j].max);
+        }
+        let rot = DQuat::from_mat3(&f.matrix3.into()) * wrist_rot(side, &values).inverse();
+        (values, f.translation, rot)
+    }
+
+    /// A held follower's hand frame at `t`: its own keyed frame, blended into the leader's frame
+    /// times the grip's offset as the grip joins them.
+    fn held_frame(&self, h: &Hold, t: f64, depth: usize) -> DAffine3 {
+        let (v, wrist, rot) = self.posed(h.follower, t, false);
+        let own = hand_frame(self.ids[h.follower].side, &v, wrist, rot);
+        let (lv, lw, lr) = self.attached_at(h.leader, t, false, depth + 1);
+        let leader = hand_frame(self.ids[h.leader].side, &lv, lw, lr);
+        let mut offset = h.offsets[0];
+        for (n, k) in (h.first + 1..=h.last).enumerate() {
+            offset = blend(offset, h.offsets[n + 1], self.keys[k].place_steps[h.follower].at(t).clamp(0.0, 1.0));
+        }
+        blend(own, leader * offset, h.weight(t))
+    }
+
+    /// Where a held follower's elbow would be at `t` with its own wrist angles.
+    fn elbow_of(&self, h: &Hold, t: f64, depth: usize) -> DVec3 {
+        let f = self.held_frame(h, t, depth);
+        let (v, _, _) = self.posed(h.follower, t, false);
+        let idx = |k: &str| PARAMS.iter().position(|p| p.key == k).unwrap();
+        f.translation + f.matrix3 * forearm_dir(self.ids[h.follower].side, v[idx("wrist_dev")], v[idx("wrist_flex")]) * FOREARM
+    }
+
+    /// How far collisions push hand `si` at `t`; a held follower moves with its leader's push.
+    fn push_of(&self, si: usize, t: f64) -> DVec3 {
+        let own = self.track.at(si, t);
+        match self.holds.iter().find(|h| h.follower == si && h.weight(t) > 0.0) {
+            Some(h) => own.lerp(self.push_of(h.leader, t), h.weight(t)),
+            None => own,
+        }
+    }
+
+    /// Every hand at `t` before collisions and goals, and its wrist: the motion the collisions
+    /// push. Follow-through (slow to compute) only for hands near another.
+    fn free_hands(&self, t: f64) -> Result<(Vec<HandGeom>, Vec<DVec3>), String> {
+        let build = |si: usize, follow: bool| -> Result<(HandGeom, DVec3), String> {
+            let (values, wrist, rot) = self.attached(si, t, follow);
+            let mut hp: pose::HandPose = serde_json::from_value(Self::hand_value(&values, wrist, rot)).map_err(|e| e.to_string())?;
+            hp.scale = pose::person_scale(self.people.as_ref(), &self.ids[si].person);
+            Ok((crate::rig::build_hand(&self.ids[si], &hp, Some(1), None)?, wrist))
+        };
+        let (mut geoms, mut wrists): (Vec<HandGeom>, Vec<DVec3>) = (0..self.ids.len()).map(|si| build(si, false)).collect::<Result<Vec<_>, _>>()?.into_iter().unzip();
+        if self.follow != 0.0 {
+            let boxes: Vec<_> = geoms.iter().map(collide::bounds).collect();
+            for si in 0..geoms.len() {
+                let near = (0..geoms.len()).any(|o| o != si && collide::boxes_near(boxes[si], boxes[o], 0.04));
+                if near {
+                    (geoms[si], wrists[si]) = build(si, true)?;
+                }
+            }
+        }
+        Ok((geoms, wrists))
+    }
+
+    /// Whether hand `si` collides at `t`: the setting of its latest key whose move has begun.
+    fn collides_at(&self, si: usize, t: f64) -> bool {
+        let k = (1..self.keys.len()).rev().find(|k| self.keys[*k].named[si] && self.keys[*k].place_steps[si].begin() <= t).unwrap_or(0);
+        self.keys[k].collide[si]
+    }
+
+    /// The parts of two hands that the goals held at `t` join (every part any of their goals
+    /// names, on each hand): those may touch and overlap.
+    pub fn joined_parts(&self, t: f64, hands: &[HandGeom]) -> Vec<collide::Exempt> {
+        let (held, new, dropped) = self.goals_at(t);
+        let goals = held.iter().chain(new.iter().chain(&dropped).filter(|g| g.1 > 0.0).map(|g| &g.0));
+        let mut out: Vec<collide::Exempt> = Vec::new();
+        for g in goals {
+            let Some([a, b]) = g.get("touch").and_then(Value::as_array).and_then(|n| Some([n.first()?.as_str()?, n.get(1)?.as_str()?])) else { continue };
+            let (Some((ia, ra)), Some((ib, rb))) = (pose::split_hand(a), pose::split_hand(b)) else { continue };
+            let (Some(mut ha), Some(mut hb)) = (self.ids.iter().position(|h| *h == ia), self.ids.iter().position(|h| *h == ib)) else { continue };
+            if ha == hb {
+                continue;
+            }
+            let (mut ma, mut mb) = (parts_named(&hands[ha], ra), parts_named(&hands[hb], rb));
+            if ha > hb {
+                (ha, hb, ma, mb) = (hb, ha, mb, ma);
+            }
+            match out.iter_mut().find(|e| (e.a, e.b) == (ha, hb)) {
+                Some(collide::Exempt { parts: Some((xa, xb)), .. }) => {
+                    xa.iter_mut().zip(&ma).for_each(|(x, m)| *x |= *m);
+                    xb.iter_mut().zip(&mb).for_each(|(x, m)| *x |= *m);
+                }
+                _ => out.push(collide::Exempt { a: ha, b: hb, parts: Some((ma, mb)) }),
+            }
+        }
+        // Two hands taking, holding or letting go of each other's grip touch everywhere.
+        for h in self.holds.iter().filter(|h| t >= h.exempt.0 && t <= h.exempt.1) {
+            out.push(collide::Exempt { a: h.leader.min(h.follower), b: h.leader.max(h.follower), parts: None });
+        }
+        out
+    }
+
+    /// Runs the collisions between the hands over the whole clip (see `collide`).
+    fn collisions(&self) -> Result<collide::Track, String> {
+        let first = self.keys.iter().flat_map(|k| k.place_steps.iter().map(|s| s.begin())).fold(0.0_f64, f64::min);
+        let last = self.keys.last().unwrap().t.max(self.duration);
+        collide::simulate(first - 0.25, last + 1.0, |t| {
+            let (hands, wrists) = self.free_hands(t)?;
+            let on = (0..self.ids.len()).map(|si| self.collides_at(si, t)).collect();
+            let exempt = self.joined_parts(t, &hands);
+            Ok(collide::Moment { hands, wrists, on, exempt })
+        })
+    }
+
+    /// How far collisions push each hand at `t` (meters, in the clip's hand order).
+    pub fn pushes(&self, t: f64) -> Vec<DVec3> {
+        (0..self.ids.len()).map(|si| self.track.at(si, t)).collect()
+    }
+
     /// The pose and active goals at `t` seconds.
     pub fn sample(&self, t: f64) -> Result<Frame, String> {
         let mut hands = serde_json::Map::new();
-        for (si, (_, name)) in SIDES.iter().enumerate() {
-            if !self.present[si] {
-                continue;
-            }
-            let (mut values, mut wrist, rot) = self.base(si, t).unwrap();
-            let drag = self.follow_through(si, t);
-            for (j, p) in PARAMS.iter().enumerate() {
-                let (digit, _) = group_of(p.key);
-                let k = match (digit, p.key.split_once('.').map(|x| x.1)) {
-                    (Some(0), Some("mcp_flex")) => 0.3,
-                    (Some(d), Some("mcp_flex")) if d > 0 => 1.0,
-                    (Some(d), Some("pip_flex")) if d > 0 => 0.6,
-                    (Some(d), Some("dip_flex")) if d > 0 => 0.4,
-                    _ => 0.0,
-                };
-                if k != 0.0 {
-                    // Curled fingers are held, not loose.
-                    let curl = (values[j] / 90.0).clamp(0.0, 1.0);
-                    values[j] += k * drag * (1.0 - 0.7 * curl);
-                }
-                values[j] += self.idle * idle(self.seed, si, j, p.key, t);
-                values[j] = soft_clamp(values[j], p.min, p.max);
-            }
-            for (a, axis) in [(0, DVec3::X), (1, DVec3::Y), (2, DVec3::Z)] {
-                wrist += axis * self.idle * 0.0012 * noise(self.seed, si * 100 + 90 + a, t, 0.2);
-            }
-            let mut hand = json!({});
-            for (j, p) in PARAMS.iter().enumerate() {
-                set_path(&mut hand, p.key, json!(r6(values[j])));
-            }
-            hand["place"] = place_json(wrist, rot);
-            hands.insert((*name).into(), hand);
+        for (si, id) in self.ids.iter().enumerate() {
+            let (values, mut wrist, rot) = self.attached(si, t, true);
+            wrist += self.push_of(si, t);
+            hands.insert(id.name(), Self::hand_value(&values, wrist, rot));
         }
         let mut pose = json!({ "version": 1, "hands": Value::Object(hands) });
         if let Some(c) = self.camera_at(t) {
@@ -712,16 +1110,30 @@ impl Clip {
         if let Some(l) = &self.look {
             pose["look"] = l.clone();
         }
+        if let Some(p) = &self.people {
+            pose["people"] = p.clone();
+        }
 
         // Goals: held through a transition when both keys have them, ramped in near a key's
         // arrival when new, ramped out at a transition's start when dropped.
         let (held, new, dropped) = self.goals_at(t);
+        // Grips are not re-solved: their keys' solved fingers and the follower moving with the
+        // leader keep them closed. A grip counts as held once its key is reached.
+        let is_grip = |g: &Value| g.get("grip").is_some();
+        let (grips, held): (Vec<Value>, Vec<Value>) = held.into_iter().partition(is_grip);
+        let reached = |g: &Value| self.holds.iter().any(|h| grip_id(g) == Some(h.id.clone()) && t >= self.keys[h.first].t - 1e-9 && t < h.release);
+        let grips: Vec<Value> = grips.into_iter().chain(new.iter().map(|g| g.0.clone())).filter(|g| is_grip(g) && reached(g)).collect();
+        let new: Vec<(Value, f64)> = new.into_iter().filter(|g| !is_grip(&g.0)).collect();
+        let dropped: Vec<(Value, f64)> = dropped.into_iter().filter(|g| !is_grip(&g.0)).collect();
         // Re-solving goals keeps a hand's own parts apart, and the two hands apart only while
         // a goal joins them (overlaps between hands are handled below).
-        let joined = held.iter().chain(new.iter().chain(&dropped).map(|g| &g.0)).any(|g| {
-            let names: Vec<&str> = g.get("touch").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).collect();
-            names.iter().any(|n| n.starts_with("right.")) && names.iter().any(|n| n.starts_with("left."))
-        });
+        let gripping = self.holds.iter().any(|h| t >= h.exempt.0 && t <= h.exempt.1);
+        let joined = gripping
+            || held.iter().chain(new.iter().chain(&dropped).map(|g| &g.0)).any(|g| {
+                let names: Vec<&str> = g.get("touch").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).collect();
+                let hands: Vec<String> = names.iter().map(|n| pose::hand_of(n)).collect();
+                hands.windows(2).any(|w| w[0] != w[1])
+            });
         let solve = |pose: &Value, goals: &[Value], own_hand: bool| -> Result<Value, String> {
             if goals.is_empty() {
                 return Ok(pose.clone());
@@ -754,12 +1166,12 @@ impl Clip {
         out["version"] = json!(1);
         let solved = crate::solve_value(&out)?;
         let report = crate::query::analyze(&solved.pose, &solved.hands)?;
-        let side_of = |label: &str| label.split('.').next().unwrap_or("").to_string();
+        let side_of = |label: &str| pose::hand_of(label);
         let mut vary: Vec<String> = Vec::new();
         for p in report.contacts.iter().chain(&report.penetrations).filter(|p| p.gap_mm < -0.9 && side_of(&p.a) == side_of(&p.b)) {
             for label in [&p.a, &p.b] {
-                let mut parts = label.split('.');
-                let (side, part) = (parts.next().unwrap_or(""), parts.next().unwrap_or(""));
+                let Some((id, rest)) = pose::split_hand(label) else { continue };
+                let (side, part) = (id.name(), rest.split('.').next().unwrap_or(""));
                 if DIGITS.contains(&part) {
                     let pat = format!("{side}.{part}.*");
                     if !vary.contains(&pat) {
@@ -774,6 +1186,7 @@ impl Clip {
         }
         let mut pose = round_numbers(&out);
         pose["version"] = json!(1);
+        active.extend(grips);
         Ok(Frame { pose, goals: active })
     }
 
@@ -814,6 +1227,98 @@ impl Clip {
         let dropped = p.goals.iter().filter(|g| !k.goals.contains(g)).map(|g| (g.clone(), wout)).collect();
         (held, new, dropped)
     }
+}
+
+/// Every run of keys holding a grip. Their timing changes: in the key a grip starts in, the
+/// gripping fingers close over the last `GRIP_CLOSE` s of the move, without overshoot (the hands
+/// meet first); in the key after the run, they open over `GRIP_OPEN` s at the start of the move
+/// and the two hands start apart `GRIP_PART_DELAY` s later.
+fn holds_of(keys: &mut [Key], ids: &[HandId]) -> Result<Vec<Hold>, String> {
+    let mut out = Vec::new();
+    for i in 0..keys.len() {
+        for g in keys[i].goals.clone() {
+            let Some(id) = grip_id(&g) else { continue };
+            let has = |k: &Key| k.goals.iter().any(|q| grip_id(q).as_ref() == Some(&id));
+            if i > 0 && has(&keys[i - 1]) {
+                continue;
+            }
+            let mut last = i;
+            while last + 1 < keys.len() && has(&keys[last + 1]) {
+                last += 1;
+            }
+            let at = |e: String| format!("keys[{i}]: {e}");
+            let goal: pose::Goal = serde_json::from_value(g.clone()).map_err(|e| at(e.to_string()))?;
+            let (la, lb) = crate::grip::pair(&goal).ok_or_else(|| at("grip: name two hands, e.g. [\"ana.right\", \"ben.right\"]".into()))?;
+            let find = |h: &HandId| ids.iter().position(|x| x == h).ok_or_else(|| at(format!("grip: there is no {h} hand in the clip")));
+            let (leader, follower) = (find(&la)?, find(&lb)?);
+            if out.iter().any(|h: &Hold| h.follower == follower && h.first <= last && i <= h.last) {
+                return Err(at(format!("grip: the {lb} hand already follows another hand here; a hand follows one grip at a time")));
+            }
+            let digits = crate::grip::closing(&goal).map_err(at)?;
+            let closing = digits.map(|ds| (0..PARAMS.len()).filter(|j| ds.iter().any(|d| PARAMS[*j].key.starts_with(&format!("{d}.")))).collect::<Vec<_>>());
+            let offsets = (i..=last).map(|k| keys[k].frames[leader].inverse() * keys[k].frames[follower]).collect();
+            // The gripping digits close and open together (no cascade), timed by the hand's move.
+            // A grip without them (a high five) is a plain touch.
+            let fingers = closing.iter().any(|c| !c.is_empty());
+            if i > 0 && fingers {
+                // The hands arrive GRIP_CLOSE early; the fingers then close, done a little
+                // before the key so they have settled when it arrives.
+                for (who, hand) in [leader, follower].into_iter().enumerate() {
+                    let k = &mut keys[i];
+                    let end = k.place_steps[hand].start + k.place_steps[hand].dur;
+                    for s in k.steps[hand].iter_mut().chain(std::iter::once(&mut k.place_steps[hand])) {
+                        s.dur = (s.dur - GRIP_CLOSE).max(s.dur.min(0.15));
+                    }
+                    for &j in &closing[who] {
+                        let s = &mut k.steps[hand][j];
+                        (s.start, s.dur) = (end - GRIP_CLOSE, GRIP_CLOSE - 0.1);
+                        s.spring = Spring { w: f64::INFINITY, zeta: 1.0 };
+                    }
+                }
+            }
+            let mut release = f64::INFINITY;
+            if last + 1 < keys.len() {
+                let k = &mut keys[last + 1];
+                for (who, hand) in [leader, follower].into_iter().enumerate() {
+                    let begin = k.place_steps[hand].start;
+                    release = release.min(begin);
+                    if !fingers {
+                        continue;
+                    }
+                    for (j, s) in k.steps[hand].iter_mut().enumerate() {
+                        if closing[who].contains(&j) {
+                            (s.start, s.dur) = (begin, s.dur.min(GRIP_OPEN));
+                            s.spring = Spring { w: f64::INFINITY, zeta: 1.0 };
+                        } else {
+                            s.start += GRIP_PART_DELAY;
+                            s.dur = (s.dur - GRIP_PART_DELAY).max(0.15);
+                        }
+                    }
+                    let s = &mut k.place_steps[hand];
+                    s.start += GRIP_PART_DELAY;
+                    s.dur = (s.dur - GRIP_PART_DELAY).max(0.15);
+                }
+            }
+            let join = if i == 0 {
+                (f64::NEG_INFINITY, f64::NEG_INFINITY)
+            } else {
+                let s = &keys[i].place_steps[follower];
+                let arrive = s.start + s.dur + s.spring.lag();
+                let r = (0.4 * s.dur).clamp(0.05, 0.25);
+                (arrive - r, arrive)
+            };
+            let part = match keys.get(last + 1) {
+                Some(k) => {
+                    let s = &k.place_steps[follower];
+                    (s.begin(), s.begin() + (0.5 * s.dur).clamp(0.08, 0.35))
+                }
+                None => (f64::INFINITY, f64::INFINITY),
+            };
+            let exempt = (if i == 0 { f64::NEG_INFINITY } else { keys[i].begin() - 0.05 }, part.1 + 0.3);
+            out.push(Hold { id, leader, follower, first: i, last, offsets, join, part, release, exempt, closing });
+        }
+    }
+    Ok(out)
 }
 
 /// Merges a key over the previous key. A key-level `from` takes the whole gesture (its hands,
@@ -878,6 +1383,21 @@ fn place_json(wrist: DVec3, rot: DQuat) -> Value {
         "elbow": [r6(elbow.x), r6(elbow.y), r6(elbow.z)],
         "forearm_rotation_deg": [r6(x.to_degrees()), r6(y.to_degrees()), r6(z.to_degrees())],
     })
+}
+
+/// The capsules of `hand` a site or segment name (after the hand) belongs to: its whole digit,
+/// the forearm, or for a palm site the palm.
+fn parts_named(hand: &HandGeom, rest: &str) -> Vec<bool> {
+    let part = rest.split('.').next().unwrap_or("");
+    let digit = Digit::ALL.into_iter().find(|d| d.name() == part);
+    hand.capsules
+        .iter()
+        .map(|c| match (digit, part) {
+            (Some(d), _) => c.digit == Some(d),
+            (None, "forearm") => c.seg == Seg::Arm,
+            _ => c.part == "palm" || (c.digit == Some(Digit::Thumb) && c.seg == Seg::Metacarpal),
+        })
+        .collect()
 }
 
 /// Smoothstep on [0, 1].

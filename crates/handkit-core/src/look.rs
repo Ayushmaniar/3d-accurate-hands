@@ -2,7 +2,7 @@
 //! on; renderers (handkit-fframes' `look` module, the three.js preview) draw it.
 //!
 //! ```json
-//! "look": { "style": "toon", "skin": "tan", "nail": "#e9c4b8", "outline": 3, "motion_blur": 4 }
+//! "look": { "style": "toon", "skin": "tan", "nail": "#e9c4b8", "outline": 3, "motion_blur": 4, "arm": "fade" }
 //! ```
 
 use serde_json::{Value, json};
@@ -78,7 +78,65 @@ pub fn parse_color(s: &str) -> Result<[u8; 3], String> {
     Ok([byte(0), byte(2), byte(4)])
 }
 
-/// A checked look. Fields left `None` take the style's default (the renderer's choice).
+/// Where the forearm ends: the rig stops at the elbow.
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
+pub enum Arm {
+    /// Skin up to the elbow, where the forearm ends in a rounded cap.
+    #[default]
+    Bare,
+    /// The forearm fades to transparent over its last 30% toward the elbow.
+    Fade,
+    /// A rolled-up cloth sleeve over the forearm from the elbow: its colour (sRGB) and how far
+    /// it reaches toward the wrist (meters).
+    Sleeve { color: [u8; 3], length: f64 },
+}
+
+impl Arm {
+    /// A sleeve's default length (meters from the elbow).
+    pub const SLEEVE_LENGTH: f64 = 0.08;
+
+    /// `"bare"`, `"fade"` or `{"sleeve": "#rrggbb", "length": 0.08}` (length optional).
+    pub fn from_value(v: &Value) -> Result<Arm, String> {
+        const HELP: &str = "look arm: \"bare\", \"fade\" or {\"sleeve\": \"#rrggbb\", \"length\": 0.08}";
+        match v {
+            Value::String(s) => match s.trim().to_ascii_lowercase().as_str() {
+                "bare" => Ok(Arm::Bare),
+                "fade" => Ok(Arm::Fade),
+                _ => Err(HELP.into()),
+            },
+            Value::Object(o) => {
+                if let Some(k) = o.keys().find(|k| !["sleeve", "length"].contains(&k.as_str())) {
+                    return Err(format!("{HELP} (unknown key \"{k}\")"));
+                }
+                let color = o.get("sleeve").and_then(Value::as_str).ok_or(HELP)?;
+                let color = parse_color(color).map_err(|e| format!("look arm sleeve: {e}"))?;
+                let length = match o.get("length") {
+                    None | Some(Value::Null) => Arm::SLEEVE_LENGTH,
+                    Some(x) => x.as_f64().filter(|x| (0.02..=0.2).contains(x)).ok_or("look arm length: meters from the elbow, 0.02 to 0.2")?,
+                };
+                Ok(Arm::Sleeve { color, length })
+            }
+            _ => Err(HELP.into()),
+        }
+    }
+
+    /// As JSON, the sleeve's colour in sRGB bytes: `"bare"`, `"fade"` or
+    /// `{"sleeve": [r, g, b], "length": ..}`.
+    pub fn to_value(&self) -> Value {
+        match self {
+            Arm::Bare => json!("bare"),
+            Arm::Fade => json!("fade"),
+            Arm::Sleeve { color, length } => json!({ "sleeve": color, "length": length }),
+        }
+    }
+
+    /// Whether the elbow may be in view: the forearm's end fades or is in a sleeve.
+    pub fn hides_end(&self) -> bool {
+        *self != Arm::Bare
+    }
+}
+
+/// A checked look.Fields left `None` take the style's default (the renderer's choice).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Look {
     pub style: Style,
@@ -101,6 +159,8 @@ pub struct Look {
     pub texture: Option<f64>,
     /// The subsurface scattering mix (realistic), 0 to 1.
     pub subsurface: Option<f64>,
+    /// How the forearm ends at the elbow.
+    pub arm: Arm,
 }
 
 impl Default for Look {
@@ -109,7 +169,7 @@ impl Default for Look {
     }
 }
 
-pub const KEYS: [&str; 10] = ["style", "skin", "nail", "outline", "motion_blur", "shutter", "halftone", "misregister", "texture", "subsurface"];
+pub const KEYS: [&str; 11] = ["style", "skin", "nail", "outline", "motion_blur", "shutter", "halftone", "misregister", "texture", "subsurface", "arm"];
 
 impl Look {
     /// The style's defaults.
@@ -125,6 +185,7 @@ impl Look {
             misregister: None,
             texture: None,
             subsurface: None,
+            arm: Arm::Bare,
         }
     }
 
@@ -183,6 +244,9 @@ impl Look {
         look.misregister = num("misregister", 0.0, 40.0)?;
         look.texture = num("texture", 0.0, 1.0)?;
         look.subsurface = num("subsurface", 0.0, 1.0)?;
+        if let Some(a) = obj.get("arm").filter(|a| !a.is_null()) {
+            look.arm = Arm::from_value(a)?;
+        }
         Ok(look)
     }
 
@@ -231,6 +295,25 @@ impl Look {
         }
     }
 
+    /// This look in a person's colours: the skin, nail and arm of their own look
+    /// (`people.<person>.look`) over this one's; the style and everything else stay this look's.
+    /// A person who gives a skin and no nail gets the nail of their skin.
+    pub fn for_person(&self, people: Option<&Value>, person: &str) -> Look {
+        let mut l = self.clone();
+        let Some(v) = people.and_then(|p| p.get(person)).and_then(|p| p.get("look")) else { return l };
+        let Ok(own) = Look::from_value(v) else { return l };
+        if v.get("skin").is_some() {
+            (l.skin, l.nail) = (own.skin, own.nail);
+        }
+        if v.get("nail").is_some() {
+            l.nail = own.nail;
+        }
+        if v.get("arm").is_some() {
+            l.arm = own.arm;
+        }
+        l
+    }
+
     /// The nail colour: given, or the skin lighter and pinker.
     pub fn nail_color(&self) -> [u8; 3] {
         self.nail.unwrap_or_else(|| {
@@ -272,6 +355,26 @@ mod tests {
         assert!(Look::parse_flag("toon,6").is_err());
         let m = Look::merge(Some(&json!({ "style": "toon", "skin": "dark" })), Some(&json!({ "style": "arcane" }))).unwrap();
         assert_eq!(m, json!({ "style": "arcane", "skin": "dark" }));
+    }
+
+    #[test]
+    fn arms() {
+        assert_eq!(Look::default().arm, Arm::Bare);
+        assert_eq!(Look::from_value(&json!({ "arm": "fade" })).unwrap().arm, Arm::Fade);
+        let l = Look::from_value(&json!({ "style": "toon", "arm": { "sleeve": "#334477", "length": 0.1 } })).unwrap();
+        assert_eq!(l.arm, Arm::Sleeve { color: [0x33, 0x44, 0x77], length: 0.1 });
+        assert_eq!(l.arm.to_value(), json!({ "sleeve": [0x33, 0x44, 0x77], "length": 0.1 }));
+        assert_eq!(Look::from_value(&json!({ "arm": { "sleeve": "tan" } })).unwrap().arm, Arm::Sleeve { color: TONES[2].1, length: Arm::SLEEVE_LENGTH });
+        for bad in [json!("sleeve"), json!({ "sleeve": "#33447" }), json!({ "sleeve": "#334477", "length": 0.5 }), json!({ "sleeve": "#334477", "lenght": 0.1 }), json!(3)] {
+            assert!(Look::from_value(&json!({ "arm": bad })).unwrap_err().contains("arm"), "{bad}");
+        }
+        assert_eq!(Look::from_value(&Look::parse_flag("toon,arm=fade").unwrap()).unwrap().arm, Arm::Fade);
+        // A person's own arm, over the file's.
+        let people = json!({ "ana": { "look": { "arm": { "sleeve": "#aa3322" } } }, "ben": { "look": { "skin": "dark" } } });
+        let base = Look::from_value(&json!({ "arm": "fade" })).unwrap();
+        assert!(matches!(base.for_person(Some(&people), "ana").arm, Arm::Sleeve { .. }));
+        assert_eq!(base.for_person(Some(&people), "ben").arm, Arm::Fade);
+        assert!(!Arm::Bare.hides_end() && Arm::Fade.hides_end());
     }
 
     #[test]

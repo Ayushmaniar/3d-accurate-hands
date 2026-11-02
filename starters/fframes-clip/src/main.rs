@@ -25,7 +25,8 @@ struct VideoArgs {
     /// How the hands are drawn, over the clip's own "look": a style (realistic, toon,
     /// spiderverse, arcane, clay), then key=value pairs, e.g. toon,skin=tan,outline=4
     /// (keys: skin, nail, outline, motion_blur, shutter, halftone, misregister, texture,
-    /// subsurface; skin is light, medium, tan, brown, dark or #rrggbb).
+    /// subsurface, arm; skin is light, medium, tan, brown, dark or #rrggbb; arm is bare or
+    /// fade, a sleeve through --look-json).
     #[arg(long, global = true)]
     look: Option<String>,
     /// The look as JSON, e.g. '{"style": "clay", "skin": "#c68e6e"}'.

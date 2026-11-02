@@ -1,0 +1,3 @@
+Made a 7.5 s 1080p video (out.mp4): a realistic brown-skinned right hand fingerspells H-A-N-D-K-I-T at 2 letters/s (`handkit spell`), then holds I-LOVE-YOU; captions burned in with ffmpeg build the word letter by letter as each handshape lands (current letter gold), then show "I LOVE YOU".
+Took about 9 minutes, including a roughly 3-minute render with 4-sample motion blur.
+What got in the way: the player can't draw text, so captions are a separate ffmpeg pass (captions.py writes the filter). The first tighter framing cut off the raised index on D and ILY, which `check` caught. The spotlight banded until noise was added, and a safety check blocked my `rm -rf` cleanup, so review frames are still in r2–r5.

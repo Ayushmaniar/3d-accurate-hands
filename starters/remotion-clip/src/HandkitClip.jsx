@@ -1,13 +1,15 @@
 // <HandkitClip clip={...} look={...} />: a Handkit clip played in Remotion through @remotion/three.
 // Each frame samples the clip (WebAssembly core) at useCurrentFrame() / fps, poses the glb hands
-// and draws them in the look (@handkit/three/look.js), so any frame renders on its own.
+// and draws them in the look (@handkit/three/look.js), so any frame renders on its own. Every
+// hand of the clip is drawn ("right", "left", "ana.right", ...: one mesh each), each person in
+// their own skin and nails from the clip's "people".
 import { useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { ThreeCanvas } from '@remotion/three';
 import { staticFile, useCurrentFrame, useDelayRender, useVideoConfig } from 'remotion';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { handRig } from '@handkit/three';
+import { handBones, handRig, handSide } from '@handkit/three';
 import { init, Clip } from '@handkit/three/core.js';
 import { HandkitLook } from '@handkit/three/look.js';
 
@@ -17,7 +19,7 @@ const DEFAULT_CAMERA = { position: [0, 0.1, 0.6], target: [0, 0.05, 0], fov: 35 
 /**
  * @param clip   a clip (object or JSON text, see docs/POSE_SPEC.md, Clips)
  * @param look   a look ({ style, skin, ... } or a style name); default: the clip's own
- * @param assets the hand .glb files under public/ ({ right, left })
+ * @param assets the hand .glb files under public/ ({ right, left }: by side, for every person)
  * @param style  CSS for the canvas (it is transparent: put a backdrop behind it)
  */
 export const HandkitClip = ({ clip, look = null, assets = DEFAULT_ASSETS, style }) => {
@@ -29,9 +31,10 @@ export const HandkitClip = ({ clip, look = null, assets = DEFAULT_ASSETS, style 
   );
 };
 
-function handsIn(clipObject) {
-  // Every hand of a clip is in its first key.
-  return Object.keys(clipObject.keys?.[0]?.hands ?? { right: {} });
+/** The colours a hand wears when its person has their own look (else the look's: null). */
+export function personColors(clipObject, looks, hand) {
+  const person = hand.includes('.') ? hand.slice(0, hand.lastIndexOf('.')) : '';
+  return clipObject.people?.[person]?.look ? looks[hand] : null;
 }
 
 const Hands = ({ clip, look, assets }) => {
@@ -53,13 +56,16 @@ const Hands = ({ clip, look, assets }) => {
       await init();
       const c = new Clip(text);
       const loader = new GLTFLoader();
-      const sides = handsIn(JSON.parse(text));
-      const gltfs = await Promise.all(sides.map((s) => loader.loadAsync(staticFile(assets[s] ?? DEFAULT_ASSETS[s]))));
+      const parsed = JSON.parse(text);
+      // One mesh per hand of the clip, by its side; each posed from its own bones.
+      const names = JSON.parse(c.hands);
+      const looks = JSON.parse(c.looks());
+      const gltfs = await Promise.all(names.map((h) => { const s = handSide(h); return loader.loadAsync(staticFile(assets[s] ?? DEFAULT_ASSETS[s])); }));
       if (!alive) return;
       gltfs.forEach((g) => { scene.add(g.scene); roots.push(g.scene); });
-      const rigs = gltfs.map((g) => handRig(g.scene));
+      const rigs = gltfs.map((g, i) => { const apply = handRig(g.scene); return (bones) => apply(handBones(bones, names[i])); });
       styled = new HandkitLook(gl, look ?? JSON.parse(c.look));
-      for (const g of gltfs) await styled.dress(g);
+      for (const [i, g] of gltfs.entries()) await styled.dress(g, personColors(parsed, looks, names[i]));
       const cam = JSON.parse(c.camera) ?? DEFAULT_CAMERA;
       camera.fov = cam.fov ?? 35;
       camera.near = 0.01;

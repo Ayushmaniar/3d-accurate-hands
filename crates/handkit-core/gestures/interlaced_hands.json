@@ -1,0 +1,28 @@
+{
+  "name": "interlaced_hands",
+  "description": "Interlaced hands: one person's right hand and the other's left, palm to palm and hanging down, fingers alternating between each other's and curled over the back of the other hand, both thumbs over the other's back, as when walking together.",
+  "version": 1,
+  "hands": {
+    "ana.right": {
+      "place": { "wrist": [-0.013, 0.0, 0.0], "palm_facing": [1.0, 0.0, 0.0], "fingers_toward": [0.0, -1.0, 0.0], "forearm_toward": [-0.6, 1.0, 0.0] },
+      "palm_cup": 0.0,
+      "thumb": { "cmc_flex": -23.5, "cmc_abd": 29.7, "cmc_rot": 6.8, "mcp_flex": 45.7, "ip_flex": 27.0 },
+      "index": { "mcp_flex": 25.3, "pip_flex": 83.6, "dip_flex": 4.3, "mcp_abd": 19.8, "mcp_roll": -5.4 },
+      "middle": { "mcp_flex": 19.6, "pip_flex": 85.6, "dip_flex": 4.0, "mcp_abd": -2.5, "mcp_roll": -5.5 },
+      "ring": { "mcp_flex": 35.8, "pip_flex": 43.3, "dip_flex": 25.9, "mcp_abd": 19.3, "mcp_roll": -5.0 },
+      "pinky": { "mcp_flex": 70.9, "pip_flex": 12.0, "dip_flex": 6.9, "mcp_abd": 35.0, "mcp_roll": -2.0 }
+    },
+    "ben.left": {
+      "palm_cup": 0.0,
+      "thumb": { "cmc_flex": 12.2, "cmc_abd": 8.7, "cmc_rot": 1.7, "mcp_flex": -3.2, "ip_flex": 20.8 },
+      "index": { "mcp_flex": 15.9, "pip_flex": 83.1, "dip_flex": 13.2, "mcp_abd": 25.0, "mcp_roll": -5.6 },
+      "middle": { "mcp_flex": 21.5, "pip_flex": 91.3, "dip_flex": 7.4, "mcp_abd": -2.9, "mcp_roll": 8.4 },
+      "ring": { "mcp_flex": 36.7, "pip_flex": 71.6, "dip_flex": 15.7, "mcp_abd": 15.0, "mcp_roll": -3.1 },
+      "pinky": { "mcp_flex": 71.4, "pip_flex": 12.2, "dip_flex": 10.3, "mcp_abd": 27.8, "mcp_roll": -4.2 },
+      "place": { "wrist": [0.0708, -0.0238, -0.0127], "palm_facing": [-0.887, -0.135, -0.093], "fingers_toward": [-0.321, -0.695, 0.192], "forearm_toward": [0.5145, 0.85749, 0.0] }
+    }
+  },
+  "people": { "ana": { "look": { "skin": "brown" } }, "ben": { "look": { "skin": "light" } } },
+  "goals": [{ "grip": ["ana.right", "ben.left"], "style": "interlaced" }],
+  "camera": { "position": [-0.284, -0.145, -0.079], "target": [0.016, -0.085, 0.001], "fov": 30 }
+}

@@ -3,9 +3,11 @@
 
 pub mod check;
 pub mod clip;
+pub mod collide;
 pub mod explain;
 pub mod gestures;
 pub mod goals;
+pub mod grip;
 pub mod look;
 pub mod params;
 pub mod pose;
@@ -17,7 +19,7 @@ pub mod spell;
 use glam::DVec3;
 use serde_json::{Value, json};
 
-use pose::{PoseFile, Side};
+use pose::PoseFile;
 use rig::HandGeom;
 
 pub struct Solved {
@@ -45,23 +47,17 @@ fn build(pose: PoseFile, mirrors: pose::Mirrors) -> Result<Solved, String> {
         }
     }
     let mut hands: Vec<HandGeom> = Vec::new();
-    // A hand that mirrors the other is built second, from the other's placement.
-    let order = if mirrors.right { [Side::Left, Side::Right] } else { [Side::Right, Side::Left] };
-    for side in order {
-        let hp = match side {
-            Side::Right => &pose.hands.right,
-            Side::Left => &pose.hands.left,
-        };
-        let Some(hp) = hp else { continue };
-        let mirrored = match side {
-            Side::Right => mirrors.right,
-            Side::Left => mirrors.left,
-        };
-        let other = if mirrored { hands.iter().find(|h| h.side != side) } else { None };
-        let geom = rig::build(side, hp, version, other)?;
+    // A hand that mirrors another is built after it, from its placement.
+    let (plain, mirrored): (Vec<_>, Vec<_>) = pose.hands.iter().partition(|(id, _)| mirrors.source(id).is_none());
+    for (id, hp) in plain.into_iter().chain(mirrored) {
+        let other = mirrors.source(id).and_then(|s| hands.iter().find(|h| h.id == *s));
+        let mut hp = hp.clone();
+        hp.scale = pose::person_scale(pose.people.as_ref(), &id.person);
+        let geom = rig::build_hand(id, &hp, version, other)?;
         hands.push(geom);
     }
-    hands.sort_by_key(|h| h.side == Side::Left);
+    let order = pose::hand_order(pose.hands.iter().map(|(id, _)| id));
+    hands.sort_by_key(|h| order.iter().position(|id| *id == h.id));
     Ok(Solved { pose, hands })
 }
 
@@ -79,39 +75,64 @@ impl Solved {
 
     /// Everything a preview renderer draws.
     pub fn geometry(&self) -> Value {
-        json!({
+        let mut g = json!({
             "camera": self.pose.camera,
             "look": self.pose.look,
             "capsules": self.hands.iter().flat_map(|h| &h.capsules).map(|c| json!({
-                "a": arr(c.a), "b": arr(c.b), "r": c.r, "side": c.side.name(), "label": c.label(), "arm": c.seg == rig::Seg::Arm,
+                "a": arr(c.a), "b": arr(c.b), "r": c.r, "side": c.side.name(), "hand": &*c.hand, "label": c.label(), "arm": c.seg == rig::Seg::Arm,
             })).collect::<Vec<_>>(),
             "nails": self.hands.iter().flat_map(|h| h.nails.iter().map(move |n| json!({
-                "pos": arr(n.pos), "up": arr(n.up), "out": arr(n.out), "w": n.w, "side": h.side.name(),
+                "pos": arr(n.pos), "up": arr(n.up), "out": arr(n.out), "w": n.w, "side": h.side.name(), "hand": &*h.name,
             }))).collect::<Vec<_>>(),
             "sites": self.hands.iter().flat_map(|h| &h.sites).map(|s| json!({"name": s.name, "pos": arr(s.pos)})).collect::<Vec<_>>(),
             "probes": self.pose.probes,
-        })
+        });
+        if let Some(p) = &self.pose.people {
+            g["people"] = p.clone();
+        }
+        g
+    }
+
+    /// One hand's joints, its mesh's name and its corrective weights (see `bones`).
+    fn hand_bones(h: &HandGeom) -> (serde_json::Map<String, Value>, String, Value) {
+        let r = |x: f64| (x * 1e6).round() / 1e6;
+        let mut joints = serde_json::Map::new();
+        for (i, l) in h.locals().iter().enumerate() {
+            let mut j = json!({
+                "t": [r(l.translation.x), r(l.translation.y), r(l.translation.z)],
+                "r": [r(l.rotation.x), r(l.rotation.y), r(l.rotation.z), r(l.rotation.w)],
+            });
+            // A smaller or larger person's hand: the root joint scales the whole skeleton.
+            if h.bones[i].parent.is_none() && h.scale != 1.0 {
+                j["s"] = json!(r(h.scale));
+            }
+            joints.insert(h.joint_name(i), j);
+        }
+        let suffix = if h.side == pose::Side::Left { "L" } else { "R" };
+        (joints, format!("skin_{suffix}"), json!(h.corrective_weights().iter().map(|w| r(*w)).collect::<Vec<_>>()))
     }
 
     /// What a Handkit hand mesh needs per frame: `joints`, every skeleton joint's transform
     /// relative to its parent by glTF joint name ("index_pip_R": `t` translation in m, `r`
     /// rotation quaternion [x, y, z, w]), and `morph`, the corrective shape weights of each
-    /// hand mesh ("skin_R": [..], rig::CORRECTIVES order).
+    /// hand mesh ("skin_R": [..], rig::CORRECTIVES order), for the default person's hands; and
+    /// `hands`, the same per hand by its name ("right", "ana.left": { joints, morph }), for
+    /// poses with more people (one mesh instance per hand).
     pub fn bones(&self) -> Value {
-        let r = |x: f64| (x * 1e6).round() / 1e6;
         let mut joints = serde_json::Map::new();
         let mut morph = serde_json::Map::new();
+        let mut hands = serde_json::Map::new();
         for h in &self.hands {
-            for (i, l) in h.locals().iter().enumerate() {
-                joints.insert(h.joint_name(i), json!({
-                    "t": [r(l.translation.x), r(l.translation.y), r(l.translation.z)],
-                    "r": [r(l.rotation.x), r(l.rotation.y), r(l.rotation.z), r(l.rotation.w)],
-                }));
+            let (j, skin, w) = Self::hand_bones(h);
+            if h.id.is_default() {
+                joints.extend(j.clone());
+                morph.insert(skin.clone(), w.clone());
             }
-            let suffix = if h.side == Side::Left { "L" } else { "R" };
-            morph.insert(format!("skin_{suffix}"), json!(h.corrective_weights().iter().map(|w| r(*w)).collect::<Vec<_>>()));
+            let mut m = serde_json::Map::new();
+            m.insert(skin, w);
+            hands.insert(h.name.to_string(), json!({ "joints": j, "morph": m }));
         }
-        json!({ "joints": joints, "morph": morph })
+        json!({ "joints": joints, "morph": morph, "hands": hands })
     }
 
     /// Every bone's joint position and axes: `along` points down the bone, `palmar` is the side
@@ -121,13 +142,13 @@ impl Solved {
         let mut s = String::from("bone: joint position (m) | along | palmar (bend direction)\n");
         for h in &self.hands {
             for b in &h.bones {
-                s.push_str(&format!("{}.{}: {} | {} | {}\n", h.side.name(), b.name, f(b.origin), f(b.along), f(b.palmar)));
+                s.push_str(&format!("{}.{}: {} | {} | {}\n", h.name, b.name, f(b.origin), f(b.along), f(b.palmar)));
             }
             for site in &h.sites {
                 s.push_str(&format!("site {}: {} facing {}\n", site.name, f(site.pos), f(site.normal)));
             }
             for d in rig::Digit::ALL {
-                let name = format!("{}.{}", h.side.name(), d.name());
+                let name = format!("{}.{}", h.name, d.name());
                 if let Ok((base, dir)) = self.finger_ray(&name) {
                     s.push_str(&format!("aim line {name}: from {} along {}\n", f(base), f(dir)));
                 }

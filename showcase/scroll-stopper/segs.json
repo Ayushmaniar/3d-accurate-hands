@@ -1,0 +1,10 @@
+[
+ [0,30,{"style":"realistic","skin":"medium","motion_blur":4},"#1d1f24","0.48,0.42,0.42,#3d4350"],
+ [30,60,{"style":"spiderverse","skin":"brown","motion_blur":4},"#1b0a3c","0.48,0.42,0.42,#ff2e88"],
+ [60,87,{"style":"arcane","skin":"tan","motion_blur":4},"#0d2a30","0.48,0.42,0.42,#d4813f"],
+ [87,108,{"style":"clay","skin":"#d99a74","motion_blur":4},"#f4c9a6","0.48,0.42,0.42,#fff1e2"],
+ [108,126,{"style":"toon","skin":"light","motion_blur":4},"#2f6fff","0.48,0.42,0.42,#8fd0ff"],
+ [126,142,{"style":"realistic","skin":"dark","motion_blur":4},"#141210","0.48,0.42,0.42,#6b5236"],
+ [142,159,{"style":"spiderverse","skin":"medium","motion_blur":4},"#ffd400","0.48,0.42,0.42,#ff5a1f"],
+ [159,210,{"style":"realistic","skin":"medium","motion_blur":4},"#1d1f24","0.48,0.42,0.42,#3d4350"]
+]

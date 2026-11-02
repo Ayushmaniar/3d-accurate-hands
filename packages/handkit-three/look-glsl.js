@@ -435,14 +435,42 @@ void main() {
 `;
 
 /** Toon, spiderverse and arcane fills, ink and plates (shade.rs stylized): premultiplied linear. */
+/** The most skin tones (people's colours) one stylized frame tells apart. */
+export const MAX_TONES = 8;
+
 export const STYLED_FS = /* glsl */ `
 ${COMMON}
 ${STYLED_INPUTS}
 uniform sampler2D lines;
-uniform vec3 skin, nailC, palmRatio, ink;
+// Each person's skin and nail (linear), palm ratio and ink; with toneCount > 1, toneMap holds
+// each pixel's skin (unlit, premultiplied) and the nearest entry is that pixel's person.
+uniform sampler2D toneMap;
+uniform int toneCount;
+uniform vec3 skins[${MAX_TONES}], nails[${MAX_TONES}], palms[${MAX_TONES}], inks[${MAX_TONES}];
+// 1 for a sleeve's cloth (its own colour darker and lighter, not skin's).
+uniform float cloths[${MAX_TONES}];
 in vec2 vUv;
+int toneAt(ivec2 p) {
+  if (toneCount < 2) return 0;
+  vec4 t = texelFetch(toneMap, p, 0);
+  if (t.a < 1e-4) return 0;
+  vec3 c = t.rgb / t.a;
+  int best = 0;
+  float bd = 1e9;
+  for (int i = 0; i < ${MAX_TONES}; i++) {
+    if (i >= toneCount) break;
+    vec3 e = skins[i] - c;
+    float d = dot(e, e);
+    if (d < bd) { bd = d; best = i; }
+  }
+  return best;
+}
 struct Pal { vec3 deep, shadow, mid, light; };
 Pal toon(vec3 c) { return Pal(c * vec3(0.42, 0.26, 0.25), c * vec3(0.62, 0.42, 0.40), c, min(c * 1.22 + vec3(0.05, 0.035, 0.02), vec3(1.0))); }
+Pal toonPal(vec3 c, bool cloth) {
+  if (cloth) return Pal(c * 0.4, c * 0.6, c, min(c * 1.25 + vec3(0.03), vec3(1.0)));
+  return toon(c);
+}
 Pal arcanePal(vec3 c) {
   float l = lum3(c);
   vec3 cool = vec3(0.30, 0.30, 0.46) * l * 1.6;
@@ -461,6 +489,8 @@ void main() {
   float line = texelFetch(lines, p, 0).r;
   vec4 outc = vec4(0.0);
   vec3 l = lightDir();
+  int k = toneAt(p);
+  vec3 skin = skins[k], nailC = nails[k], palmRatio = palms[k], ink = inks[k];
   if (a > 0.0) {
     vec3 n = nAt(p);
     float nl = dot(n, l);
@@ -481,7 +511,8 @@ void main() {
       float rim = ss(0.45, 0.95, 1.0 - max(n.z, 0.0)) * (1.0 - t1);
       col += vec3(0.22, 0.09, 0.03) * rim * lum3(skin) * 1.4;
     } else {
-      Pal ps = toon(skin), pn = toon(nailC);
+      bool cloth = cloths[k] > 0.5;
+      Pal ps = toonPal(skin, cloth), pn = toonPal(nailC, cloth);
       float aa = 0.025;
       float t1 = ss(0.18 - aa, 0.18 + aa, nl), t2 = ss(0.72 - aa, 0.72 + aa, nl);
       vec3 bs = mix(mix(ps.shadow, ps.mid, t1), ps.light, t2);
@@ -610,6 +641,44 @@ void main() {
   #include <skinning_vertex>
   #include <project_vertex>
   vDist = length(mvPosition.xyz);
+}
+`;
+
+/** The fade pass (a look's arm): each vertex's opacity (`handkitFade`), unlit. */
+export const FADE_PASS_VS = /* glsl */ `
+#include <common>
+#include <morphtarget_pars_vertex>
+#include <skinning_pars_vertex>
+in float handkitFade;
+out float vFade;
+void main() {
+  vFade = handkitFade;
+  #include <skinbase_vertex>
+  #include <begin_vertex>
+  #include <morphinstance_vertex>
+  #include <morphtarget_vertex>
+  #include <skinning_vertex>
+  #include <project_vertex>
+}
+`;
+
+export const FADE_PASS_FS = /* glsl */ `
+in float vFade;
+void main() { gl_FragColor = vec4(vec3(vFade), 1.0); }
+`;
+
+/** A layer times the fade pass's opacity, carried out past the silhouette (its blur) so the ink
+ * and plates round a faded forearm fade with it (look/mod.rs). */
+export const FADE_FS = /* glsl */ `
+uniform sampler2D layer;   // premultiplied linear
+uniform sampler2D opacity; // (m * a, a)
+uniform sampler2D around;  // the same, blurred
+in vec2 vUv;
+void main() {
+  ivec2 p = ivec2(gl_FragCoord.xy);
+  vec4 o = texelFetch(opacity, p, 0), b = texelFetch(around, p, 0);
+  float m = o.r + (b.a > 1e-4 ? b.r / b.a : 1.0) * (1.0 - o.a);
+  gl_FragColor = texelFetch(layer, p, 0) * m;
 }
 `;
 

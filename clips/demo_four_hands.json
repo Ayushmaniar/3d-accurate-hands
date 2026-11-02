@@ -1,0 +1,838 @@
+{
+ "version": 1,
+ "name": "team hands-in",
+ "description": "Two people stack four hands one by one (Ana from the left, Ben from the back), press down, lift together and let go.",
+ "fps": 30,
+ "duration": 5.8,
+ "size": [
+  1920,
+  1080
+ ],
+ "camera": {
+  "position": [
+   0.07,
+   0.42,
+   0.64
+  ],
+  "target": [
+   0.025,
+   0.08,
+   0.01
+  ],
+  "fov": 26
+ },
+ "people": {
+  "ana": {
+   "look": {
+    "skin": "brown"
+   }
+  },
+  "ben": {
+   "look": {
+    "skin": "light"
+   }
+  }
+ },
+ "keys": [
+  {
+   "t": 0,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.24,
+       0.17,
+       0.07
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       0.4
+      ]
+     },
+     "thumb": {
+      "cmc_abd": 10,
+      "mcp_flex": 8,
+      "ip_flex": 10
+     },
+     "index": {
+      "mcp_flex": 8,
+      "pip_flex": 12
+     },
+     "middle": {
+      "mcp_flex": 10,
+      "pip_flex": 14
+     },
+     "ring": {
+      "mcp_flex": 12,
+      "pip_flex": 16
+     },
+     "pinky": {
+      "mcp_flex": 14,
+      "pip_flex": 18
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       -0.07,
+       0.19,
+       -0.24
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       -0.4,
+       0.9,
+       -1.0
+      ]
+     },
+     "thumb": {
+      "cmc_abd": 10,
+      "mcp_flex": 8,
+      "ip_flex": 10
+     },
+     "index": {
+      "mcp_flex": 8,
+      "pip_flex": 12
+     },
+     "middle": {
+      "mcp_flex": 10,
+      "pip_flex": 14
+     },
+     "ring": {
+      "mcp_flex": 12,
+      "pip_flex": 16
+     },
+     "pinky": {
+      "mcp_flex": 14,
+      "pip_flex": 18
+     }
+    },
+    "ana.left": {
+     "place": {
+      "wrist": [
+       -0.24,
+       0.21,
+       -0.07
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       -0.4
+      ]
+     },
+     "thumb": {
+      "cmc_abd": 10,
+      "mcp_flex": 8,
+      "ip_flex": 10
+     },
+     "index": {
+      "mcp_flex": 8,
+      "pip_flex": 12
+     },
+     "middle": {
+      "mcp_flex": 10,
+      "pip_flex": 14
+     },
+     "ring": {
+      "mcp_flex": 12,
+      "pip_flex": 16
+     },
+     "pinky": {
+      "mcp_flex": 14,
+      "pip_flex": 18
+     }
+    },
+    "ben.left": {
+     "place": {
+      "wrist": [
+       0.07,
+       0.23,
+       -0.24
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       0.4,
+       0.9,
+       -1.0
+      ]
+     },
+     "thumb": {
+      "cmc_abd": 10,
+      "mcp_flex": 8,
+      "ip_flex": 10
+     },
+     "index": {
+      "mcp_flex": 8,
+      "pip_flex": 12
+     },
+     "middle": {
+      "mcp_flex": 10,
+      "pip_flex": 14
+     },
+     "ring": {
+      "mcp_flex": 12,
+      "pip_flex": 16
+     },
+     "pinky": {
+      "mcp_flex": 14,
+      "pip_flex": 18
+     }
+    }
+   }
+  },
+  {
+   "t": 1.0,
+   "move": 0.75,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.0,
+       0.012
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       0.4
+      ]
+     },
+     "thumb": {
+      "cmc_abd": -8,
+      "cmc_flex": 8,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "index": {
+      "mcp_flex": 6,
+      "pip_flex": 8
+     },
+     "middle": {
+      "mcp_flex": 6,
+      "pip_flex": 8
+     },
+     "ring": {
+      "mcp_flex": 7,
+      "pip_flex": 9
+     },
+     "pinky": {
+      "mcp_flex": 8,
+      "pip_flex": 10
+     }
+    }
+   }
+  },
+  {
+   "t": 1.55,
+   "move": 0.75,
+   "hands": {
+    "ben.right": {
+     "place": {
+      "wrist": [
+       -0.012,
+       0.05,
+       -0.075
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       -0.4,
+       0.9,
+       -1.0
+      ]
+     },
+     "thumb": {
+      "cmc_abd": -8,
+      "cmc_flex": 8,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "index": {
+      "mcp_flex": 6,
+      "pip_flex": 8
+     },
+     "middle": {
+      "mcp_flex": 6,
+      "pip_flex": 8
+     },
+     "ring": {
+      "mcp_flex": 7,
+      "pip_flex": 9
+     },
+     "pinky": {
+      "mcp_flex": 8,
+      "pip_flex": 10
+     }
+    }
+   }
+  },
+  {
+   "t": 2.1,
+   "move": 0.75,
+   "hands": {
+    "ana.left": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.1,
+       -0.012
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       -0.4
+      ]
+     },
+     "thumb": {
+      "cmc_abd": -8,
+      "cmc_flex": 8,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "index": {
+      "mcp_flex": 6,
+      "pip_flex": 8
+     },
+     "middle": {
+      "mcp_flex": 6,
+      "pip_flex": 8
+     },
+     "ring": {
+      "mcp_flex": 7,
+      "pip_flex": 9
+     },
+     "pinky": {
+      "mcp_flex": 8,
+      "pip_flex": 10
+     }
+    }
+   }
+  },
+  {
+   "t": 2.65,
+   "move": 0.75,
+   "hands": {
+    "ben.left": {
+     "place": {
+      "wrist": [
+       0.012,
+       0.15,
+       -0.075
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       0.4,
+       0.9,
+       -1.0
+      ]
+     },
+     "thumb": {
+      "cmc_abd": -8,
+      "cmc_flex": 8,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "index": {
+      "mcp_flex": 6,
+      "pip_flex": 8
+     },
+     "middle": {
+      "mcp_flex": 6,
+      "pip_flex": 8
+     },
+     "ring": {
+      "mcp_flex": 7,
+      "pip_flex": 9
+     },
+     "pinky": {
+      "mcp_flex": 8,
+      "pip_flex": 10
+     }
+    }
+   }
+  },
+  {
+   "t": 3.35,
+   "move": 0.3,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       -0.012,
+       0.012
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       0.4
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       -0.012,
+       0.038,
+       -0.075
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       -0.4,
+       0.9,
+       -1.0
+      ]
+     }
+    },
+    "ana.left": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.088,
+       -0.012
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       -0.4
+      ]
+     }
+    },
+    "ben.left": {
+     "place": {
+      "wrist": [
+       0.012,
+       0.138,
+       -0.075
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       0.4,
+       0.9,
+       -1.0
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 3.85,
+   "move": 0.4,
+   "ease": "snappy",
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.05,
+       0.012
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       0.4
+      ]
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       -0.012,
+       0.1,
+       -0.075
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       -0.4,
+       0.9,
+       -1.0
+      ]
+     }
+    },
+    "ana.left": {
+     "place": {
+      "wrist": [
+       -0.075,
+       0.15,
+       -0.012
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       -0.4
+      ]
+     }
+    },
+    "ben.left": {
+     "place": {
+      "wrist": [
+       0.012,
+       0.2,
+       -0.075
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       0.4,
+       0.9,
+       -1.0
+      ]
+     }
+    }
+   }
+  },
+  {
+   "t": 4.9,
+   "move": 0.6,
+   "hands": {
+    "ana.right": {
+     "place": {
+      "wrist": [
+       -0.2,
+       0.1,
+       0.06
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       0.4
+      ]
+     },
+     "thumb": {
+      "cmc_abd": 25,
+      "cmc_flex": -10,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "index": {
+      "mcp_abd": 10,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "middle": {
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "ring": {
+      "mcp_abd": 8,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "pinky": {
+      "mcp_abd": 15,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     }
+    },
+    "ben.right": {
+     "place": {
+      "wrist": [
+       -0.06,
+       0.11,
+       -0.2
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       -0.4,
+       0.9,
+       -1.0
+      ]
+     },
+     "thumb": {
+      "cmc_abd": 25,
+      "cmc_flex": -10,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "index": {
+      "mcp_abd": 10,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "middle": {
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "ring": {
+      "mcp_abd": 8,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "pinky": {
+      "mcp_abd": 15,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     }
+    },
+    "ana.left": {
+     "place": {
+      "wrist": [
+       -0.2,
+       0.12,
+       -0.06
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       1,
+       -0.08,
+       0
+      ],
+      "forearm_toward": [
+       -1.0,
+       0.9,
+       -0.4
+      ]
+     },
+     "thumb": {
+      "cmc_abd": 25,
+      "cmc_flex": -10,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "index": {
+      "mcp_abd": 10,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "middle": {
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "ring": {
+      "mcp_abd": 8,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "pinky": {
+      "mcp_abd": 15,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     }
+    },
+    "ben.left": {
+     "place": {
+      "wrist": [
+       0.06,
+       0.13,
+       -0.2
+      ],
+      "palm_facing": [
+       0,
+       -1,
+       0
+      ],
+      "fingers_toward": [
+       0,
+       -0.08,
+       1
+      ],
+      "forearm_toward": [
+       0.4,
+       0.9,
+       -1.0
+      ]
+     },
+     "thumb": {
+      "cmc_abd": 25,
+      "cmc_flex": -10,
+      "mcp_flex": 0,
+      "ip_flex": 0
+     },
+     "index": {
+      "mcp_abd": 10,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "middle": {
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "ring": {
+      "mcp_abd": 8,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     },
+     "pinky": {
+      "mcp_abd": 15,
+      "mcp_flex": -5,
+      "pip_flex": 0
+     }
+    }
+   }
+  }
+ ]
+}

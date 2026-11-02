@@ -4,7 +4,7 @@ use fframes_three_d::{Vec2, Vec3};
 use rayon::prelude::*;
 
 use super::img::{self, Layer, Rect, smoothstep};
-use super::{Look, Style};
+use super::{Look, Paint, Style};
 
 pub(crate) struct Inputs<'a> {
     pub look: &'a Look,
@@ -28,6 +28,10 @@ pub(crate) struct Inputs<'a> {
     pub detail: Vec<f32>,
     /// Distance from the camera in meters.
     pub depth: Vec<f32>,
+    /// The colours of the hands' people and sleeves; none: the look's.
+    pub tones: &'a [Paint],
+    /// Each pixel's index in `tones` (stylized looks with more than one tone; else all 0).
+    pub tone: Vec<u8>,
 }
 
 /// The key light of the stylized looks in view space: up and to the left, in front.
@@ -105,6 +109,11 @@ impl Palette {
         }
     }
 
+    /// Cloth in toon and spiderverse: the colour itself, darker and lighter.
+    fn cloth(c: Vec3) -> Palette {
+        Palette { deep: c * 0.4, shadow: c * 0.6, mid: c, light: (c * 1.25 + Vec3::splat(0.03)).min(Vec3::ONE) }
+    }
+
     /// Warm lights, cool violet shadows.
     fn arcane(c: Vec3) -> Palette {
         let l = luminance(c);
@@ -118,6 +127,37 @@ impl Palette {
     }
 }
 
+/// A person's colours in a stylized look: the cel palettes of skin and nails, and the palm (a
+/// sleeve's: its cloth's palette, no palm).
+struct Tone {
+    ps: Palette,
+    pn: Palette,
+    /// The palm's colour relative to the back (much lighter on darker skin), from the same
+    /// model as the realistic skin.
+    palm_ratio: Vec3,
+    skin: Vec3,
+}
+
+impl Tone {
+    fn new(style: Style, paint: &Paint) -> Tone {
+        let Paint { skin: skin_rgb, nail: nail_rgb, cloth } = *paint;
+        let (skin, nail) = (img::srgb(skin_rgb), img::srgb(nail_rgb));
+        if cloth {
+            let p = || if style == Style::Arcane { Palette::arcane(skin) } else { Palette::cloth(skin) };
+            return Tone { ps: p(), pn: p(), palm_ratio: Vec3::ONE, skin };
+        }
+        let (ps, pn) = match style {
+            Style::Arcane => (Palette::arcane(skin), Palette::arcane(nail)),
+            _ => (Palette::toon(skin), Palette::toon(nail)),
+        };
+        let t = handkit_mesh::skin::linear(skin_rgb);
+        let back = handkit_mesh::skin::tone_base(t, t, [0.0; 4]);
+        let palm = handkit_mesh::skin::tone_base(t, t, [0.0, 0.0, 0.0, 1.0]);
+        let palm_ratio = Vec3::new(palm[0] / back[0].max(1e-4), palm[1] / back[1].max(1e-4), palm[2] / back[2].max(1e-4));
+        Tone { ps, pn, palm_ratio, skin }
+    }
+}
+
 /// Toon, spiderverse and arcane, from the normals and data passes.
 pub(crate) fn stylized(inp: &Inputs) -> Layer {
     let look = inp.look;
@@ -125,21 +165,11 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
     let s = inp.scale;
     let (sil_d, int_d) = edges(inp);
     let int_d = int_d.unwrap();
-    let skin = img::srgb(look.skin);
-    let nail = img::srgb(look.nail_color());
     let style = look.style;
-    let (ps, pn) = match style {
-        Style::Arcane => (Palette::arcane(skin), Palette::arcane(nail)),
-        _ => (Palette::toon(skin), Palette::toon(nail)),
-    };
-    // The palm's colour relative to the back (much lighter on darker skin), from the same
-    // model as the realistic skin.
-    let palm_ratio = {
-        let t = handkit_mesh::skin::linear(look.skin);
-        let back = handkit_mesh::skin::tone_base(t, t, [0.0; 4]);
-        let palm = handkit_mesh::skin::tone_base(t, t, [0.0, 0.0, 0.0, 1.0]);
-        Vec3::new(palm[0] / back[0].max(1e-4), palm[1] / back[1].max(1e-4), palm[2] / back[2].max(1e-4))
-    };
+    let own = [Paint { skin: look.skin, nail: look.nail_color(), cloth: false }];
+    let tones = if inp.tones.is_empty() { &own[..] } else { inp.tones };
+    let tones: Vec<Tone> = tones.iter().map(|p| Tone::new(style, p)).collect();
+    let tone_at = |i: usize| &tones[inp.tone.get(i).map_or(0, |t| *t as usize).min(tones.len() - 1)];
     // Crease ink: the main creases only (palm lines, finger joints), thin.
     let crease_ink = match style {
         Style::Toon => 0.7,
@@ -149,8 +179,8 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
     };
     let tex = look.texture.unwrap_or(1.0) as f32;
     let r = look.outline as f32 * 0.5 * s;
-    let ink = match style {
-        Style::Arcane => skin * Vec3::new(0.09, 0.045, 0.045),
+    let ink = |t: &Tone| match style {
+        Style::Arcane => t.skin * Vec3::new(0.09, 0.045, 0.045),
         Style::Toon => Vec3::new(0.02, 0.012, 0.01),
         _ => Vec3::splat(0.004),
     };
@@ -216,6 +246,8 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
             let (x, y) = (i % w, i / w);
             let a = inp.alpha[i];
             let line = lines[i];
+            let tone = tone_at(i);
+            let Tone { ps, pn, palm_ratio, skin } = tone;
             let mut out = [0f32; 4];
             if a > 0.0 {
                 let n = inp.normal[i];
@@ -232,12 +264,12 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
                         let t1 = smoothstep(-0.1 - soft, -0.1 + soft, nl);
                         let t2 = smoothstep(0.42 - soft, 0.42 + soft, nl);
                         let band = |p: &Palette| p.deep.lerp(p.shadow, t0).lerp(p.mid, t1).lerp(p.light, t2);
-                        let mut c = band(&ps).lerp(band(&pn), m);
+                        let mut c = band(ps).lerp(band(pn), m);
                         // The stroke's colour: warmer and lighter, or cooler and darker.
                         c *= (Vec3::ONE + Vec3::new(0.16, 0.06, -0.1) * stroke * tex).max(Vec3::splat(0.2));
                         // Warm bounce on the shadow side's rim.
                         let rim = smoothstep(0.45, 0.95, 1.0 - n.z.max(0.0)) * (1.0 - t1);
-                        c += Vec3::new(0.22, 0.09, 0.03) * rim * luminance(skin) * 1.4;
+                        c += Vec3::new(0.22, 0.09, 0.03) * rim * luminance(*skin) * 1.4;
                         c
                     }
                     _ => {
@@ -246,7 +278,7 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
                         let t2 = smoothstep(0.72 - aa, 0.72 + aa, nl);
                         let band = |p: &Palette| p.shadow.lerp(p.mid, t1).lerp(p.light, t2);
                         let palm = inp.detail.get(i).copied().unwrap_or(0.0);
-                        let mut c = (band(&ps) * Vec3::ONE.lerp(palm_ratio, palm)).min(Vec3::ONE).lerp(band(&pn), m);
+                        let mut c = (band(ps) * Vec3::ONE.lerp(*palm_ratio, palm)).min(Vec3::ONE).lerp(band(pn), m);
                         if halftone > 0.0 {
                             // Ben-Day dots on a 45 degree grid, larger where it is darker.
                             let q = (Vec2::new(x as f32, y as f32) - inp.anchor) / halftone;
@@ -267,6 +299,7 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
             }
             // Ink over the fill, out to the line's own edge.
             let la = line.max(0.0);
+            let ink = ink(tone);
             for k in 0..3 {
                 out[k] = out[k] * (1.0 - la) + ink[k] * la;
             }

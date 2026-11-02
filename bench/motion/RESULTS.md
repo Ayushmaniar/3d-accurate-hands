@@ -72,9 +72,22 @@ Fixed from run 2's reports:
   `--help` (it ran without output because Windows could not find FFmpeg's DLLs; they are now
   copied next to it) and `--spotlight` x is a fraction of the width.
 
+## M6: hands kept apart
+
+Clips now push the faster of two hands aside where their moves would cross (`"collide"`,
+`handkit explain clips`). The Burrows clip, `handkit check` with collisions off and on:
+
+| | hand-crossing penetrations | deepest | problems | pops |
+|---|---|---|---|---|
+| off (`"collide": false`) | 14 | 23.7 mm (right thumb through left thumb, 2.90 s) | 15 | none |
+| on (default) | none | - | 2 (framing, elbow in view) | none |
+
+The hands keep the authored layering and slide over or under each other instead of through;
+in the hand-over-hand folds the push reaches 6-14 cm, so the right wrist's peak speed rises
+from 0.59 to 2.02 m/s.
+
 ## Still open
 
-- Routing one hand around the other through a move (M6, multiple hands).
 - Finger waves and gesture blends across waypoint keys, for dance.
 - Motion blur in the player, a sleeve or fade where the forearm ends, and the mesh's
   proportions (M5, realistic hand).

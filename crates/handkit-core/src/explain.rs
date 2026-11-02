@@ -37,6 +37,15 @@ Placement, per hand, one of:
   A hand written as { \"mirror\": \"right\", ... } copies the right hand's joint values and takes the
   mirror image of its placement across the plane x = 0; any keys given override the copy.
 
+Hands and people: \"hands\" holds right and left (one person) and, for more people,
+<person>.right and <person>.left (person: lowercase letters, digits and _), e.g. \"ana.right\".
+The name is the prefix everywhere a hand is named: sites (ana.right.index.tip), goals and vary
+patterns (ana.left.*), checks, mirror (\"mirror\": \"ana.right\" on ana.left), `bones`. Every hand
+is placed in the same world. A top-level \"people\": { \"ana\": { \"look\": { \"skin\": \"brown\" } } }
+gives a person their own look (over the file's look); right and left belong to no person.
+\"scale\": 0.75 on a person (0.5 to 1.5) sizes their hands and forearms (a child's): every length,
+site, reach and mesh scales; angles do not. Grips between hands of two sizes still solve.
+
 Chains: wrist = twist (about the forearm) -> wrist_dev -> wrist_flex. Fingers: knuckle spread
 (rest fan + mcp_abd) -> mcp_roll -> mcp_flex -> pip_flex -> dip_flex. Thumb: base at (0.020, 0.018, 0.008)
 in the hand frame (x toward the thumb, y toward the fingers, z out of the palm); rest
@@ -92,6 +101,27 @@ the hand.
   { \"aim\": \"right.index\", \"at\": [x, y, z] }   the finger's line (knuckle through tip) passes
       through the point, within 1 deg. The point is in world space, so an aim belongs to its
       placement: a hand-level \"from\" leaves a gesture's aims behind.
+  { \"grip\": [a, b], \"style\": s }   two people's hands hold each other; a and b are whole hands
+      (\"ana.right\"), a the leader, b the follower. Styles: handshake (two right or two left
+      hands, palms together, thumbs over the backs, fingers wrapped round), interlaced (a right
+      and a left side by side, fingers spread and alternating, each curled over the back of the
+      other hand, both thumbs over the other's back), cupped (right with left: holding hands
+      side by side, the leader's palm in the follower's, the follower's fingers curled round
+      the leader's pinky edge onto its back and its thumb closed over the leader's index; two
+      rights: a palm up cradles the other's fingers), high_five (palms flat, fingers up and
+      spread), fist_bump (fists knuckles to knuckles), pinky (two rights in loose fists,
+      thumbs resting on the index, both pinkies bent and hooked round each other).
+      Unless the grip already holds, `solve` gives both hands the style's open shape, places
+      the follower on the leader where the style puts it (only the follower placed: the
+      leader moves to it; neither: the leader goes to a default spot near the origin), slides
+      it in until the hands touch, then closes each gripping digit until it meets the other
+      hand (or its own) and stops; the solver then tidies what is left. The result is plain
+      joint values and placements, free to edit. It holds when every closing digit's last
+      segment is within 1 mm of the other hand, or of the part the style lands it on (the
+      pinkies on each other's middle segment, an interlaced fingertip on the back of the
+      other hand; `query` lists each tip's gap in mm), the hands touch, and nothing overlaps
+      more than 2 mm. A grip takes no touch or aim; its
+      vary defaults to the closing digits and the follower's place.
   \"vary\": [...] on a goal chooses what may change (default: every joint of each digit a touch
       names, plus palm_cup for ring and pinky and the wrist for palm sites; for aim, the wrist
       and that finger's knuckle). Patterns: right.thumb.* (one digit), right.index.pip_flex
@@ -107,7 +137,8 @@ the hand.
 Gestures: `handkit gestures` lists a library of finished poses; `handkit gesture <name>` prints
 one. \"from\": \"<name>\" at the top of a file starts from a whole gesture (keys you write win;
 its goals are added to yours). On a hand, { \"from\": \"ok\" } takes that gesture's joint
-values for this hand (not its placement), and its goals renamed to this hand.
+values for this hand (not its placement), and its goals renamed to this hand. handshake, holding_hands, interlaced_hands, high_five_pair,
+fist_bump_pair and pinky_promise are two people's (ana's and ben's) hands held by a grip.
 
 Motion: `handkit explain clips` (keyed poses over time, checked and previewed as a whole).
 Looks: `handkit explain looks` (skin tones, toon, spiderverse, arcane, clay, motion blur).
@@ -118,6 +149,7 @@ Clips: motion as keyed poses. A clip file:
   { \"version\": 1, \"fps\": 30, \"duration\": 9.0, \"size\": [1920, 1080],
     \"camera\": { \"position\": [..], \"target\": [..], \"fov\": 35 },
     \"keys\": [ { \"t\": 0, \"hands\": {..}, \"goals\": [..] }, { \"t\": 1.2, \"move\": 0.4, ... }, ... ] }
+Any number of hands (see Hands and people in `handkit explain`), with \"people\" as in a pose.
 duration defaults to the last key + 0.5 s; size (the video's, for the framing check, `sheet`
 and screen placements) to 16:9. A key's place.screen uses the clip's camera as of that key.
 
@@ -156,13 +188,29 @@ through the move between them, every frame, so a pinch stays closed while the ha
 A goal only in the later key closes as the hand arrives; one only in the earlier key lets go
 as the move starts. A hand's fingers never pass through each other or its palm: where a move
 would, they slide past. A goal with only \"vary\" (no touch or aim) does the same in a pose
-file: it keeps the parts it varies from passing through anything. Mid-move the two hands are
-not pushed apart (frame by frame, a finger passing through the other hand would flip from one
-side of it to the other) unless a held goal joins them: route a crossing yourself (a lifted
-waypoint, fingers opened first); `check` reports each overlap with the keys either side.
+file: it keeps the parts it varies from passing through anything. Hands do not pass through
+each other either: where two hands' moves would cross, the faster-moving one is pushed aside
+(the slower barely moves; at equal speed the later-listed hand gives way), smoothly, and eases
+back onto its keyed path once clear, on the side the keys put it (above stays above). Parts a
+held goal joins (a touch between two hands) are not pushed apart. \"collide\": false turns
+this off: clip-wide at the top, on a key (from its start on), or on one hand of a key. `check`
+reports any overlap left with the keys either side; a deep keyed overlap is pushed far, so
+route a big crossing yourself (a lifted waypoint, fingers opened first).
+
+Grips in clips: keys in a row writing the same grip (hands and style) hold it. Only the leader
+needs keying (the follower's place in later keys is ignored): the follower's hand rides on the
+leader's, and its forearm follows through a critically damped spring (3 Hz, a few frames
+behind), so a handshake pumped by one arm reads as led. In the first key with the grip the
+hands arrive 0.3 s early and open, the gripping fingers closing over the last 0.3 s; the
+follower blends onto the leader as it arrives. In the first key without it the fingers open
+over 0.25 s, then the hands part. The pair does not collide with itself from the grip's
+approach until it has parted. A grip in the first key holds from the start. Come in through a
+pass waypoint a few cm short of the grip, palms facing and thumbs lifted toward their own
+palms (open_palm with thumb cmc_abd 40, cmc_flex -25), so the thumbs pass each other; leave
+the same way. high_five and fist_bump close no fingers: the hands simply meet at t.
 
 Commands: `handkit check clip.json` (held goals, penetrations, joint speeds, pops, fingertips
-leaving the camera's view, elbows in view; fix everything it reports; penetrations and pops
+leaving the camera's view, bare elbows in view; fix everything it reports; penetrations and pops
 name the keys either side; \"at limit\" lines, joints held within 1 deg of a limit for over
 0.3 s, are information: the pose asks a joint for more than it has), `handkit sheet clip.json
 -n 12 --mesh` (a contact sheet at the clip's aspect; --at 1.2,1.3,1.4 for chosen times,
@@ -170,7 +218,15 @@ name the keys either side; \"at limit\" lines, joints held within 1 deg of a lim
 file at a time, to query or render; --wrist writes its placement as wrist, palm_facing and
 fingers_toward), `handkit preview clip.json` (a quick MP4). To match a reference video:
 `python tools/motion/compare.py ref.mp4 out.mp4 cmp` writes cmp.sheet.png (both at the same
-times, in rows) and cmp.side.mp4 (side by side).";
+times, in rows) and cmp.side.mp4 (side by side).
+
+Where a site is on screen (e.g. a button behind the hand that reacts to a fingertip):
+`handkit track clip.json --site right.index.tip [--site left.thumb.tip ...] [--fps 60]` prints
+a JSON array, one frame per line: { \"t\", \"sites\": { \"<site>\": { \"screen\": [x, y], \"depth\",
+\"world\": [x, y, z] } } }. screen is in fractions of the frame as place.screen (x 0 left to 1
+right, y 0 top to 1 bottom) through the clip's camera and size, depth is meters along the
+view (both null without a camera); fps defaults to the clip's. The same one call at a time:
+clip.site(t, name) in the WASM build (JSON text), Clip::site_on_screen(t, name) in Rust.";
 
 pub const LOOKS: &str = "\
 Looks: how renderers draw the hands. A pose or a clip may carry a top-level \"look\":
@@ -194,9 +250,19 @@ Looks: how renderers draw the hands. A pose or a clip may carry a top-level \"lo
   misregister  spiderverse plate offset in pixels at 1080p (default 3; 0 = none).
   texture      0 to 1: brush strokes (arcane), lumps and fingerprints (clay); default 1.
   subsurface   0 to 1: how much scattered light realistic mixes in (default 0.35).
+  arm          where the forearm ends (the rig stops at the elbow): \"bare\" (default: skin to
+               a rounded end), \"fade\" (the forearm fades to transparent over its last 30%
+               toward the elbow, ink and motion blur included), or { \"sleeve\": \"#rrggbb\",
+               \"length\": 0.08 } (a rolled-up cloth sleeve, matte with soft folds and a rolled
+               cuff, over the forearm from the elbow for length meters, 0.02 to 0.2; past the
+               elbow it fades out as if it went on up the arm). With the elbow in view, use
+               fade or a sleeve: `check` then lists it as information, not a problem.
+               clips/demo_arms.json shows all three (docs/m6-arm.png).
 The fframes player takes the same as flags over the file's look: --look toon,skin=tan,outline=4,
 --look-json '{..}', --motion-blur 4, and --looks \"realistic;toon;arcane\" --look-every 2 to
-cycle through looks (a demo). In Rust, handkit_fframes::look::Styler renders any look.";
+cycle through looks (a demo). Each person's \"look\" (see \"people\") sets their skin, nail
+colours and arm; the style is the file's. In Rust, handkit_fframes::look::Styler renders any
+look (Styler::dress_as for a person's).";
 
 pub const SIGN: &str = "\
 Sign language (ASL): the manual alphabet is in the gesture library as asl_a ... asl_z (right
