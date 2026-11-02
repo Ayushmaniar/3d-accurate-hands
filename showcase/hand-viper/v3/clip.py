@@ -27,6 +27,7 @@ DIG = ('thumb', 'index', 'middle', 'ring', 'pinky')
 P0 = json.load(open(os.path.join(OUT, 'upright_hands_z32.json')))
 PV = vopen.turn_hands(P0, V)
 HEAD = json.load(open(os.path.join(OUT, 'vh%dt-10_hands.json' % V)))
+CLOSED = {'me.' + s: h for s, h in json.load(open(os.path.join(HERE, 'closed.json')))['hands'].items()}
 STRAIGHT = {'mcp_abd': 0, 'mcp_roll': 0, 'mcp_flex': 4, 'pip_flex': 6, 'dip_flex': 3}
 THUMB_UP = {'cmc_flex': 8, 'cmc_abd': -8, 'cmc_rot': 0, 'mcp_flex': 5, 'ip_flex': 5}
 
@@ -66,9 +67,10 @@ def clear_thumbs(digits, **where):
     return {s: sol['hands']['me.' + s]['thumb'] for s in S}
 
 
-def tidy(digits, name, **where):
-    """The solver pushes every finger out of the other hand and its own (a vary-only goal)."""
-    goal = {'vary': ['me.%s.%s.*' % (s, d) for s in S for d in DIG]}
+def tidy(digits, name, only=DIG, **where):
+    """The solver pushes every finger (of `only`) out of the other hand and its own (a vary-only
+    goal)."""
+    goal = {'vary': ['me.%s.%s.*' % (s, d) for s in S for d in only]}
     code, text, sol = solve('tidy_' + name, pose(hands_at(digits, **where), [goal]))
     print('tidy', name, text.splitlines()[0])
     return {s: joints(sol['hands'], s, DIG) for s in S}
@@ -93,11 +95,15 @@ def build():
     cross = {s: dict(flat[s], **joints(P0, s, ('ring', 'pinky'))) for s in S}
     stack = {s: dict(cross[s], **joints(P0, s, ('middle',))) for s in S}
     shut = {s: joints(HEAD, s, DIG) for s in S}
+    # The mouth shut: each index tip resting on its thumb's last segment (closed.py solves it).
+    for s in S:
+        shut[s].update(joints(CLOSED, s, ('index', 'thumb')))
     curl = {s: dict(shut[s], thumb=dict(THUMB_UP)) for s in S}
     wide = nudged(shut, index={'mcp_flex': -18, 'pip_flex': -30}, thumb={'mcp_flex': -8, 'ip_flex': -10})
     for s in S:
         wide[s]['thumb']['cmc_flex'] = max(-30, wide[s]['thumb']['cmc_flex'] - 8)
-    curl, shut, wide = [tidy(d, n, base=PV) for d, n in ((curl, 'curl'), (shut, 'shut'), (wide, 'wide'))]
+    curl, wide = [tidy(d, n, base=PV) for d, n in ((curl, 'curl'), (wide, 'wide'))]
+    shut = tidy(shut, 'shut', only=('middle', 'ring', 'pinky'), base=PV)
     jaw = {s: {d: {k: (shut[s][d][k] * 2 + wide[s][d][k]) / 3 for k in shut[s][d]} for d in DIG} for s in S}
     # On the way under, the thumbs stay flat in their own palms' planes, so they pass each other.
     swing = {s: dict(curl[s], thumb={'cmc_flex': (THUMB_UP['cmc_flex'] + jaw[s]['thumb']['cmc_flex']) / 2,
