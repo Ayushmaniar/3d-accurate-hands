@@ -69,4 +69,6 @@ launch/film/public/vendor
 # Scratch solves and renders of the symbol checks and the viper.
 showcase/symbols/out/
 showcase/hand-viper/v3/out/
+showcase/hand-viper/v4/out/
 showcase/hand-viper/facing/out/
+starters/*/target-*/

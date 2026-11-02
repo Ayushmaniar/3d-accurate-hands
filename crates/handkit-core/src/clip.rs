@@ -1229,7 +1229,9 @@ impl Clip {
         for extra in [new, dropped] {
             let Some(w) = extra.first().map(|g| g.1).filter(|w| *w > 0.0) else { continue };
             let all: Vec<Value> = held.iter().cloned().chain(goals_of(&extra)).collect();
-            let full = solve(&base, &all, !joined)?;
+            // From the keyed pose, as a key's own goals are solved: from `base` the solver can
+            // settle elsewhere, and the fingers jump where the goals start or stop changing.
+            let full = solve(&pose, &all, !joined)?;
             out = add(&out, &scale(&sub(&full, &base), w));
             if w >= 0.999 {
                 active.extend(goals_of(&extra));

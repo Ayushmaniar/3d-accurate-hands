@@ -15,8 +15,8 @@ for f in out/handkit-launch.mp4 "$HK/phone/handkit-launch.mp4"; do
   ffmpeg -hide_banner -nostats -i "$f" -map 0:a -af ebur128=peak=true -f null - 2>&1 | sed -n "/Summary/,\$p" | grep -E "I:|Peak:" | sed -n "1p;3p"
 done
 # contact sheet of the final: 30 frames, one every 2.46 s, timestamped
-ffmpeg -v error -y -i out/handkit-launch.mp4 -vf "select='isnan(prev_selected_t)+gte(t-prev_selected_t\,2.45)',scale=384:-2,drawtext=fontfile='C\:/Windows/Fonts/arial.ttf':text='%{pts\:hms}':x=6:y=6:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.6,tile=6x5:padding=4:color=black" -fps_mode vfr -frames:v 1 out/contact-sheet.png
+ffmpeg -v error -y -i out/handkit-launch.mp4 -vf "select='isnan(prev_selected_t)+gte(t-prev_selected_t\,2.6)',scale=384:-2,drawtext=fontfile='C\:/Windows/Fonts/arial.ttf':text='%{pts\:hms}':x=6:y=6:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.6,tile=6x5:padding=4:color=black" -fps_mode vfr -frames:v 1 out/contact-sheet.png
 # key sync frames
-for t in 10.967 19.1 27.1 50.3 51.867 60.833 70.833; do ffmpeg -v error -y -ss $t -i out/handkit-launch.mp4 -frames:v 1 -vf scale=480:-2 work/key_$t.png; done
-ffmpeg -v error -y $(for t in 10.967 19.1 27.1 50.3 51.867 60.833 70.833; do echo -i work/key_$t.png; done) -filter_complex "hstack=7" out/key-frames.png
+for t in 10.967 21.1 27.1 41.1 50.64 55.873 70.84; do ffmpeg -v error -y -ss $t -i out/handkit-launch.mp4 -frames:v 1 -vf scale=480:-2 work/key_$t.png; done
+ffmpeg -v error -y $(for t in 10.967 21.1 27.1 41.1 50.64 55.873 70.84; do echo -i work/key_$t.png; done) -filter_complex "hstack=7" out/key-frames.png
 echo done

@@ -195,7 +195,13 @@ impl std::fmt::Debug for FframesClipVideo<'_> {
     }
 }
 
-// ---- The "Ship it" shot: a deploy card under the hand, the button reacting to the tap. ----
+
+// ---- The "Ship it" shot: one release card on paper, one physical button under the fingertip. ----
+//
+// The film shows this shot zoomed 1.55x-1.42x around (50%, 56%), so only about x 285..1635,
+// y 180..940 is ever seen: everything sits inside that. The hand comes in from the bottom
+// right and covers that corner, so the copy and the button label sit top and left of the
+// fingertip, and the only follow-through (the status turning "Live") is top right.
 
 /// The right index fingertip per frame from `tip_track.py`: [screen x px, screen y px,
 /// distance from the camera in m].
@@ -204,10 +210,20 @@ const TIP: &str = include_str!("tip.json");
 const SCREEN_D: f64 = 0.800;
 /// When the fingertip first touches the button.
 const TAP: f64 = 2.52;
-/// The button: centre x, y, width, height.
-const BTN: (f64, f64, f64, f64) = (960.0, 640.0, 360.0, 108.0);
-/// Where the fingertip lands.
-const TOUCH: (f64, f64) = (970.0, 640.0);
+
+const INK: &str = "#0B0B0D";
+const PAPER: &str = "#F4F2EE";
+const ACCENT: &str = "#FF5B2E";
+const FONT: &str = "Inter Tight";
+
+/// The card: x, y, width, height.
+const CARD: (f64, f64, f64, f64) = (508.0, 250.0, 904.0, 534.0);
+/// Inner margin of the card.
+const PAD: f64 = 72.0;
+/// The button's face at rest: x, y, width, height (the fingertip lands at about 970, 640).
+const BTN: (f64, f64, f64, f64) = (580.0, 580.0, 760.0, 120.0);
+/// How far the face stands above the card: the visible edge under it, pressed away by the tap.
+const LIP: f64 = 12.0;
 
 fn clamp01(x: f64) -> f64 {
     x.clamp(0.0, 1.0)
@@ -223,11 +239,16 @@ fn out_cubic(u: f64) -> f64 {
     1.0 - (1.0 - u).powi(3)
 }
 fn out_back(u: f64) -> f64 {
-    let c = 1.9;
+    let c = 1.6;
     1.0 + (c + 1.0) * (u - 1.0).powi(3) + c * (u - 1.0).powi(2)
 }
-fn mix(a: [f64; 3], b: [f64; 3], t: f64) -> String {
-    let c = |i: usize| (a[i] + (b[i] - a[i]) * t).round().clamp(0.0, 255.0) as u8;
+fn hex(c: &str) -> [f64; 3] {
+    let v = |i: usize| u8::from_str_radix(&c[1 + 2 * i..3 + 2 * i], 16).unwrap_or(0) as f64;
+    [v(0), v(1), v(2)]
+}
+fn mix(a: &str, b: &str, t: f64) -> String {
+    let (a, b) = (hex(a), hex(b));
+    let c = |i: usize| (a[i] + (b[i] - a[i]) * clamp01(t)).round().clamp(0.0, 255.0) as u8;
     format!("#{:02x}{:02x}{:02x}", c(0), c(1), c(2))
 }
 
@@ -242,18 +263,11 @@ impl FframesClipVideo<'_> {
     }
 }
 
-fn check_icon<'a>(cx: f64, cy: f64, s: f64, color: &'static str) -> Svgr<'a> {
-    fframes::svgr!(<g>
-        <circle cx={cx} cy={cy} r={11.0 * s} fill={color} opacity="0.18" />
-        <path d={format!("M{} {} L{} {} L{} {}", cx - 5.0 * s, cy, cx - 1.5 * s, cy + 4.0 * s, cx + 5.5 * s, cy - 4.5 * s)} fill="none" stroke={color} stroke-width={2.6 * s} stroke-linecap="round" stroke-linejoin="round" />
-    </g>)
-}
-
 impl Video for FframesClipVideo<'_> {
     const FPS: usize = FPS;
     const WIDTH: usize = WIDTH;
     const HEIGHT: usize = HEIGHT;
-    const BACKGROUND_COLOR: Color = Color::BLACK;
+    const BACKGROUND_COLOR: Color = Color::WHITE;
 
     fn duration(&self) -> Duration<'_> {
         Duration::Seconds(self.clip.duration as f32)
@@ -263,159 +277,104 @@ impl Video for FframesClipVideo<'_> {
         AudioMap::none()
     }
 
-    fn render_frame<'a>(&'a self, frame: Frame, _ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
+    fn render_frame<'a>(&'a self, mut frame: Frame, ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
         let t = frame.seconds() as f64;
         let hands = self.hands_image(t);
-        let font = "DM Sans";
 
-        // The fingertip's height above the screen drives the hand's shadow on it.
+        // The hand's shadow on the screen: the light is above and to the right, so it falls
+        // down and to the left, out from under the hand where it shows on the white card. It
+        // is softer the higher the fingertip is above the glass and closes in on the touch.
         let tip = self.tip(t);
         let gap = (SCREEN_D - tip[2]).max(0.0);
-        let off = gap * 800.0;
-        let (sdx, sdy, sblur) = (off * 0.55, off, 2.5 + gap * 150.0);
-        let sop = 0.7 - (gap * 3.0).min(0.3);
+        let off = gap * 950.0;
+        let (sdx, sdy, sblur) = (-off * 0.45, off * 0.9, 4.0 + gap * 160.0);
+        let sop = 0.40 - (gap * 1.2).min(0.1);
 
-        // Button states.
-        let intro = out_cubic(lin(t, 0.0, 0.7));
-        let hover = smooth(t, 1.25, 1.7) * (1.0 - smooth(t, 2.6, 2.75));
-        let press_in = smooth(t, TAP - 0.04, TAP + 0.04);
-        let release = out_back(lin(t, 2.70, 3.05));
-        let press = press_in * (1.0 - release);
-        let ok = smooth(t, 2.62, 2.92);
-        let scale = 1.0 + 0.025 * hover - 0.06 * press;
+        // The press follows the fingertip into the glass, then the button latches lower:
+        // a shipped release does not pop back up all the way.
+        let touch = smooth(tip[2], 0.784, 0.797);
+        let latch_rise = out_back(lin(t, 2.70, 3.00));
+        let dep = if t < TAP + 0.03 { touch * LIP } else { (touch * LIP).max(LIP - 6.0 * latch_rise) };
+        // Ink floods the face out from under the fingertip: orange (do it) becomes ink (done)
+        // without passing through a muddy mix of the two.
+        let flood = out_cubic(lin(t, 2.56, 2.80));
+        let flood_r = 1.0 + 420.0 * flood;
+        let edge = mix("#C2401B", "#000000", smooth(t, 2.62, 2.70));
+        let label_in = out_cubic(lin(t, 2.70, 2.98));
+        let check = smooth(t, 2.76, 3.02);
+
+        // Follow-through: the release goes live a beat after the button settles.
+        let live = smooth(t, 2.98, 3.14);
+
+        // The card settles in at the start.
+        let intro = out_cubic(lin(t, 0.0, 0.8));
+        let card_dy = (1.0 - intro) * 28.0;
+
+        let (cx, cy, cw, ch) = CARD;
         let (bx, by, bw, bh) = BTN;
-        let (tx, ty) = TOUCH;
-        let idle_fill = mix([99.0, 102.0, 241.0], [124.0, 127.0, 252.0], hover);
-        let fill = if ok > 0.0 { mix([124.0, 127.0, 252.0], [22.0, 163.0, 74.0], ok) } else { idle_fill };
-        let fill_dark = mix([67.0, 56.0, 202.0], [21.0, 128.0, 61.0], ok);
-        let ripple_u = lin(t, TAP, TAP + 0.65);
-        let ripple_r = 1.0 + out_cubic(ripple_u) * 330.0;
-        let ripple_op = if t >= TAP { 0.55 * (1.0 - ripple_u) } else { 0.0 };
-        let ring_u = lin(t, TAP + 0.05, TAP + 0.85);
-        let ring_op = if t >= TAP + 0.05 { 0.7 * (1.0 - ring_u) } else { 0.0 };
-        let ring_pad = out_cubic(ring_u) * 46.0;
-        let glow = ok * (0.55 + 0.15 * (1.0 - lin(t, 3.0, 4.0)));
-        let check_draw = smooth(t, 2.78, 3.05);
+        let left = cx + PAD;
+        let right = cx + cw - PAD;
+        let fy = by + dep; // the face's top
+        let r = 26.0;
 
-        // Deploy progress after the tap, then live.
-        let prog = out_cubic(lin(t, 2.75, 3.95));
-        let live = smooth(t, 3.95, 4.15);
-        let chip_pop = out_back(lin(t, 3.95, 4.3));
-        let chip_scale = 1.0 + 0.15 * (lin(t, 3.95, 4.05) - lin(t, 4.05, 4.3)).max(0.0) + 0.0 * chip_pop;
-        let toast = out_back(lin(t, 4.25, 4.75));
+        // Status, top right, right-aligned: a dot then the word.
+        let status_font = |w: u16| fframes::FontQuery { family: FONT, size: 30, weight: w, ..Default::default() };
+        let w_ready = frame.text_width(ctx, status_font(600), "Ready to ship").unwrap_or(180) as f64;
+        let w_live = frame.text_width(ctx, status_font(600), "Live").unwrap_or(56) as f64;
+        let dot_ready = right - w_ready - 22.0;
+        let dot_live = right - w_live - 22.0;
+        let dot_x = dot_ready + (dot_live - dot_ready) * live;
+        let dot_r = 8.0 * (1.0 + 0.5 * (lin(t, 2.98, 3.30) * std::f64::consts::PI).sin());
 
-        let lbl_a = 1.0 - smooth(t, 2.62, 2.8);
-        let lbl_b = smooth(t, 2.74, 2.95);
-        let burst = lin(t, TAP + 0.02, TAP + 0.6);
-        let card_y = (1.0 - intro) * 30.0;
-
-        let sparks: Svgr = (0..14)
-            .map(|i| {
-                let a = i as f64 / 14.0 * std::f64::consts::TAU + 0.2;
-                let u = out_cubic(burst);
-                let (ex, ey) = (a.cos(), a.sin());
-                let (rx0, ry0) = (195.0 + 110.0 * u, 66.0 + 50.0 * u);
-                let len = 0.12 * (1.0 - burst) + 0.02;
-                let op = if t > TAP + 0.02 { (1.0 - burst) * 0.9 } else { 0.0 };
-                fframes::svgr!(<line x1={bx + ex * rx0} y1={by + ey * ry0} x2={bx + ex * rx0 * (1.0 + len)} y2={by + ey * ry0 * (1.0 + len)}
-                    stroke="#86efac" stroke-width="5" stroke-linecap="round" opacity={op} />)
-            })
-            .collect();
-
-        let pills: Svgr = [("Tests 412/412", 690.0), ("Build 1m 42s", 960.0), ("Preview approved", 1230.0)]
-            .into_iter()
-            .map(|(label, cx): (&'static str, f64)| {
-                fframes::svgr!(<g>
-                    <rect x={cx - 120.0} y="470" width="240" height="52" rx="26" fill="#1c2620" stroke="#24452f" stroke-width="2" />
-                    {check_icon(cx - 88.0, 496.0, 1.0, "#4ade80")}
-                    <text x={cx + 14.0} y="503" text-anchor="middle" font-family={font} font-weight="500" font-size="21" fill="#b7e4c7">{label}</text>
-                </g>)
-            })
-            .collect();
-
-        let status = if live > 0.5 { "Live" } else { "Ready" };
-        let deploying = format!("Deploying  ·  {} of 3 regions", ((prog * 3.0).floor() as i32).clamp(0, 3));
+        let check_path = format!("M{} {} L{} {} L{} {}", left + 36.0, fy + 61.0, left + 52.0, fy + 77.0, left + 82.0, fy + 45.0);
+        let arrow_path = format!(
+            "M{} {} L{} {} M{} {} L{} {} L{} {}",
+            bx + bw - 92.0, fy + 60.0, bx + bw - 52.0, fy + 60.0,
+            bx + bw - 70.0, fy + 42.0, bx + bw - 52.0, fy + 60.0, bx + bw - 70.0, fy + 78.0
+        );
 
         fframes::svgr!(
             <svg xmlns="http://www.w3.org/2000/svg" viewBox={format!("0 0 {WIDTH} {HEIGHT}")} width={WIDTH} height={HEIGHT}>
                 <defs>
-                    <radialGradient id="bg" cx="0.5" cy="0.42" r="0.75">
-                        <stop offset="0" stop-color="#1c2030" />
-                        <stop offset="1" stop-color="#0a0b10" />
-                    </radialGradient>
-                    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0" stop-color="#1a1d27" />
-                        <stop offset="1" stop-color="#14161e" />
-                    </linearGradient>
-                    <linearGradient id="btn" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0" stop-color={fill.clone()} />
-                        <stop offset="1" stop-color={fill_dark.clone()} />
-                    </linearGradient>
-                    <filter id="glow" x="-50%" y="-80%" width="200%" height="260%">
-                        <feGaussianBlur stdDeviation="28" />
+                    <filter id="cardshadow" x="-20%" y="-20%" width="140%" height="160%">
+                        <feGaussianBlur stdDeviation="34" />
                     </filter>
-                    <filter id="cardshadow" x="-20%" y="-20%" width="140%" height="150%">
-                        <feGaussianBlur stdDeviation="40" />
+                    <filter id="btnshadow" x="-10%" y="-60%" width="120%" height="260%">
+                        <feGaussianBlur stdDeviation="9" />
                     </filter>
                     <filter id="handshadow" x="-10%" y="-10%" width="120%" height="120%">
-                        <feColorMatrix type="matrix" values={format!("0 0 0 0 0.02  0 0 0 0 0.02  0 0 0 0 0.05  0 0 0 {sop:.3} 0")} />
+                        <feColorMatrix type="matrix" values={format!("0 0 0 0 0.043  0 0 0 0 0.043  0 0 0 0 0.05  0 0 0 {sop:.3} 0")} />
                         <feGaussianBlur stdDeviation={sblur} />
                     </filter>
-                    <filter id="toastshadow" x="-20%" y="-40%" width="140%" height="200%">
-                        <feGaussianBlur stdDeviation="18" />
-                    </filter>
-                    <clipPath id="btnclip">
-                        <rect x={bx - bw / 2.0} y={by - bh / 2.0} width={bw} height={bh} rx={bh / 2.0} />
+                    <clipPath id="facetext">
+                        <rect x={bx} y={fy} width={bw} height={bh} rx={r} />
                     </clipPath>
                 </defs>
-                <rect width={WIDTH} height={HEIGHT} fill="url(#bg)" />
+                <rect width={WIDTH} height={HEIGHT} fill={PAPER} />
 
-                <g opacity={intro} transform={format!("translate(0 {card_y:.2})")}>
-                    <rect x="440" y="200" width="1040" height="700" rx="28" fill="#000000" opacity="0.55" filter="url(#cardshadow)" />
-                    <rect x="420" y="170" width="1080" height="740" rx="26" fill="url(#card)" stroke="#2a2f3d" stroke-width="2" />
-                    <path d="M420 238 L1500 238" stroke="#232733" stroke-width="2" />
-                    <circle cx="462" cy="204" r="8" fill="#ef5f57" />
-                    <circle cx="490" cy="204" r="8" fill="#f5bd2f" />
-                    <circle cx="518" cy="204" r="8" fill="#29c840" />
-                    <text x="960" y="212" text-anchor="middle" font-family={font} font-weight="500" font-size="22" fill="#7d8496">{"Deploys"}</text>
-                    <g transform={format!("translate(1404 204) scale({chip_scale:.3}) translate(-1404 -204)")}>
-                        <rect x="1346" y="188" width="116" height="34" rx="17" fill={mix([58.0, 46.0, 20.0], [20.0, 58.0, 36.0], live)} />
-                        <circle cx="1370" cy="205" r="6" fill={mix([245.0, 189.0, 47.0], [74.0, 222.0, 128.0], live)} />
-                        <text x="1414" y="213" text-anchor="middle" font-family={font} font-weight="500" font-size="20" fill={mix([245.0, 208.0, 120.0], [134.0, 239.0, 172.0], live)}>{status}</text>
-                    </g>
-
-                    <text x="960" y="318" text-anchor="middle" font-family={font} font-weight="500" font-size="20" letter-spacing="4" fill="#8b93a7">{"PRODUCTION RELEASE"}</text>
-                    <text x="960" y="390" text-anchor="middle" font-family={font} font-weight="500" font-size="58" fill="#f3f4f8">{"v2.4.0  Checkout redesign"}</text>
-                    <text x="960" y="438" text-anchor="middle" font-family={font} font-weight="500" font-size="24" fill="#7d8496">{"main  ·  12 commits  ·  3 reviewers"}</text>
-                    {pills}
-
-                    <rect x={bx - bw / 2.0 + 10.0} y={by - bh / 2.0 + 18.0} width={bw - 20.0} height={bh} rx={bh / 2.0} fill="#22c55e" opacity={glow} filter="url(#glow)" />
-                    <rect x={bx - bw / 2.0 + 14.0} y={by - bh / 2.0 + 22.0} width={bw - 28.0} height={bh - 10.0} rx={bh / 2.0} fill="#6366f1" opacity={0.45 * (1.0 - ok) * (0.6 + 0.4 * hover)} filter="url(#glow)" />
-                    <rect x={bx - bw / 2.0 - ring_pad * 1.6} y={by - bh / 2.0 - ring_pad} width={bw + ring_pad * 3.2} height={bh + ring_pad * 2.0} rx={bh / 2.0 + ring_pad} fill="none" stroke="#4ade80" stroke-width="3" opacity={ring_op} />
-                    <g transform={format!("translate({bx} {by}) scale({scale:.4}) translate({} {})", -bx, -by)}>
-                        <rect x={bx - bw / 2.0} y={by - bh / 2.0 + 6.0} width={bw} height={bh} rx={bh / 2.0} fill={fill_dark.clone()} opacity={0.9 * (1.0 - press)} />
-                        <rect x={bx - bw / 2.0} y={by - bh / 2.0 + 4.0 * press} width={bw} height={bh} rx={bh / 2.0} fill="url(#btn)" />
-                        <rect x={bx - bw / 2.0 + 3.0} y={by - bh / 2.0 + 3.0 + 4.0 * press} width={bw - 6.0} height={bh / 2.0} rx={bh / 2.0 - 3.0} fill="#ffffff" opacity={0.10 + 0.05 * hover} />
-                        <g clip-path="url(#btnclip)">
-                            <circle cx={tx} cy={ty} r={ripple_r} fill="#ffffff" opacity={ripple_op} />
+                <g opacity={intro} transform={format!("translate(0 {card_dy:.2})")}>
+                    <rect x={cx + 30.0} y={cy + 40.0} width={cw - 60.0} height={ch - 20.0} rx="36" fill={INK} opacity="0.08" filter="url(#cardshadow)" />
+                    <rect x={cx} y={cy} width={cw} height={ch} rx="32" fill="#FFFFFF" stroke={INK} stroke-opacity="0.07" stroke-width="1.5" />
+                    <rect x={left} y={cy + 79.0} width="14" height="14" rx="2.5" fill={ACCENT} />
+                    <text x={left + 28.0} y={cy + 97.0} font-family={FONT} font-weight="600" font-size="30" fill={INK} fill-opacity="0.55">{"Release"}</text>
+                    <circle cx={dot_x} cy={cy + 86.0} r={dot_r} fill={mix("#C9C6C0", ACCENT, live)} />
+                    <text x={right} y={cy + 97.0} text-anchor="end" font-family={FONT} font-weight="600" font-size="30" fill={INK} fill-opacity={0.5 * (1.0 - live)}>{"Ready to ship"}</text>
+                    <text x={right} y={cy + 97.0} text-anchor="end" font-family={FONT} font-weight="600" font-size="30" fill={INK} opacity={live}>{"Live"}</text>
+                    <text x={left - 5.0} y={cy + 221.0} font-family={FONT} font-weight="800" font-size="120" letter-spacing="-5" fill={INK}>{"Handkit 0.1"}</text>
+                    <text x={left} y={cy + 273.0} font-family={FONT} font-weight="500" font-size="36" letter-spacing="-0.4" fill={INK} fill-opacity="0.58">{"Accurate 3D hands for code-made video."}</text>
+                    <rect x={bx + 14.0} y={by + 26.0 + dep * 0.3} width={bw - 28.0} height={bh} rx={r} fill={INK} opacity={0.16 * (1.0 - 0.6 * dep / LIP)} filter="url(#btnshadow)" />
+                    <rect x={bx} y={by + LIP} width={bw} height={bh} rx={r} fill={edge.clone()} />
+                    <rect x={bx} y={fy} width={bw} height={bh} rx={r} fill={if flood < 1.0 { ACCENT } else { INK }} />
+                    <g clip-path="url(#facetext)">
+                        <g opacity={if flood < 1.0 { 1.0 } else { 0.0 }}>
+                            <text x={left + 40.0} y={fy + 77.0} font-family={FONT} font-weight="800" font-size="50" letter-spacing="-1.4" fill={INK}>{"Ship it"}</text>
+                            <path d={arrow_path} fill="none" stroke={INK} stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
                         </g>
-                        <g opacity={lbl_a} transform={format!("translate(0 {:.2})", -14.0 * (1.0 - lbl_a) + 4.0 * press)}>
-                            <text x={bx - 18.0} y={by + 15.0} text-anchor="middle" font-family={font} font-weight="500" font-size="42" fill="#ffffff">{"Ship it"}</text>
-                            <path d={format!("M{} {} L{} {} M{} {} L{} {} L{} {}", bx + 66.0, by + 1.0, bx + 98.0, by + 1.0, bx + 86.0, by - 11.0, bx + 98.0, by + 1.0, bx + 86.0, by + 13.0)} fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="970" cy={fy + 58.0} r={flood_r} fill={INK} opacity={if t >= 2.56 { 1.0 } else { 0.0 }} />
+                        <g opacity={label_in} transform={format!("translate(0 {:.2})", 26.0 * (1.0 - label_in))}>
+                            <path d={check_path} fill="none" stroke={ACCENT} stroke-width="7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="70" stroke-dashoffset={70.0 * (1.0 - check)} />
+                            <text x={left + 104.0} y={fy + 77.0} font-family={FONT} font-weight="800" font-size="50" letter-spacing="-1.4" fill={PAPER}>{"Shipped"}</text>
                         </g>
-                        <g opacity={lbl_b} transform={format!("translate(0 {:.2})", 14.0 * (1.0 - lbl_b))}>
-                            <path d={format!("M{} {} L{} {} L{} {}", bx - 112.0, by + 1.0, bx - 98.0, by + 15.0, bx - 72.0, by - 13.0)} fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="70" stroke-dashoffset={70.0 * (1.0 - check_draw)} />
-                            <text x={bx + 24.0} y={by + 15.0} text-anchor="middle" font-family={font} font-weight="500" font-size="42" fill="#ffffff">{"Shipped"}</text>
-                        </g>
-                    </g>
-                    {sparks}
-
-                    <text x="960" y="762" text-anchor="middle" font-family={font} font-weight="500" font-size="22" fill="#6b7285" opacity={1.0 - smooth(t, 2.6, 2.8)}>{"Deploys main to production in 3 regions"}</text>
-                    <g opacity={smooth(t, 2.7, 2.9)}>
-                        <rect x="760" y="774" width="400" height="8" rx="4" fill="#232836" />
-                        <rect x="760" y="774" width={0.1 + 400.0 * prog} height="8" rx="4" fill={mix([99.0, 102.0, 241.0], [34.0, 197.0, 94.0], live.max(prog * 0.6))} />
-                        <text x="960" y="752" text-anchor="middle" font-family={font} font-weight="500" font-size="22" fill="#9aa1b2" opacity={1.0 - live}>{deploying}</text>
-                        <text x="960" y="752" text-anchor="middle" font-family={font} font-weight="500" font-size="22" fill="#86efac" opacity={live}>{"Live in production  ·  38s"}</text>
                     </g>
                 </g>
 
@@ -426,14 +385,6 @@ impl Video for FframesClipVideo<'_> {
                     </g>),
                     None => Svgr::empty(),
                 }}
-
-                <g opacity={lin(t, 4.25, 4.45)} transform={format!("translate({:.2} 0)", (1.0 - toast) * 80.0)}>
-                    <rect x="1490" y="64" width="380" height="88" rx="18" fill="#000000" opacity="0.5" filter="url(#toastshadow)" />
-                    <rect x="1480" y="52" width="380" height="88" rx="18" fill="#1b2a22" stroke="#2c5a3d" stroke-width="2" />
-                    {check_icon(1530.0, 96.0, 1.6, "#4ade80")}
-                    <text x="1566" y="90" font-family={font} font-weight="500" font-size="24" fill="#e8f7ee">{"v2.4.0 is live"}</text>
-                    <text x="1566" y="120" font-family={font} font-weight="500" font-size="19" fill="#86b79a">{"Shipped by you  ·  just now"}</text>
-                </g>
             </svg>
         )
     }

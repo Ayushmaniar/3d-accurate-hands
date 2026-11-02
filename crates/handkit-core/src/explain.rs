@@ -197,7 +197,9 @@ each other either: where two hands' moves would cross, the faster-moving one is 
 (the slower barely moves; at equal speed the later-listed hand gives way), smoothly, and eases
 back onto its keyed path once clear, on the side the keys put it (above stays above). Parts a
 held goal joins (a touch between two hands) are not pushed apart. \"collide\": false turns
-this off: clip-wide at the top, on a key (from its start on), or on one hand of a key. `check`
+this off: clip-wide at the top, on a key, or on one hand of a key. On a key it covers the move
+into that key and its hold; the next key without it goes back to the clip's setting, so write it
+on every key of a stretch that should stay off. `check`
 reports any overlap left with the keys either side; a deep keyed overlap is pushed far, so
 route a big crossing yourself (a lifted waypoint, fingers opened first).
 
