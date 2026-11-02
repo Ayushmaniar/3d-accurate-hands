@@ -289,6 +289,8 @@ struct Grip {
     hold: &'static Hold,
     offset: DAffine3,
     forearm: DVec3,
+    /// The digits that close, per hand: the style's, less those the goal's vary leaves alone.
+    close: [Vec<Digit>; 2],
 }
 
 impl Grip {
@@ -313,7 +315,11 @@ impl Grip {
             offset = m * offset * m;
             forearm.x = -forearm.x;
         }
-        Ok(Grip { ids: [la, lb], style, hold: o, offset, forearm })
+        let close = [0, 1].map(|who| {
+            let name = [&la, &lb][who].name();
+            o.close[who].iter().copied().filter(|d| joints(*d).iter().any(|(k, _, _)| lets_vary(goal, &name, k))).collect()
+        });
+        Ok(Grip { ids: [la, lb], style, hold: o, offset, forearm, close })
     }
 
     fn label(&self) -> String {
@@ -330,7 +336,7 @@ pub fn pair(goal: &Goal) -> Option<(HandId, HandId)> {
 /// The digits each hand of a grip closes (leader, follower), by name.
 pub fn closing(goal: &Goal) -> Result<[Vec<&'static str>; 2], String> {
     let g = Grip::of(goal)?;
-    Ok(g.hold.close.map(|ds| ds.iter().map(|d| d.name()).collect()))
+    Ok(g.close.map(|ds| ds.iter().map(|d| d.name()).collect()))
 }
 
 /// A hand frame from a placement: x = y cross z, y along the fingers, z out of the palm.
@@ -400,7 +406,7 @@ pub fn evaluate(goal: &Goal, s: &Solved) -> Result<(Vec<f64>, GoalStatus), Strin
     let mut worst = 0.0_f64;
     let mut lands_met = true;
     for who in 0..2 {
-        for d in g.hold.close[who] {
+        for d in &g.close[who] {
             if let Some(&(_, site, other, onto)) = g.hold.lands.iter().find(|l| l.0 == who && l.1.split('.').next() == Some(d.name())) {
                 // A contact the style names: the digit lands there, like a touch goal.
                 let touch = Goal { touch: Some([format!("{}.{site}", g.ids[who]), format!("{}.{onto}", g.ids[other])]), ..Goal::default() };
@@ -451,12 +457,32 @@ pub fn vary(goal: &Goal) -> Result<Vec<String>, String> {
     let g = Grip::of(goal)?;
     let mut out: Vec<String> = Vec::new();
     for who in 0..2 {
-        for d in g.hold.close[who] {
+        for d in &g.close[who] {
             out.push(format!("{}.{}.*", g.ids[who], d.name()));
         }
     }
     out.push(format!("{}.place", g.ids[1]));
     Ok(out)
+}
+
+/// Whether the grip may move hand `name`: its vary is left to the default (which moves the
+/// follower) or names that hand's placement or everything on it.
+fn moves_place(goal: &Goal, name: &str) -> bool {
+    goal.vary.is_empty() || goal.vary.iter().any(|p| p.strip_prefix(name).and_then(|r| r.strip_prefix('.')).is_some_and(|r| r == "*" || r.starts_with("place")))
+}
+
+/// Whether the goal's vary lets the grip change `key` (a joint value such as "thumb.ip_flex") of
+/// hand `name`: always when the vary is left to the default.
+fn lets_vary(goal: &Goal, name: &str, key: &str) -> bool {
+    goal.vary.is_empty()
+        || goal.vary.iter().any(|p| {
+            p.strip_prefix(name).and_then(|r| r.strip_prefix('.')).is_some_and(|r| match r {
+                "*" => true,
+                "wrist" => ["twist", "wrist_flex", "wrist_dev"].contains(&key),
+                r if r.starts_with("*.") => key.split_once('.').is_some_and(|(_, j)| j == &r[2..]),
+                r => r == key || key.split_once('.').is_some_and(|(d, _)| r == d || r.strip_suffix(".*") == Some(d)),
+            })
+        })
 }
 
 /// Whether a hand of the file has its own placement (or mirrors another's).
@@ -532,7 +558,7 @@ const STEP: f64 = 2.0;
 fn close_digits(work: &mut Value, g: &Grip) -> Result<(), String> {
     let names = [g.ids[0].name(), g.ids[1].name()];
     // (hand, digit, joints frozen from the base)
-    let mut runs: Vec<(usize, Digit, usize)> = (0..2).flat_map(|who| g.hold.close[who].iter().map(move |d| (who, *d, 0))).collect();
+    let mut runs: Vec<(usize, Digit, usize)> = (0..2).flat_map(|who| g.close[who].iter().map(move |d| (who, *d, 0))).collect();
     let limit = |k: &str| params::find(k).map(|p| (p.min, p.max)).unwrap();
     for _ in 0..(200.0 / STEP) as usize {
         let mut moving = false;
@@ -589,12 +615,17 @@ pub fn prepare(raw: &Value) -> Result<Value, String> {
         let g = Grip::of(&goal)?;
         let names = [g.ids[0].name(), g.ids[1].name()];
         for (who, name) in names.iter().enumerate() {
-            for (key, x) in g.hold.shape[who] {
+            for (key, x) in g.hold.shape[who].iter().filter(|(k, _)| lets_vary(&goal, name, k)) {
                 set_value(&mut work, name, key, *x);
             }
         }
         let (resolved, _) = crate::pose::resolve(work.clone())?;
         let (pa, pb) = (placed(&work, &resolved, &names[0]), placed(&work, &resolved, &names[1]));
+        if pa && pb && !names.iter().any(|n| moves_place(&goal, n)) {
+            // Both hands placed and the goal's own vary keeps them there: only the digits close.
+            close_digits(&mut work, &g)?;
+            continue;
+        }
         if !pa && !pb {
             let [w, p, f, a] = g.hold.home;
             let x = if g.ids[0].side == Side::Left { -1.0 } else { 1.0 };

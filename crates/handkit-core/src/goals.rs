@@ -65,7 +65,7 @@ fn site_segment(name: &str) -> Option<String> {
 
 impl Solved {
     pub fn target(&self, name: &str) -> Result<Target, String> {
-        let capsule = |label: &str| self.hands.iter().flat_map(|h| &h.capsules).find(|c| c.label() == label);
+        let capsule = |label: &str| self.hands.iter().flat_map(|h| &h.capsules).find(|c| c.is(label));
         if let Some(s) = self.hands.iter().flat_map(|h| &h.sites).find(|s| s.name == name) {
             return Ok(match site_segment(name).and_then(|l| capsule(&l)) {
                 Some(c) => Target { a: c.a, b: c.b, r: c.r, site: Some((s.name.clone(), s.pos)) },

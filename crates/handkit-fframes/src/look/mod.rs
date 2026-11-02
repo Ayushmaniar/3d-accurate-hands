@@ -15,6 +15,11 @@
 //! Everything textured is in the hand's UV atlas, so it moves with the skin; only spiderverse's
 //! halftone dots stay on the screen, as print does.
 //!
+//! A look's `wall` renders one more pass under the hands, whatever the style: a wall facing the
+//! camera that catches the shadows a lamp throws, the hands drawn flat in the wall's colour so
+//! they cast shadows but never show through (a fading arm stays faded). The lamp also lights
+//! the hands in the lit looks, in a dim room.
+//!
 //! The look's `arm` ends the forearm at the elbow (`arm.rs`): a fading arm renders one more flat
 //! pass, each vertex's opacity, and multiplies every layer by it after the post-process (ink
 //! included); a sleeve is a cloth mesh on the forearm joint, lit as matte cloth in the lit looks
@@ -29,17 +34,18 @@
 //! ```
 
 mod arm;
+mod gpu;
 mod img;
 mod shade;
 mod surface;
 
-pub use handkit_core::look::{Arm, Look, Style, TONES};
+pub use handkit_core::look::{Arm, Look, Style, TONES, Wall};
 
 use std::sync::Arc;
 
 use fframes_three_d::{
-    Background, Camera, Environment, Fog, Geometry, Light, Material, Node, NodeId, Pixels, Renderer, Rgb, Scene, Shading, Shadow, Texture,
-    ToneMapping, Vec2, Vec3, Vec4,
+    Aabb, Background, Camera, Environment, Fog, Geometry, Light, Material, Node, NodeId, Pixels, Quat, Renderer, Rgb, Scene, Shading, Shadow,
+    Texture, ToneMapping, Vec2, Vec3, Vec4,
 };
 
 use crate::HandModel;
@@ -101,13 +107,19 @@ enum Flat {
 /// it fades stay readable.
 const FOG_SPAN: f32 = 0.6;
 
+/// Motion blur: the farthest apart (in pixels of a 1080-high frame) the sub-frame copies of a
+/// moving joint may land before more sub-frames are rendered, and how many times the look's
+/// own count that may grow to.
+const BLUR_STEP_PX: f32 = 6.0;
+const BLUR_MAX_SCALE: usize = 6;
+
 impl Styler {
     pub fn new(look: Look, width: u32, height: u32) -> Self {
-        let color = Renderer::new(width, height).cpu().tone_mapping(ToneMapping::Neutral).exposure(match look.style {
+        let color = Renderer::new(width, height).gpu().tone_mapping(ToneMapping::Neutral).exposure(match look.style {
             Style::Clay => 1.05,
             _ => 1.0,
         });
-        let flat = Renderer::new(width, height).cpu().tone_mapping(ToneMapping::Linear);
+        let flat = Renderer::new(width, height).gpu().tone_mapping(ToneMapping::Linear);
         Styler { look, width, height, color, flat, dressed: Vec::new(), tones: Vec::new() }
     }
 
@@ -266,8 +278,8 @@ impl Styler {
     /// Renders one frame. `moment(dt)` builds the scene and camera `dt` frames from the
     /// frame's time; with motion blur it is called once per sub-frame across the shutter.
     pub fn render(&self, moment: impl Fn(f32) -> (Scene, Camera)) -> Pixels {
-        let n = self.look.motion_blur.max(1) as usize;
         let shutter = self.look.shutter as f32 / 360.0;
+        let n = self.sub_frames(&moment, shutter);
         let layers: Vec<Layer> = (0..n)
             .filter_map(|i| {
                 let dt = if n == 1 { 0.0 } else { ((i as f32 + 0.5) / n as f32 - 0.5) * shutter };
@@ -299,8 +311,37 @@ impl Styler {
         }
     }
 
-    /// One moment through the look's passes and post-process.
+    /// How many sub-frames to average: the look's `motion_blur`, raised for a fast move so the
+    /// copies across the shutter sit at most `BLUR_STEP_PX` apart on screen (a smear, not a
+    /// row of ghosts), up to `BLUR_MAX_SCALE` times the look's count.
+    fn sub_frames(&self, moment: &impl Fn(f32) -> (Scene, Camera), shutter: f32) -> usize {
+        let n = self.look.motion_blur.max(1) as usize;
+        if n == 1 {
+            return 1;
+        }
+        // Every skinned joint on screen, at the shutter's open and close.
+        let at = |dt: f32| -> Vec<Option<Vec3>> {
+            let (scene, camera) = moment(dt);
+            let joints = scene.nodes().filter_map(|(_, node)| node.as_mesh().and_then(|m| m.skin.as_ref())).flat_map(|skin| skin.joints.clone());
+            joints.map(|j| camera.project(scene.world_position(j), self.width as f32, self.height as f32)).collect()
+        };
+        let (a, b) = (at(-0.5 * shutter), at(0.5 * shutter));
+        let travel = a.iter().zip(&b).filter_map(|(p, q)| Some((p.as_ref()?.truncate() - q.as_ref()?.truncate()).length())).fold(0.0, f32::max) / (self.height as f32 / 1080.0);
+        n.max((travel / BLUR_STEP_PX).ceil() as usize).min(n * BLUR_MAX_SCALE)
+    }
+
+    /// One moment through the look's passes and post-process, over the wall if it has one
+    /// (which shows even with no hand in view).
     fn layer(&self, scene: &Scene, camera: &Camera) -> Option<Layer> {
+        let hands = self.hands_layer(scene, camera);
+        match self.look.wall {
+            Some(wall) => Some(self.on_wall(hands, self.wall_pass(scene, camera, &wall))),
+            None => hands,
+        }
+    }
+
+    /// The hands through the look's passes and post-process; none when none is in view.
+    fn hands_layer(&self, scene: &Scene, camera: &Camera) -> Option<Layer> {
         let scale = self.height as f32 / 1080.0;
         let look = &self.look;
         let reach = look.outline as f32 * 0.5 * 1.6 + look.misregister.unwrap_or(3.0) as f32 + 6.0;
@@ -412,12 +453,116 @@ impl Styler {
         }
     }
 
+    /// `hands` over the wall (the whole frame).
+    fn on_wall(&self, hands: Option<Layer>, mut out: Layer) -> Layer {
+        let Some(hands) = hands else { return out };
+        let w = self.width as usize;
+        out.rgba.par_chunks_mut(w).skip(hands.rect.y0).take(hands.rect.h).enumerate().for_each(|(y, row)| {
+            let src = &hands.rgba[y * hands.rect.w..(y + 1) * hands.rect.w];
+            for (d, s) in row[hands.rect.x0..hands.rect.x0 + hands.rect.w].iter_mut().zip(src) {
+                let keep = 1.0 - s[3];
+                *d = [s[0] + d[0] * keep, s[1] + d[1] * keep, s[2] + d[2] * keep, 1.0];
+            }
+        });
+        out
+    }
+
+    /// Where the wall's lamp stands: given, or beside the camera, up and to the left.
+    fn lamp(wall: &Wall, camera: &Camera) -> Vec3 {
+        match wall.lamp {
+            Some([x, y, z]) => Vec3::new(x as f32, y as f32, z as f32),
+            None => {
+                let d = (camera.target - camera.position).length();
+                camera.position - camera.right() * 0.7 * d + camera.up_vector() * 0.3 * d
+            }
+        }
+    }
+
+    /// The wall, lit by its lamp with the hands' shadows on it: the whole frame, opaque.
+    fn wall_pass(&self, scene: &Scene, camera: &Camera, wall: &Wall) -> Layer {
+        let mut s = scene.clone();
+        s.background = Background::Transparent;
+        s.environment = Environment::None;
+        s.reflector = None;
+        s.fog = None;
+        let ids: Vec<NodeId> = s.nodes().map(|(id, _)| id).collect();
+        for id in ids {
+            let node = &mut s[id];
+            if node.light_mut().is_some() {
+                node.visible = false;
+                continue;
+            }
+            let Some(mesh) = node.mesh_mut() else { continue };
+            let m = &mesh.material;
+            if m.shading == Shading::ShadowCatcher || m.opacity < 1.0 || m.transparent {
+                node.visible = false;
+                continue;
+            }
+            // White: no shadow where the hands cover the wall.
+            mesh.material = Material::unlit(Rgb::WHITE);
+            mesh.cast_shadow = true;
+        }
+        let forward = camera.forward();
+        let v3 = |a: [f64; 3]| Vec3::new(a[0] as f32, a[1] as f32, a[2] as f32);
+        // The wall's plane: fixed in the world, or facing the camera behind what it looks at.
+        let (point, normal) = match wall.at {
+            Some(at) => (v3(at), v3(wall.facing).normalize_or(Vec3::Z)),
+            None => (camera.target + forward * wall.behind as f32, -forward),
+        };
+        let meet = |from: Vec3, along: Vec3| {
+            let across = along.dot(normal);
+            let t = (point - from).dot(normal) / across;
+            (across.abs() > 1e-5 && t > 0.0).then(|| from + along * t)
+        };
+        let center = meet(camera.position, forward).unwrap_or(point);
+        let depth = (center - camera.position).length();
+        let aspect = self.width as f32 / self.height as f32;
+        // The wall in view (more of it when seen at a slant), and a margin.
+        let slant = forward.dot(normal).abs().max(0.25);
+        let h = (2.0 * depth * (camera.fov.to_radians() * 0.5).tan() + 2.0 * camera.shift.length() * depth) / slant;
+        let side = 1.4 * h * aspect.max(1.0);
+        s.add(Node::mesh(Arc::new(Geometry::plane(side, side)), Material::shadow_catcher(1.0)).with_position(center).with_rotation(Quat::from_rotation_arc(Vec3::Z, normal)));
+        let lamp = Self::lamp(wall, camera);
+        // A larger lamp blurs the edges more; the map is sized for crisp edges at a bare bulb.
+        // The map covers the wall in view and the space in front of it, where the hands are
+        // (fitted to the hands alone, it would end before the wall).
+        let u = (camera.right() - normal * camera.right().dot(normal)).normalize_or(normal.any_orthonormal_vector());
+        let w = normal.cross(u);
+        let (hw, hh) = (0.5 * h * aspect, 0.5 * h);
+        let corners = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)].map(|(x, y)| center + u * x * hw + w * y * hh);
+        let front = normal * ((camera.target - point).dot(normal).abs() + 0.2);
+        let bounds = Aabb::from_points(corners.iter().flat_map(|c| [*c, *c + front]));
+        let shadow = Shadow { map_size: 4096, softness: 0.8 + 10.0 * wall.softness as f32, strength: 1.0, bias: 1.5, bounds: Some(bounds) };
+        s.add(Node::light(Light::directional(Rgb::WHITE, 1.0, lamp - camera.target).with_shadow(shadow)));
+        let px = gpu::render_pixels(&self.flat, s, camera);
+        let full = Rect { x0: 0, y0: 0, w: self.width as usize, h: self.height as usize };
+        let (rgb, alpha) = img::decode(&px, full);
+        // The lamp's pool of light: centred where its ray through what the camera looks at
+        // meets the wall, falling off toward the frame's corners.
+        let hit = meet(camera.target, camera.target - lamp).unwrap_or(center);
+        let pool = camera.project(hit, self.width as f32, self.height as f32).map(|p| Vec2::new(p.x, p.y)).unwrap_or(Vec2::new(self.width as f32, self.height as f32) * 0.5);
+        let c = img::srgb(wall.color);
+        let hgt = self.height as f32;
+        let rgba = (0..full.len())
+            .into_par_iter()
+            .map(|i| {
+                let (x, y) = ((i % full.w) as f32, (i / full.w) as f32);
+                let r = (Vec2::new(x, y) - pool).length() / hgt;
+                let light = 1.0 - 0.55 * img::smoothstep(0.25, 1.1, r);
+                let shade = alpha[i] * (1.0 - rgb[i].x);
+                let v = c * light * (1.0 - 0.86 * shade);
+                [v.x, v.y, v.z, 1.0]
+            })
+            .collect();
+        Layer { rect: full, rgba }
+    }
+
     /// The scene lit for the look and rendered in colour.
     fn color_pass(&self, scene: &Scene, camera: &Camera) -> Pixels {
         let mut s = scene.clone();
         s.background = Background::Transparent;
         self.light(&mut s, camera);
-        self.color.render_pixels(&s, camera)
+        gpu::render_pixels(&self.color, s, camera)
     }
 
     /// Adds the look's lights and environment, placed relative to the camera.
@@ -426,6 +571,15 @@ impl Styler {
         let dir = |x: f32, y: f32, z: f32| (right * x + up * y + back * z).normalize();
         let azimuth = back.x.atan2(back.z);
         let soft = Shadow { softness: 4.0, strength: 0.85, bias: 4.0, ..Default::default() };
+        if let Some(wall) = self.look.wall {
+            // A dim room lit by the lamp, which throws the hands' shadows on each other too.
+            let from = Self::lamp(&wall, camera) - camera.target;
+            scene.environment = Environment::studio().intensity(0.25).rotated(azimuth);
+            scene.add(Node::light(Light::hemisphere(Rgb::hex(0xfff4e8), Rgb::hex(0x302a26), 0.45)));
+            scene.add(Node::light(Light::sun(Rgb::hex(0xfff1dc), 3.0, from).with_shadow(Shadow { softness: 2.0 + 6.0 * wall.softness as f32, strength: 0.9, ..soft })));
+            scene.add(Node::light(Light::directional(Rgb::hex(0xe8f0ff), 0.35, dir(0.8, 0.35, -0.55))));
+            return;
+        }
         match self.look.style {
             Style::Clay => {
                 scene.environment = Environment::studio().intensity(0.55).rotated(azimuth);
@@ -506,7 +660,7 @@ impl Styler {
                 }
             };
         }
-        self.flat.render_pixels(&s, camera)
+        gpu::render_pixels(&self.flat, s, camera)
     }
 }
 

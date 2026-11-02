@@ -9,6 +9,9 @@
 //! two neighbouring keys share are re-solved every frame, so a held contact stays closed while
 //! the hand moves.
 
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 use glam::{DAffine3, DQuat, DVec3, EulerRot};
 use serde_json::{Value, json};
 
@@ -18,6 +21,9 @@ use crate::pose::{self, HandId, Side};
 use crate::rig::{Digit, FOREARM, HandGeom, Seg};
 
 const DIGITS: [&str; 5] = ["thumb", "index", "middle", "ring", "pinky"];
+/// The parameters of the digits (thumb.cmc_flex .. pinky.dip_flex), which the own-hand clearing moves.
+static DIGIT_KEYS: std::sync::LazyLock<Vec<&'static str>> =
+    std::sync::LazyLock::new(|| PARAMS.iter().map(|p| p.key).filter(|k| k.split_once('.').is_some_and(|(d, _)| DIGITS.contains(&d))).collect());
 /// Key fields that are about timing (and collisions), not the pose. All but `t` can also go on
 /// a hand.
 const TIMING: [&str; 8] = ["t", "move", "ease", "spring", "cascade", "anticipate", "pass", "collide"];
@@ -373,7 +379,19 @@ pub struct Clip {
     track: collide::Track,
     /// Grips held over runs of keys.
     holds: Vec<Hold>,
+    /// What keeping each hand's fingers out of each other changed, per frame of the grid
+    /// (`Clip::fix_at`), shared by every sample.
+    fixes: Arc<Mutex<HashMap<i64, Arc<Fix>>>>,
 }
+
+/// Per hand (in `ids` order), per digit parameter (`DIGIT_KEYS` order): how far the frame's
+/// own-hand clearing moved it, in degrees.
+type Fix = Vec<Vec<f64>>;
+
+/// Frames either side of a sample whose clearing it blends (triangular weights), so a finger
+/// pushed out of the way eases there instead of jumping when the solver changes its mind
+/// between two frames.
+const FIX_SPREAD: i64 = 3;
 
 /// A grip goal's identity: its two hands and style.
 fn grip_id(g: &Value) -> Option<(Value, Value)> {
@@ -792,7 +810,7 @@ impl Clip {
                 })
             })
             .collect();
-        let mut clip = Clip { duration, fps, camera, size, look, people, keys, idle, seed, follow, ids, chan, track: collide::Track::none(), holds };
+        let mut clip = Clip { duration, fps, camera, size, look, people, keys, idle, seed, follow, ids, chan, track: collide::Track::none(), holds, fixes: Arc::default() };
         if clip.ids.len() > 1 && clip.keys.iter().any(|k| k.collide.iter().filter(|c| **c).count() > 1) {
             clip.track = clip.collisions()?;
         }
@@ -1117,6 +1135,42 @@ impl Clip {
 
     /// The pose and active goals at `t` seconds.
     pub fn sample(&self, t: f64) -> Result<Frame, String> {
+        let (mut out, mut active, grips, joined) = self.goal_pose(t)?;
+        // Keeping each hand's fingers out of each other, blended over the frames around `t`,
+        // then finished from there (a small push from a pose that is already nearly clear, so it
+        // cannot jump between frames the way a push from the keyed pose can).
+        let at = t * self.fps;
+        let (k0, mut fix, mut total) = (at.floor() as i64, vec![vec![0.0; DIGIT_KEYS.len()]; self.ids.len()], 0.0);
+        for k in k0 - FIX_SPREAD + 1..=k0 + FIX_SPREAD {
+            let w = (FIX_SPREAD as f64 - (k as f64 - at).abs()).max(0.0);
+            if w <= 0.0 {
+                continue;
+            }
+            for (acc, f) in fix.iter_mut().zip(self.fix_at(k)?.iter()) {
+                for (a, d) in acc.iter_mut().zip(f) {
+                    *a += w * d;
+                }
+            }
+            total += w;
+        }
+        for (si, id) in self.ids.iter().enumerate() {
+            let hand = &mut out["hands"][id.name()];
+            for (j, key) in DIGIT_KEYS.iter().enumerate() {
+                let p = crate::params::find(key).unwrap();
+                let v = key.split('.').fold(&*hand, |v, k| &v[k]).as_f64().unwrap_or(0.0);
+                set_path(hand, key, json!(r6((v + fix[si][j] / total).clamp(p.min, p.max))));
+            }
+        }
+        let out = self.clear_own(&out, &active, joined)?;
+        let mut pose = round_numbers(&out);
+        pose["version"] = json!(1);
+        active.extend(grips);
+        Ok(Frame { pose, goals: active })
+    }
+
+    /// The pose at `t` with its goals solved, before the fingers are kept out of each other:
+    /// the pose, the non-grip goals active, the grips held, and whether a goal joins two hands.
+    fn goal_pose(&self, t: f64) -> Result<(Value, Vec<Value>, Vec<Value>, bool), String> {
         let mut hands = serde_json::Map::new();
         for (si, id) in self.ids.iter().enumerate() {
             let (values, mut wrist, rot) = self.attached(si, t, true);
@@ -1181,6 +1235,43 @@ impl Clip {
                 active.extend(goals_of(&extra));
             }
         }
+        Ok((out, active, grips, joined))
+    }
+
+    /// How keeping each hand's fingers out of each other moves its digits in frame `k` of the
+    /// grid (`DIGIT_KEYS` order, per hand), computed once per frame and shared.
+    fn fix_at(&self, k: i64) -> Result<Arc<Fix>, String> {
+        if let Some(f) = self.fixes.lock().unwrap().get(&k) {
+            return Ok(f.clone());
+        }
+        let (before, active, _, joined) = self.goal_pose(k as f64 / self.fps)?;
+        let after = self.clear_own(&before, &active, joined)?;
+        let fix: Fix = self
+            .ids
+            .iter()
+            .map(|id| {
+                let (a, b) = (&before["hands"][id.name()], &after["hands"][id.name()]);
+                let get = |h: &Value, key: &str| key.split('.').fold(h, |v, k| &v[k]).as_f64().unwrap_or(0.0);
+                DIGIT_KEYS.iter().map(|key| get(b, key) - get(a, key)).collect()
+            })
+            .collect();
+        let fix = Arc::new(fix);
+        self.fixes.lock().unwrap().insert(k, fix.clone());
+        Ok(fix)
+    }
+
+    /// `out` with each hand's digits pushed out of each other and its palm where they overlap,
+    /// keeping the `active` goals.
+    fn clear_own(&self, out: &Value, active: &[Value], joined: bool) -> Result<Value, String> {
+        let solve = |pose: &Value, goals: &[Value], own_hand: bool| -> Result<Value, String> {
+            let mut p = pose.clone();
+            p["goals"] = json!(goals);
+            p["version"] = json!(1);
+            let (mut out, _) = crate::solve::solve_goals_in(&p, false, own_hand)?;
+            out.as_object_mut().unwrap().remove("goals");
+            Ok(out)
+        };
+        let mut out = out.clone();
         // A hand's fingers must not pass through each other or its palm mid-move (a thumb
         // through the fingers as a fist opens): where they would, push the digits involved
         // apart, keeping the held goals. Overlaps between the two hands are left to the author
@@ -1207,10 +1298,7 @@ impl Clip {
             let goals: Vec<Value> = active.iter().cloned().chain(std::iter::once(json!({ "vary": vary }))).collect();
             out = solve(&out, &goals, !joined)?;
         }
-        let mut pose = round_numbers(&out);
-        pose["version"] = json!(1);
-        active.extend(grips);
-        Ok(Frame { pose, goals: active })
+        Ok(out)
     }
 
     /// The clip's camera, moved by each key that sets one, on that key's step.

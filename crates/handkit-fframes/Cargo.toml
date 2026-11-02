@@ -12,3 +12,8 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg"]
 rayon = "1.10"
 serde_json = "1"
 
+[features]
+# Render the looks on the GPU (wgpu: Vulkan, Metal or DX12); without it, or without a working
+# GPU, they render on the CPU.
+gpu = ["fframes_three_d/gpu"]
+

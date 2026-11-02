@@ -177,3 +177,19 @@ fn a_sleeve_covers_the_forearm_from_the_elbow() {
         assert!(rgba(-0.04)[3] < 10, "{}: {:?}", style.name(), rgba(-0.04));
     }
 }
+
+#[test]
+fn a_wall_shows_the_hands_shadow() {
+    let hand = coarse_hand();
+    let solved = spread();
+    let look = Look::from_value(&serde_json::json!({ "style": "realistic", "wall": { "behind": 0.2, "lamp": [-0.25, 0.3, 0.6] } })).unwrap();
+    let mut styler = Styler::new(look, 160, 160);
+    let dressed = styler.dress(&hand);
+    // Shadow: grey wall, much darker than the lit wall around it.
+    let shadow = |px: &Pixels| px.to_straight_rgba().chunks(4).filter(|p| p[0] < 120 && p[0].abs_diff(p[2]) < 30).count();
+    let with = render(&styler, &dressed, &solved, 0.0);
+    assert!(with.to_straight_rgba().chunks(4).all(|p| p[3] == 255), "the wall fills the frame");
+    let empty = styler.render(|_| (styler.stage(), Camera::perspective(36.0).at(0.0, 0.1, 0.45).look_at(vec3(0.0, 0.09, 0.0))));
+    let (a, b) = (shadow(&with), shadow(&empty));
+    assert!(a > 400 && b < 20, "shadow pixels: {a} with the hand, {b} without");
+}

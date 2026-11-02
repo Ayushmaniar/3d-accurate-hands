@@ -10,10 +10,12 @@ use std::sync::Arc;
 use crate::pose::{HandId, HandPose, Side};
 
 pub const FOREARM: f64 = 0.26;
-/// The forearm capsule is as thick as a wrist (front to back), not as wide, and stops short of
-/// the wrist joint so its rounded end does not bulge past the heel of the palm.
-const FOREARM_R: f64 = 0.022;
-const FOREARM_END: f64 = 0.012;
+/// The forearm's capsules, following the mesh's forearm (handkit-mesh sdf.rs): round near the
+/// elbow, then flat toward the wrist, where a pair side by side (radial, ulnar) makes the
+/// section wide and thin. (from y, to y, x offset of the pair, radius), in the forearm frame
+/// from the elbow; the last pair's rounded end stops inside the heel of the palm. The first is
+/// centered, so it starts at the elbow.
+const FOREARM_CAPS: [(f64, f64, f64, f64); 3] = [(0.0, 0.13, 0.0, 0.030), (0.13, 0.208, 0.008, 0.0225), (0.208, 0.252, 0.010, 0.016)];
 const METACARPAL_R: f64 = 0.0125;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -106,6 +108,16 @@ impl Capsule {
         match self.digit {
             Some(d) => format!("{}.{}.{}", self.hand, d.name(), self.seg.name()),
             None => format!("{}.forearm", self.hand),
+        }
+    }
+
+    /// Whether `label()` is `label`, without building it (goals look segments up by label
+    /// on every solver step).
+    pub fn is(&self, label: &str) -> bool {
+        let Some(rest) = label.strip_prefix(&*self.hand).and_then(|r| r.strip_prefix('.')) else { return false };
+        match self.digit {
+            Some(d) => rest.split_once('.') == Some((d.name(), self.seg.name())),
+            None => rest == "forearm",
         }
     }
 
@@ -314,7 +326,12 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
         sites.push(Site { name: format!("{prefix}.{name}"), pos: at(m, p), normal: dir(m, n) });
     };
 
-    capsule(at(DAffine3::IDENTITY, o), at(wrist, dvec3(0.0, -FOREARM_END * k, 0.0)), FOREARM_R * k, "forearm", None, Seg::Arm);
+    for (y0, y1, x, r) in FOREARM_CAPS {
+        let xs: &[f64] = if x == 0.0 { &[0.0] } else { &[-x, x] };
+        for &x in xs {
+            capsule(at(DAffine3::IDENTITY, dvec3(x, y0, 0.0) * k), at(DAffine3::IDENTITY, dvec3(x, y1, 0.0) * k), r * k, "forearm", None, Seg::Arm);
+        }
+    }
     let forearm_bone = bone("forearm".into(), DAffine3::IDENTITY, FOREARM * k, None);
     let hand_bone = bone("hand".into(), hand, 0.095 * k, Some(forearm_bone));
     site("palm_center".into(), hand, dvec3(0.0, 0.055, 0.013) * k, DVec3::Z);
