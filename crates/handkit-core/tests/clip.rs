@@ -124,6 +124,22 @@ fn forearm_toward_aims_the_forearm() {
     }
 }
 
+#[test]
+fn a_pose_near_the_wrist_limits_holds_where_it_was_put() {
+    // dev about 33 and flex about -76, within 4 degrees of their limits: the clip must not ease
+    // a keyed pose away from them (that turned touching fingertips into each other).
+    let hand = r#"{"from": "point", "place": {"wrist": [0, 0.1, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0], "forearm_toward": [0.545, -0.203, -0.814]}}"#;
+    let pose = format!(r#"{{"version": 1, "hands": {{"right": {hand}}}}}"#);
+    let clip = Clip::parse(&format!(r#"{{"version": 1, "idle": 0, "follow": 0, "keys": [{{"t": 0, "hands": {{"right": {hand}}}}}]}}"#)).unwrap();
+    let want = handkit_core::solve(&pose).unwrap();
+    let got = handkit_core::solve_value(&clip.sample(1.0).unwrap().pose).unwrap();
+    for site in ["right.index.tip", "right.thumb.tip", "right.pinky.tip"] {
+        let at = |s: &handkit_core::Solved| s.hands[0].sites.iter().find(|x| x.name == site).unwrap().pos;
+        let d = (at(&want) - at(&got)).length();
+        assert!(d < 5e-5, "{site} is {:.2} mm from the pose", d * 1000.0);
+    }
+}
+
 fn bone(s: &handkit_core::Solved, name: &str) -> glam::DVec3 {
     s.hands[0].bones.iter().find(|b| b.name == name).unwrap().origin
 }
