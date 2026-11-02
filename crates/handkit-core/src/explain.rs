@@ -124,6 +124,8 @@ the hand.
       vary defaults to the closing digits and the follower's place. With both hands placed
       and a vary that names neither hand's place, both stay put and only the digits close
       (one person's own two hands, e.g. the clasp of a hand viper).
+      A vary naming only some closing digits closes those and leaves the rest as written
+      (Naruto's tiger seal: the ring and little fingers interlace, index and middle stay up).
   \"vary\": [...] on a goal chooses what may change (default: every joint of each digit a touch
       names, plus palm_cup for ring and pinky and the wrist for palm sites; for aim, the wrist
       and that finger's knuckle). Patterns: right.thumb.* (one digit), right.index.pip_flex

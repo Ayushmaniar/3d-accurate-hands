@@ -291,3 +291,27 @@ fn a_grip_varying_only_digits_keeps_both_hands_where_they_are() {
         }
     }
 }
+
+#[test]
+fn a_grip_closes_only_the_digits_its_vary_names() {
+    // Naruto's tiger seal: ring and little fingers interlaced, index, middle and thumbs left
+    // straight up as written.
+    let place = |s: f64| json!({ "wrist": [s * 0.025, 0.0, s * 0.004], "palm_facing": [-s, 0.0, 0.0], "fingers_toward": [-s * 0.15, 1.0, 0.0], "forearm_toward": [s * 0.25, -1.0, -0.45] });
+    let up = json!({ "mcp_abd": 0, "mcp_flex": 0, "pip_flex": 0, "dip_flex": 0 });
+    let thumb = json!({ "cmc_flex": 15, "cmc_abd": -5, "cmc_rot": 0, "mcp_flex": 0, "ip_flex": 0 });
+    let hand = |s: f64| json!({ "place": place(s), "thumb": thumb, "index": up, "middle": up });
+    let pose = json!({
+        "version": 1,
+        "hands": { "right": hand(-1.0), "left": hand(1.0) },
+        "goals": [{ "grip": ["right", "left"], "style": "interlaced", "vary": ["right.ring.*", "right.pinky.*", "left.ring.*", "left.pinky.*"] }],
+    });
+    let (v, _) = handkit_core::solve::solve_goals(&pose).unwrap();
+    let s = solve_value(&v).unwrap();
+    for who in ["right", "left"] {
+        assert_eq!(v["hands"][who]["thumb"], thumb, "{who} thumb");
+        assert_eq!(v["hands"][who]["index"], up, "{who} index");
+        assert_eq!(v["hands"][who]["middle"], up, "{who} middle");
+        let curl = value(&s, who, "ring.mcp_flex") + value(&s, who, "ring.pip_flex");
+        assert!(curl > 60.0, "{who} ring closed only {curl:.0} degrees");
+    }
+}
