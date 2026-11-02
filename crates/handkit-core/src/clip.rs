@@ -19,7 +19,7 @@ use crate::rig::FOREARM;
 const SIDES: [(Side, &str); 2] = [(Side::Right, "right"), (Side::Left, "left")];
 const DIGITS: [&str; 5] = ["thumb", "index", "middle", "ring", "pinky"];
 /// Key fields that are about timing, not the pose.
-const TIMING: [&str; 6] = ["t", "move", "ease", "spring", "cascade", "anticipate"];
+const TIMING: [&str; 7] = ["t", "move", "ease", "spring", "cascade", "anticipate", "pass"];
 
 #[derive(Clone, Copy, Debug)]
 struct Spring {
@@ -193,6 +193,15 @@ struct Key {
     steps: [Vec<Step>; 2],
     /// The step for the placement and the camera.
     place_step: Step,
+    /// The hand moves through this key without stopping.
+    pass: bool,
+}
+
+impl Key {
+    fn all_steps(&mut self) -> impl Iterator<Item = &mut Step> {
+        let [a, b] = &mut self.steps;
+        a.iter_mut().chain(b.iter_mut()).chain(std::iter::once(&mut self.place_step))
+    }
 }
 
 /// Joint groups for timing: the cascade shifts each digit, distal joints get slower springs.
@@ -340,6 +349,10 @@ impl Clip {
                         None => 0.0,
                     })
                     .collect();
+                let mut values: Vec<f64> = values;
+                for (k, x) in [("wrist_flex", g.wrist_angles[0]), ("wrist_dev", g.wrist_angles[1])] {
+                    values[PARAMS.iter().position(|p| p.key == k).unwrap()] = x;
+                }
                 let rot = DQuat::from_mat3(&g.world.matrix3.into());
                 let wrist = g.world.transform_point3(DVec3::new(0.0, FOREARM, 0.0));
                 hands[si] = Some(HandKey { values, wrist, rot });
@@ -352,6 +365,10 @@ impl Clip {
                         obj.remove(k);
                     }
                     obj.insert("place".into(), place_json(h.wrist, h.rot));
+                    for k in ["wrist_flex", "wrist_dev"] {
+                        let j = PARAMS.iter().position(|p| p.key == k).unwrap();
+                        obj.insert(k.into(), json!(r6(h.values[j])));
+                    }
                 }
             }
             let goals = next.as_object_mut().unwrap().remove("goals").and_then(|g| g.as_array().cloned()).unwrap_or_default();
@@ -431,7 +448,27 @@ impl Clip {
             }
             let mut place_step = base;
             place_step.spring = spring.scaled(0.8);
-            keys.push(Key { t, hands, goals, camera: key_camera, steps, place_step });
+            let pass = match raw.get("pass") {
+                None => false,
+                Some(Value::Bool(b)) => *b,
+                Some(_) => return Err(at("pass is true or false".into())),
+            };
+            keys.push(Key { t, hands, goals, camera: key_camera, steps, place_step, pass });
+        }
+        // A pass key is a waypoint: its move runs on past it while the next one starts early,
+        // so the hand flows through it (near the key's pose) without slowing to a stop.
+        for i in 1..keys.len().saturating_sub(1) {
+            if !keys[i].pass {
+                continue;
+            }
+            let e = 0.5 * keys[i].place_step.dur.min(keys[i + 1].place_step.dur);
+            for s in keys[i].all_steps() {
+                s.dur += e;
+            }
+            for s in keys[i + 1].all_steps() {
+                s.start -= e;
+                s.dur += e;
+            }
         }
         let last = keys.last().unwrap().t;
         let duration = num(v, "duration")?.unwrap_or(last + 0.5);

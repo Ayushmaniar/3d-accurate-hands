@@ -77,6 +77,10 @@ enum Cmd {
         t: f64,
         #[arg(long)]
         bones: bool,
+        /// Write each hand's placement as wrist, palm_facing and fingers_toward (the clip
+        /// works in elbow + rotation).
+        #[arg(long)]
+        wrist: bool,
     },
     /// Motion problems over a whole clip: held goals coming apart, penetrations mid-move, joints
     /// moving too fast, pops, fingertips leaving the camera's view.
@@ -247,9 +251,22 @@ fn run() -> Result<()> {
             std::fs::write(&out, handkit_core::pose::to_text(&solved))?;
             emit(report.text() + &format!("wrote {}\n", out.display()));
         }
-        Cmd::Sample { clip, t, bones } => {
+        Cmd::Sample { clip, t, bones, wrist } => {
             let c = load_clip(&clip)?;
-            let f = c.sample(t).map_err(|e| anyhow!(e))?;
+            let mut f = c.sample(t).map_err(|e| anyhow!(e))?;
+            if wrist {
+                let solved = handkit_core::solve_value(&f.pose).map_err(|e| anyhow!(e))?;
+                let r = |x: f64| (x * 1e4).round() / 1e4;
+                for h in &solved.hands {
+                    let Some(b) = h.bones.iter().find(|b| b.name == "hand") else { continue };
+                    let (p, m) = (b.frame.translation, b.frame.matrix3);
+                    f.pose["hands"][h.side.name()]["place"] = serde_json::json!({
+                        "wrist": [r(p.x), r(p.y), r(p.z)],
+                        "palm_facing": [r(m.z_axis.x), r(m.z_axis.y), r(m.z_axis.z)],
+                        "fingers_toward": [r(m.y_axis.x), r(m.y_axis.y), r(m.y_axis.z)],
+                    });
+                }
+            }
             if bones {
                 let solved = handkit_core::solve_value(&f.pose).map_err(|e| anyhow!(e))?;
                 emit(serde_json::to_string(&solved.bones())? + "\n");
@@ -263,7 +280,8 @@ fn run() -> Result<()> {
         }
         Cmd::Check { clip } => {
             let c = load_clip(&clip)?;
-            let times: Vec<f64> = (0..=c.frames()).map(|i| i as f64 / c.fps).filter(|t| *t <= c.duration + 1e-9).collect();
+            // The frames a video of the clip renders.
+            let times: Vec<f64> = (0..c.frames()).map(|i| i as f64 / c.fps).collect();
             let frames = sample_frames(&c, &times)?;
             let report = handkit_core::check::analyze(&c, &frames, clip_aspect(&clip)).map_err(|e| anyhow!(e))?;
             emit(report.text());

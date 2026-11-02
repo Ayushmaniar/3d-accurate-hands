@@ -1,0 +1,3912 @@
+{
+ "version": 1,
+ "name": "pexels-hands-doing-gestures seg01",
+ "fps": 30,
+ "duration": 18.2,
+ "size": [
+  1920,
+  1080
+ ],
+ "camera": {
+  "position": [
+   0,
+   0,
+   0.5341
+  ],
+  "target": [
+   0,
+   0,
+   0
+  ],
+  "fov": 30.0
+ },
+ "idle": {
+  "amount": 0.6,
+  "seed": 3
+ },
+ "keys": [
+  {
+   "t": 0.0,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0721,
+       -0.0456,
+       0.035
+      ],
+      "palm_facing": [
+       -0.968,
+       0.0,
+       0.25
+      ],
+      "fingers_toward": [
+       0.275,
+       0.962,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -56.4,
+     "wrist_dev": -12.6,
+     "index": {
+      "mcp_flex": 65,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 75,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 25,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 15,
+      "pip_flex": 15,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0106,
+       -0.0954,
+       -0.035
+      ],
+      "palm_facing": [
+       0.199,
+       -0.896,
+       -0.398
+      ],
+      "fingers_toward": [
+       0.852,
+       0.524,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -2.0,
+     "wrist_dev": 0.9,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 50,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 45,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   }
+  },
+  {
+   "t": 0.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0721,
+       -0.0466,
+       0.035
+      ],
+      "palm_facing": [
+       -0.979,
+       0.0,
+       0.202
+      ],
+      "fingers_toward": [
+       0.249,
+       0.968,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -56.1,
+     "wrist_dev": -10.0,
+     "index": {
+      "mcp_flex": 60,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 70,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 25,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 15,
+      "pip_flex": 15,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0085,
+       -0.0975,
+       -0.035
+      ],
+      "palm_facing": [
+       0.199,
+       -0.896,
+       -0.398
+      ],
+      "fingers_toward": [
+       0.864,
+       0.503,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -0.6,
+     "wrist_dev": 0.3,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 50,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 45,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 1.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0848,
+       -0.0604,
+       0.035
+      ],
+      "palm_facing": [
+       -0.995,
+       0.0,
+       -0.1
+      ],
+      "fingers_toward": [
+       0.213,
+       0.977,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -64.2,
+     "wrist_dev": 5.3,
+     "index": {
+      "mcp_flex": 45,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 25,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 20,
+      "pip_flex": 15,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0021,
+       -0.106,
+       -0.035
+      ],
+      "palm_facing": [
+       0.199,
+       -0.845,
+       -0.497
+      ],
+      "fingers_toward": [
+       0.834,
+       0.552,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -3.0,
+     "wrist_dev": 1.8,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 20,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 30,
+      "pip_flex": 40,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 35,
+      "pip_flex": 40,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 1.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.1039,
+       -0.0615,
+       0.035
+      ],
+      "palm_facing": [
+       -0.995,
+       0.0,
+       -0.103
+      ],
+      "fingers_toward": [
+       -0.157,
+       0.988,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -48.1,
+     "wrist_dev": 4.4,
+     "index": {
+      "mcp_flex": 15,
+      "pip_flex": 10,
+      "mcp_abd": 10
+     },
+     "middle": {
+      "mcp_flex": 15,
+      "pip_flex": 10,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 15,
+      "pip_flex": 10,
+      "mcp_abd": 6
+     },
+     "pinky": {
+      "mcp_flex": 15,
+      "pip_flex": 10,
+      "mcp_abd": 15
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0021,
+       -0.0996,
+       -0.035
+      ],
+      "palm_facing": [
+       0.204,
+       -0.612,
+       -0.764
+      ],
+      "fingers_toward": [
+       0.826,
+       0.564,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -4.0,
+     "wrist_dev": 4.9,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 10,
+      "pip_flex": 10,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 15,
+      "pip_flex": 15,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 15,
+      "pip_flex": 15,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 2.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0795,
+       -0.053,
+       0.035
+      ],
+      "palm_facing": [
+       -0.406,
+       -0.304,
+       -0.862
+      ],
+      "fingers_toward": [
+       -0.743,
+       0.669,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 0.1,
+     "wrist_dev": -0.1,
+     "index": {
+      "mcp_flex": -5,
+      "pip_flex": 5,
+      "mcp_abd": 2
+     },
+     "middle": {
+      "mcp_flex": -5,
+      "pip_flex": 5,
+      "mcp_abd": -6
+     },
+     "ring": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 10
+     },
+     "pinky": {
+      "mcp_flex": 5,
+      "pip_flex": 10,
+      "mcp_abd": 20
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0286,
+       -0.0996,
+       -0.035
+      ],
+      "palm_facing": [
+       0.205,
+       -0.717,
+       -0.666
+      ],
+      "fingers_toward": [
+       0.883,
+       0.47,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -1.5,
+     "wrist_dev": 1.4,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 5,
+      "pip_flex": 10,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 10,
+      "pip_flex": 10,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 10,
+      "pip_flex": 10,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 2.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.036,
+       -0.0488,
+       0.035
+      ],
+      "palm_facing": [
+       0.0,
+       -0.981,
+       -0.196
+      ],
+      "fingers_toward": [
+       -0.854,
+       0.521,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 18.4,
+     "wrist_dev": -4.2,
+     "index": {
+      "mcp_flex": 10,
+      "pip_flex": 10,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 10,
+      "pip_flex": 10,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 12,
+      "pip_flex": 10,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 15,
+      "pip_flex": 10,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0636,
+       -0.106,
+       -0.035
+      ],
+      "palm_facing": [
+       0.098,
+       -0.976,
+       -0.195
+      ],
+      "fingers_toward": [
+       0.976,
+       0.217,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 11.3,
+     "wrist_dev": -2.2,
+     "index": {
+      "mcp_flex": 5,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 15,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 20,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 20,
+      "pip_flex": 15,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 3.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0159,
+       -0.0318,
+       0.035
+      ],
+      "palm_facing": [
+       0.0,
+       -0.981,
+       -0.196
+      ],
+      "fingers_toward": [
+       -0.928,
+       0.371,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 35.8,
+     "wrist_dev": -7.2,
+     "index": {
+      "mcp_flex": 25,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 20,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 35,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 40,
+      "pip_flex": 20,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0636,
+       -0.0742,
+       -0.035
+      ],
+      "palm_facing": [
+       0.098,
+       -0.976,
+       -0.195
+      ],
+      "fingers_toward": [
+       0.949,
+       0.316,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 9.8,
+     "wrist_dev": -2.0,
+     "index": {
+      "mcp_flex": 10,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 35,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 3.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0159,
+       -0.0159,
+       0.035
+      ],
+      "palm_facing": [
+       -0.202,
+       -0.958,
+       -0.202
+      ],
+      "fingers_toward": [
+       -0.852,
+       0.524,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 22.6,
+     "wrist_dev": -4.8,
+     "index": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 45,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.053,
+       -0.0583,
+       -0.035
+      ],
+      "palm_facing": [
+       0.202,
+       -0.958,
+       -0.202
+      ],
+      "fingers_toward": [
+       0.707,
+       0.707,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -16.5,
+     "wrist_dev": 4.0,
+     "index": {
+      "mcp_flex": 30,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 4.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0265,
+       -0.0159,
+       0.035
+      ],
+      "palm_facing": [
+       -0.518,
+       -0.83,
+       -0.207
+      ],
+      "fingers_toward": [
+       -0.646,
+       0.763,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 4.8,
+     "wrist_dev": -1.1,
+     "index": {
+      "mcp_flex": 50,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 55,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 55,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0265,
+       -0.0265,
+       -0.035
+      ],
+      "palm_facing": [
+       0.518,
+       -0.83,
+       -0.207
+      ],
+      "fingers_toward": [
+       0.581,
+       0.814,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -14.9,
+     "wrist_dev": 3.4,
+     "index": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 4.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0583,
+       -0.0106,
+       0.035
+      ],
+      "palm_facing": [
+       -0.935,
+       -0.197,
+       -0.295
+      ],
+      "fingers_toward": [
+       -0.225,
+       0.974,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -15.6,
+     "wrist_dev": 4.7,
+     "index": {
+      "mcp_flex": 50,
+      "pip_flex": 40,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 55,
+      "pip_flex": 40,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 50,
+      "pip_flex": 40,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0053,
+       -0.0477,
+       -0.035
+      ],
+      "palm_facing": [
+       0.928,
+       -0.206,
+       -0.309
+      ],
+      "fingers_toward": [
+       0.141,
+       0.99,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -33.9,
+     "wrist_dev": 10.3,
+     "index": {
+      "mcp_flex": 50,
+      "pip_flex": 40,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 55,
+      "pip_flex": 40,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 50,
+      "pip_flex": 40,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 5.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0742,
+       -0.0265,
+       0.035
+      ],
+      "palm_facing": [
+       -0.954,
+       0.0,
+       -0.301
+      ],
+      "fingers_toward": [
+       0.196,
+       0.981,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -42.4,
+     "wrist_dev": 12.2,
+     "index": {
+      "mcp_flex": 55,
+      "pip_flex": 40,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 40,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 55,
+      "pip_flex": 40,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0,
+       -0.0371,
+       -0.035
+      ],
+      "palm_facing": [
+       0.954,
+       0.0,
+       -0.301
+      ],
+      "fingers_toward": [
+       0.077,
+       0.997,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -36.3,
+     "wrist_dev": 10.6,
+     "index": {
+      "mcp_flex": 55,
+      "pip_flex": 40,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 40,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 55,
+      "pip_flex": 40,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 5.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0742,
+       -0.0265,
+       0.035
+      ],
+      "palm_facing": [
+       -0.954,
+       0.0,
+       -0.301
+      ],
+      "fingers_toward": [
+       0.394,
+       0.919,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -59.5,
+     "wrist_dev": 16.5,
+     "index": {
+      "mcp_flex": 60,
+      "pip_flex": 35,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 65,
+      "pip_flex": 35,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 65,
+      "pip_flex": 35,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 35,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0265,
+       -0.0371,
+       -0.035
+      ],
+      "palm_facing": [
+       0.979,
+       0.0,
+       -0.206
+      ],
+      "fingers_toward": [
+       -0.164,
+       0.986,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -49.5,
+     "wrist_dev": 29.4,
+     "index": {
+      "mcp_flex": 55,
+      "pip_flex": 35,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 35,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 35,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 55,
+      "pip_flex": 35,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 6.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0848,
+       -0.0159,
+       0.035
+      ],
+      "palm_facing": [
+       -0.928,
+       0.309,
+       -0.206
+      ],
+      "fingers_toward": [
+       0.633,
+       0.774,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -70,
+     "wrist_dev": 34.4,
+     "index": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 75,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 75,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0424,
+       -0.0477,
+       -0.035
+      ],
+      "palm_facing": [
+       0.927,
+       0.103,
+       -0.361
+      ],
+      "fingers_toward": [
+       -0.225,
+       0.974,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -47.3,
+     "wrist_dev": 35,
+     "index": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 6.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0742,
+       -0.0138,
+       0.035
+      ],
+      "palm_facing": [
+       -0.928,
+       0.309,
+       -0.206
+      ],
+      "fingers_toward": [
+       0.625,
+       0.781,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -70.0,
+     "wrist_dev": 30.0,
+     "index": {
+      "mcp_flex": 45,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0689,
+       -0.0689,
+       -0.06
+      ],
+      "palm_facing": [
+       0.927,
+       0.103,
+       -0.361
+      ],
+      "fingers_toward": [
+       -0.071,
+       0.997,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -38.9,
+     "wrist_dev": 34.5,
+     "index": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 7.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0954,
+       -0.0148,
+       0.035
+      ],
+      "palm_facing": [
+       -0.928,
+       0.309,
+       -0.206
+      ],
+      "fingers_toward": [
+       0.669,
+       0.743,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -70,
+     "wrist_dev": 34.8,
+     "index": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0742,
+       -0.0848,
+       -0.06
+      ],
+      "palm_facing": [
+       0.927,
+       0.103,
+       -0.361
+      ],
+      "fingers_toward": [
+       -0.152,
+       0.988,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -40.1,
+     "wrist_dev": 34.8,
+     "index": {
+      "mcp_flex": 50,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 50,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 50,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 7.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.1007,
+       -0.0106,
+       0.035
+      ],
+      "palm_facing": [
+       -0.928,
+       0.309,
+       -0.206
+      ],
+      "fingers_toward": [
+       0.74,
+       0.673,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -70,
+     "wrist_dev": 13.6,
+     "index": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 50,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0848,
+       -0.0901,
+       -0.035
+      ],
+      "palm_facing": [
+       0.873,
+       -0.218,
+       -0.436
+      ],
+      "fingers_toward": [
+       0.196,
+       0.981,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -22.2,
+     "wrist_dev": 32.4,
+     "index": {
+      "mcp_flex": 40,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 20,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 40,
+      "pip_flex": 20,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 8.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.1007,
+       -0.0244,
+       0.035
+      ],
+      "palm_facing": [
+       -0.879,
+       0.103,
+       -0.465
+      ],
+      "fingers_toward": [
+       0.625,
+       0.781,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -70,
+     "wrist_dev": 35,
+     "index": {
+      "mcp_flex": 20,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 45,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 65,
+      "pip_flex": 15,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0742,
+       -0.1007,
+       -0.035
+      ],
+      "palm_facing": [
+       0.503,
+       -0.704,
+       0.503
+      ],
+      "fingers_toward": [
+       0.537,
+       0.844,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -13.6,
+     "wrist_dev": -8.4,
+     "index": {
+      "mcp_flex": 30,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 20,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 35,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 35,
+      "pip_flex": 20,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 8.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.1113,
+       -0.0371,
+       0.035
+      ],
+      "palm_facing": [
+       -0.884,
+       0.0,
+       -0.468
+      ],
+      "fingers_toward": [
+       0.419,
+       0.908,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -68.3,
+     "wrist_dev": 28.5,
+     "index": {
+      "mcp_flex": 10,
+      "pip_flex": 15,
+      "mcp_abd": 8
+     },
+     "middle": {
+      "mcp_flex": 25,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "pinky": {
+      "mcp_flex": 50,
+      "pip_flex": 15,
+      "mcp_abd": 14
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0636,
+       -0.1219,
+       -0.035
+      ],
+      "palm_facing": [
+       0.105,
+       -0.943,
+       -0.314
+      ],
+      "fingers_toward": [
+       0.781,
+       0.625,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -17.5,
+     "wrist_dev": 6.7,
+     "index": {
+      "mcp_flex": 5,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 25,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 9.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0933,
+       -0.0541,
+       0.035
+      ],
+      "palm_facing": [
+       -0.914,
+       0.0,
+       -0.406
+      ],
+      "fingers_toward": [
+       -0.275,
+       0.962,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -32.9,
+     "wrist_dev": 14.1,
+     "index": {
+      "mcp_flex": 5,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 15,
+      "mcp_abd": 12
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0636,
+       -0.1219,
+       -0.035
+      ],
+      "palm_facing": [
+       0.101,
+       -0.909,
+       -0.404
+      ],
+      "fingers_toward": [
+       0.983,
+       0.182,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 6.9,
+     "wrist_dev": -3.0,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 50,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 45,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 9.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0827,
+       -0.053,
+       0.035
+      ],
+      "palm_facing": [
+       -0.858,
+       -0.101,
+       -0.504
+      ],
+      "fingers_toward": [
+       -0.496,
+       0.868,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -17.3,
+     "wrist_dev": 10.7,
+     "index": {
+      "mcp_flex": 10,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "middle": {
+      "mcp_flex": 45,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "pinky": {
+      "mcp_flex": 65,
+      "pip_flex": 15,
+      "mcp_abd": 12
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.053,
+       -0.1219,
+       -0.035
+      ],
+      "palm_facing": [
+       0.101,
+       -0.909,
+       -0.404
+      ],
+      "fingers_toward": [
+       0.989,
+       0.148,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 8.7,
+     "wrist_dev": -3.8,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 50,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 45,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 10.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0784,
+       -0.0594,
+       0.035
+      ],
+      "palm_facing": [
+       -0.745,
+       -0.298,
+       -0.596
+      ],
+      "fingers_toward": [
+       -0.447,
+       0.894,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -22.5,
+     "wrist_dev": 15.9,
+     "index": {
+      "mcp_flex": 15,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 55,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 15,
+      "mcp_abd": 12
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0371,
+       -0.1007,
+       -0.035
+      ],
+      "palm_facing": [
+       0.101,
+       -0.858,
+       -0.504
+      ],
+      "fingers_toward": [
+       0.993,
+       0.117,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 14.2,
+     "wrist_dev": -8.1,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 50,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 45,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 10.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0742,
+       -0.0477,
+       0.035
+      ],
+      "palm_facing": [
+       -0.648,
+       -0.399,
+       -0.648
+      ],
+      "fingers_toward": [
+       -0.496,
+       0.868,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -18.2,
+     "wrist_dev": 14.9,
+     "index": {
+      "mcp_flex": 15,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 55,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 15,
+      "mcp_abd": 12
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0212,
+       -0.0901,
+       -0.035
+      ],
+      "palm_facing": [
+       0.101,
+       -0.858,
+       -0.504
+      ],
+      "fingers_toward": [
+       0.985,
+       0.175,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 17.4,
+     "wrist_dev": -9.9,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 40,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 50,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 45,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 11.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0371,
+       -0.0477,
+       0.035
+      ],
+      "palm_facing": [
+       -0.398,
+       -0.597,
+       -0.697
+      ],
+      "fingers_toward": [
+       -0.68,
+       0.733,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -2.6,
+     "wrist_dev": 2.6,
+     "index": {
+      "mcp_flex": 15,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 50,
+      "pip_flex": 15,
+      "mcp_abd": 6
+     },
+     "pinky": {
+      "mcp_flex": 55,
+      "pip_flex": 15,
+      "mcp_abd": 12
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0,
+       -0.0742,
+       -0.035
+      ],
+      "palm_facing": [
+       0.1,
+       -0.796,
+       -0.597
+      ],
+      "fingers_toward": [
+       0.99,
+       0.141,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 20.4,
+     "wrist_dev": -14.6,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 0,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 11.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0424,
+       -0.0477,
+       0.035
+      ],
+      "palm_facing": [
+       -0.3,
+       -0.699,
+       -0.649
+      ],
+      "fingers_toward": [
+       -0.651,
+       0.759,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -5.4,
+     "wrist_dev": 5.1,
+     "index": {
+      "mcp_flex": 20,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 15,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 45,
+      "pip_flex": 15,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 50,
+      "pip_flex": 15,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0,
+       -0.053,
+       -0.035
+      ],
+      "palm_facing": [
+       0.1,
+       -0.796,
+       -0.597
+      ],
+      "fingers_toward": [
+       0.983,
+       0.183,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 22.4,
+     "wrist_dev": -15.8,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 0,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 12.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0318,
+       -0.0477,
+       0.035
+      ],
+      "palm_facing": [
+       0.0,
+       -0.8,
+       -0.6
+      ],
+      "fingers_toward": [
+       -0.814,
+       0.581,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 7.0,
+     "wrist_dev": -6.4,
+     "index": {
+      "mcp_flex": 10,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 30,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 15,
+      "cmc_abd": 15,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       -0.0159,
+       -0.0318,
+       -0.035
+      ],
+      "palm_facing": [
+       0.202,
+       -0.807,
+       -0.555
+      ],
+      "fingers_toward": [
+       0.978,
+       0.21,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 28.3,
+     "wrist_dev": -17.6,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 0,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 12.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0212,
+       -0.0477,
+       0.035
+      ],
+      "palm_facing": [
+       0.0,
+       -0.862,
+       -0.507
+      ],
+      "fingers_toward": [
+       -0.894,
+       0.447,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 18.5,
+     "wrist_dev": -11.8,
+     "index": {
+      "mcp_flex": 35,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       -0.0106,
+       -0.0371,
+       -0.035
+      ],
+      "palm_facing": [
+       0.316,
+       -0.895,
+       -0.316
+      ],
+      "fingers_toward": [
+       0.852,
+       0.524,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 12.7,
+     "wrist_dev": -4.3,
+     "index": {
+      "mcp_flex": 0,
+      "pip_flex": 0,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 13.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0212,
+       -0.0689,
+       0.035
+      ],
+      "palm_facing": [
+       -0.105,
+       -0.943,
+       -0.314
+      ],
+      "fingers_toward": [
+       -0.868,
+       0.496,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 10.8,
+     "wrist_dev": -3.9,
+     "index": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0,
+       -0.0318,
+       -0.035
+      ],
+      "palm_facing": [
+       0.426,
+       -0.64,
+       0.64
+      ],
+      "fingers_toward": [
+       0.569,
+       0.822,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -4.4,
+     "wrist_dev": -3.9,
+     "index": {
+      "mcp_flex": 5,
+      "pip_flex": 5,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 13.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0106,
+       -0.0636,
+       0.035
+      ],
+      "palm_facing": [
+       -0.11,
+       -0.937,
+       -0.331
+      ],
+      "fingers_toward": [
+       -0.841,
+       0.541,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 13.3,
+     "wrist_dev": -5.1,
+     "index": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 60,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0,
+       -0.0265,
+       -0.035
+      ],
+      "palm_facing": [
+       0.563,
+       -0.307,
+       0.767
+      ],
+      "fingers_toward": [
+       0.496,
+       0.868,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -4.0,
+     "wrist_dev": -4.8,
+     "index": {
+      "mcp_flex": 10,
+      "pip_flex": 10,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 14.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0159,
+       -0.0583,
+       0.035
+      ],
+      "palm_facing": [
+       -0.236,
+       -0.943,
+       -0.236
+      ],
+      "fingers_toward": [
+       -0.768,
+       0.64,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": 8.7,
+     "wrist_dev": -2.3,
+     "index": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 0,
+      "cmc_abd": 8,
+      "cmc_rot": 5,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0053,
+       -0.0159,
+       -0.035
+      ],
+      "palm_facing": [
+       0.597,
+       -0.1,
+       0.796
+      ],
+      "fingers_toward": [
+       0.298,
+       0.954,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -10.0,
+     "wrist_dev": -13.0,
+     "index": {
+      "mcp_flex": 25,
+      "pip_flex": 15,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 55,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 65,
+      "pip_flex": 25,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 22,
+      "cmc_abd": 25,
+      "cmc_rot": 10,
+      "mcp_flex": 10,
+      "ip_flex": 10
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 14.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0318,
+       -0.0583,
+       0.035
+      ],
+      "palm_facing": [
+       -0.597,
+       -0.1,
+       0.796
+      ],
+      "fingers_toward": [
+       -0.504,
+       0.864,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -8.7,
+     "wrist_dev": -12.0,
+     "index": {
+      "mcp_flex": 25,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 35,
+      "pip_flex": 20,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 20,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0212,
+       -0.0265,
+       -0.035
+      ],
+      "palm_facing": [
+       0.406,
+       0.0,
+       0.914
+      ],
+      "fingers_toward": [
+       0.316,
+       0.949,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -32.2,
+     "wrist_dev": -7.2,
+     "index": {
+      "mcp_flex": 35,
+      "pip_flex": 20,
+      "mcp_abd": 5
+     },
+     "middle": {
+      "mcp_flex": 45,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 3
+     },
+     "pinky": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 8
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 15.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0477,
+       -0.053,
+       0.035
+      ],
+      "palm_facing": [
+       -0.507,
+       0.0,
+       0.862
+      ],
+      "fingers_toward": [
+       0.0,
+       1.0,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -51.0,
+     "wrist_dev": -23.9,
+     "index": {
+      "mcp_flex": 65,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 35,
+      "pip_flex": 20,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 55,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 60,
+      "pip_flex": 20,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0159,
+       -0.0318,
+       -0.035
+      ],
+      "palm_facing": [
+       0.543,
+       0.0,
+       0.84
+      ],
+      "fingers_toward": [
+       0.419,
+       0.908,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -30.9,
+     "wrist_dev": -0.5,
+     "index": {
+      "mcp_flex": 45,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 45,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 50,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 15.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0583,
+       -0.053,
+       0.035
+      ],
+      "palm_facing": [
+       -0.406,
+       0.0,
+       0.914
+      ],
+      "fingers_toward": [
+       0.21,
+       0.978,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -60.3,
+     "wrist_dev": -24.5,
+     "index": {
+      "mcp_flex": 10,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.053,
+       -0.0477,
+       -0.035
+      ],
+      "palm_facing": [
+       0.543,
+       0.0,
+       0.84
+      ],
+      "fingers_toward": [
+       0.243,
+       0.97,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -48.9,
+     "wrist_dev": 0.5,
+     "index": {
+      "mcp_flex": 55,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 16.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0742,
+       -0.0562,
+       0.035
+      ],
+      "palm_facing": [
+       -0.507,
+       0.0,
+       0.862
+      ],
+      "fingers_toward": [
+       0.243,
+       0.97,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -57.1,
+     "wrist_dev": -23.6,
+     "index": {
+      "mcp_flex": 10,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0689,
+       -0.0583,
+       -0.035
+      ],
+      "palm_facing": [
+       0.6,
+       0.0,
+       0.8
+      ],
+      "fingers_toward": [
+       0.258,
+       0.966,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -48.4,
+     "wrist_dev": 3.8,
+     "index": {
+      "mcp_flex": 50,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 45,
+      "pip_flex": 30,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 16.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0795,
+       -0.0519,
+       0.035
+      ],
+      "palm_facing": [
+       -0.507,
+       0.0,
+       0.862
+      ],
+      "fingers_toward": [
+       0.298,
+       0.954,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -60.8,
+     "wrist_dev": -23.7,
+     "index": {
+      "mcp_flex": 15,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0795,
+       -0.0901,
+       -0.035
+      ],
+      "palm_facing": [
+       0.6,
+       0.0,
+       0.8
+      ],
+      "fingers_toward": [
+       0.21,
+       0.978,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -52.9,
+     "wrist_dev": -0.1,
+     "index": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 17.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.0954,
+       -0.0477,
+       0.035
+      ],
+      "palm_facing": [
+       -0.507,
+       0.0,
+       0.862
+      ],
+      "fingers_toward": [
+       0.243,
+       0.97,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -58.5,
+     "wrist_dev": -24.4,
+     "index": {
+      "mcp_flex": 20,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0742,
+       -0.0901,
+       -0.06
+      ],
+      "palm_facing": [
+       0.693,
+       -0.198,
+       0.693
+      ],
+      "fingers_toward": [
+       0.336,
+       0.942,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -47.7,
+     "wrist_dev": 11.1,
+     "index": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 17.675,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.1113,
+       -0.0477,
+       0.035
+      ],
+      "palm_facing": [
+       -0.507,
+       0.0,
+       0.862
+      ],
+      "fingers_toward": [
+       0.401,
+       0.916,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -70,
+     "wrist_dev": -24.9,
+     "index": {
+      "mcp_flex": 25,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 20,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 70,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 20,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0742,
+       -0.1113,
+       -0.06
+      ],
+      "palm_facing": [
+       0.722,
+       -0.309,
+       0.619
+      ],
+      "fingers_toward": [
+       0.394,
+       0.919,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -50.4,
+     "wrist_dev": 13.1,
+     "index": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  },
+  {
+   "t": 18.175,
+   "hands": {
+    "left": {
+     "place": {
+      "wrist": [
+       -0.1219,
+       -0.0477,
+       0.035
+      ],
+      "palm_facing": [
+       -0.507,
+       0.0,
+       0.862
+      ],
+      "fingers_toward": [
+       0.268,
+       0.964,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -65.7,
+     "wrist_dev": -23.5,
+     "index": {
+      "mcp_flex": 30,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 60,
+      "pip_flex": 20,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 70,
+      "pip_flex": 20,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 70,
+      "pip_flex": 20,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    },
+    "right": {
+     "place": {
+      "wrist": [
+       0.0689,
+       -0.0954,
+       -0.06
+      ],
+      "palm_facing": [
+       0.64,
+       -0.426,
+       0.64
+      ],
+      "fingers_toward": [
+       0.555,
+       0.832,
+       0.0
+      ]
+     },
+     "twist": 0,
+     "wrist_flex": -36.9,
+     "wrist_dev": 21.9,
+     "index": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "middle": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 0
+     },
+     "ring": {
+      "mcp_flex": 40,
+      "pip_flex": 25,
+      "mcp_abd": 4
+     },
+     "pinky": {
+      "mcp_flex": 35,
+      "pip_flex": 25,
+      "mcp_abd": 10
+     },
+     "thumb": {
+      "cmc_flex": 28,
+      "cmc_abd": 30,
+      "cmc_rot": 10,
+      "mcp_flex": 5,
+      "ip_flex": 5
+     }
+    }
+   },
+   "move": 0.85,
+   "ease": "smooth"
+  }
+ ]
+}

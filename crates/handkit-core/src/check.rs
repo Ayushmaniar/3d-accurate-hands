@@ -100,7 +100,8 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
     // Per-frame geometry: goals, penetrations, framing.
     let mut goal_miss: std::collections::BTreeMap<String, (Vec<bool>, f64, f64)> = Default::default();
     let mut pen: std::collections::BTreeMap<String, (Vec<bool>, f64)> = Default::default();
-    let mut out_of_view = vec![false; frames.len()];
+    let mut out_of_view: std::collections::BTreeMap<String, (Vec<bool>, f64)> = Default::default();
+    let mut arm_end = vec![false; frames.len()];
     let mut site_tracks: std::collections::BTreeMap<String, Vec<DVec3>> = Default::default();
     for (i, (_, f)) in frames.iter().enumerate() {
         let mut pose = f.pose.clone();
@@ -124,10 +125,25 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
         }
         if let Some(cam) = pose.get("camera") {
             for (name, p) in &report.tips {
-                if let Some((x, y)) = project(cam, aspect, *p) {
-                    if x.abs() > 1.0 || y.abs() > 1.0 {
-                        out_of_view[i] = true;
-                        let _ = name;
+                let Some((x, y)) = project(cam, aspect, *p) else { continue };
+                for (over, edge) in [(x - 1.0, "right"), (-x - 1.0, "left"), (y - 1.0, "top"), (-y - 1.0, "bottom")] {
+                    if over > 0.0 {
+                        let e = out_of_view.entry(format!("{name} past the {edge} edge")).or_insert((vec![false; frames.len()], 0.0));
+                        e.0[i] = true;
+                        // In percent of the half-frame, so 10 = a tenth of the way to the centre.
+                        e.1 = e.1.max(over * 100.0);
+                    }
+                }
+            }
+        }
+        if let Some(cam) = pose.get("camera") {
+            // The rig ends at the elbow: the forearm's rounded end must stay out of the frame.
+            for side in ["right", "left"] {
+                let Some(e) = pose.pointer(&format!("/hands/{side}/place/elbow")).and_then(Value::as_array) else { continue };
+                let e = DVec3::new(e[0].as_f64().unwrap_or(0.0), e[1].as_f64().unwrap_or(0.0), e[2].as_f64().unwrap_or(0.0));
+                if let Some((x, y)) = project(cam, aspect, e) {
+                    if x.abs() < 1.0 && y.abs() < 1.0 {
+                        arm_end[i] = true;
                     }
                 }
             }
@@ -221,11 +237,17 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
         }
     }
     if frames.iter().any(|f| f.1.pose.get("camera").is_some()) {
-        if out_of_view.iter().any(|x| *x) {
+        if !out_of_view.is_empty() {
             problems += 1;
-            lines.push(format!("framing: a fingertip leaves the camera's view in {}", ranges(&times, &out_of_view)));
+            for (what, (hit, worst)) in &out_of_view {
+                lines.push(format!("framing: {what} in {} (at most {worst:.0}% of the half-frame out)", ranges(&times, hit)));
+            }
         } else {
             lines.push("framing: every fingertip stays in view".into());
+        }
+        if arm_end.iter().any(|x| *x) {
+            problems += 1;
+            lines.push(format!("framing: an elbow (where the forearm ends) is in view in {}; move it out of frame", ranges(&times, &arm_end)));
         }
     } else {
         lines.push("framing: no camera (add \"camera\" to the clip to check framing)".into());

@@ -153,6 +153,10 @@ pub struct HandGeom {
     pub coupled: Vec<String>,
     /// Placement: world = world * (mirror for a left hand) * local.
     pub world: DAffine3,
+    /// The wrist_flex and wrist_dev the hand was built with (`place.forearm_toward` sets them).
+    pub wrist_angles: [f64; 2],
+    /// Whether `place.forearm_toward` set the wrist angles.
+    pub forearm_aimed: bool,
 }
 
 /// A skeleton joint's transform relative to its parent (the forearm's is in the world).
@@ -240,8 +244,17 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         }
     };
     let twist = v(hp.twist);
-    let wrist_flex = v(hp.wrist_flex);
-    let wrist_dev = v(hp.wrist_dev);
+    let mut wrist_flex = v(hp.wrist_flex);
+    let mut wrist_dev = v(hp.wrist_dev);
+    let own_aim = hp.place.as_ref().and_then(|p| p.forearm_toward).is_some();
+    let mut forearm_aimed = false;
+    if let Some((f, d)) = forearm_angles(side, hp)? {
+        (wrist_flex, wrist_dev, forearm_aimed) = (f, d, true);
+    } else if let Some(other) = mirror_of.filter(|o| o.forearm_aimed && !own_aim) {
+        // A mirror of a hand whose forearm was aimed takes the angles that aim gave.
+        [wrist_flex, wrist_dev] = other.wrist_angles;
+        forearm_aimed = true;
+    }
     let cup = v(hp.palm_cup);
     check("twist", twist);
     check("wrist_flex", wrist_flex);
@@ -397,7 +410,34 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         m = next;
     }
 
-    Ok(HandGeom { side, capsules, sites, bones, nails, violations, coupled, world })
+    Ok(HandGeom { side, capsules, sites, bones, nails, violations, coupled, world, wrist_angles: [wrist_flex, wrist_dev], forearm_aimed })
+}
+
+/// The wrist_flex and wrist_dev that make the forearm point along `place.forearm_toward`
+/// (from the wrist toward the elbow), for a hand placed by `place.wrist`. In the hand's own
+/// frame the forearm points along (sin dev, -cos dev cos flex, cos dev sin flex).
+fn forearm_angles(side: Side, hp: &HandPose) -> Result<Option<(f64, f64)>, String> {
+    let Some(p) = &hp.place else { return Ok(None) };
+    let Some(toward) = p.forearm_toward else { return Ok(None) };
+    let s = side.name();
+    let (Some(_), Some(palm), Some(fingers)) = (p.wrist, p.palm_facing, p.fingers_toward) else {
+        return Err(format!("hands.{s}.place.forearm_toward needs wrist, palm_facing and fingers_toward"));
+    };
+    let y = DVec3::from(fingers).normalize_or_zero();
+    let palm = DVec3::from(palm);
+    let z = (palm - y * palm.dot(y)).normalize_or_zero();
+    let d = DVec3::from(toward).normalize_or_zero();
+    if y == DVec3::ZERO || z == DVec3::ZERO || d == DVec3::ZERO {
+        return Err(format!("hands.{s}.place: forearm_toward must not be zero"));
+    }
+    let x = y.cross(z);
+    let mut v = DVec3::new(d.dot(x), d.dot(y), d.dot(z));
+    if side == Side::Left {
+        v.x = -v.x;
+    }
+    let dev = v.x.clamp(-1.0, 1.0).asin().to_degrees();
+    let flex = v.z.atan2(-v.y).to_degrees();
+    Ok(Some((flex, dev)))
 }
 
 /// The world transform of the forearm frame from the hand's placement.

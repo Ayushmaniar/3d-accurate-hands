@@ -96,6 +96,10 @@ pub struct Place {
     pub wrist: Option<[f64; 3]>,
     pub palm_facing: Option<[f64; 3]>,
     pub fingers_toward: Option<[f64; 3]>,
+    /// With `wrist`: the direction from the wrist toward the elbow. Sets wrist_flex and
+    /// wrist_dev so the forearm points there.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub forearm_toward: Option<[f64; 3]>,
     pub elbow: Option<[f64; 3]>,
     pub forearm_rotation_deg: Option<[f64; 3]>,
 }

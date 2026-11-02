@@ -87,3 +87,39 @@ fn errors_name_the_key() {
     let e = Clip::parse(r#"{"keys": [{"t": 1, "hands": {"right": {}}}, {"t": 0}]}"#).err().unwrap();
     assert!(e.contains("before"), "{e}");
 }
+
+#[test]
+fn pass_keys_flow_without_stopping() {
+    let clip = Clip::parse(
+        r#"{"version": 1, "idle": 0, "follow": 0, "keys": [
+            {"t": 0, "hands": {"right": {"wrist_flex": 0}}},
+            {"t": 0.5, "pass": true, "hands": {"right": {"wrist_flex": 20}}},
+            {"t": 1.0, "pass": true, "hands": {"right": {"wrist_flex": 40}}},
+            {"t": 1.5, "hands": {"right": {"wrist_flex": 60}}}]}"#,
+    )
+    .unwrap();
+    let at = |t: f64| value(&clip.sample(t).unwrap().pose, "wrist_flex");
+    // Between the first and last key the hand never slows below a third of its average speed.
+    for i in 6..=54 {
+        let t = i as f64 * 0.025;
+        let speed = (at(t + 0.0125) - at(t - 0.0125)) / 0.025;
+        assert!(speed > 40.0 / 3.0, "{speed:.1} deg/s at {t:.3} s");
+    }
+    assert!((at(2.0) - 60.0).abs() < 0.1);
+}
+
+#[test]
+fn forearm_toward_aims_the_forearm() {
+    for side in ["right", "left"] {
+        let pose = format!(
+            r#"{{"version": 1, "hands": {{"{side}": {{"place": {{"wrist": [0.05, 0.1, 0], "palm_facing": [0.2, -0.3, 1], "fingers_toward": [0.1, 1, 0.3], "forearm_toward": [0.3, -1, 0.25]}}}}}}}}"#
+        );
+        let s = handkit_core::solve(&pose).unwrap();
+        let h = &s.hands[0];
+        let forearm = h.bones.iter().find(|b| b.name == "forearm").unwrap();
+        let want = glam::DVec3::new(0.3, -1.0, 0.25).normalize();
+        assert!((-forearm.along).dot(want) > 0.9999, "{side}: forearm along {:?}", forearm.along);
+        let hand = h.bones.iter().find(|b| b.name == "hand").unwrap();
+        assert!((hand.origin - glam::DVec3::new(0.05, 0.1, 0.0)).length() < 1e-9);
+    }
+}

@@ -74,7 +74,11 @@ Timing, per key (all optional except t):
   anticipate a small move the other way first, as a fraction of the move (0.05 to 0.15).
   cascade    seconds between fingers in the move (default up to 0.035): closing runs pinky to
              index and then the thumb, opening frees the thumb, then index to pinky.
-Moves overlap freely: a key can start moving before the previous one has arrived.
+  pass       true makes the key a waypoint: the hand flows through it (passing near its pose)
+             instead of slowing to a stop there. Use it for paths: an arc, a wave, a swing.
+Moves overlap freely: a key can start moving before the previous one has arrived. A key at a
+negative t starts the clip mid-move (the hand is already moving at 0). An ease or spring
+written on a key applies to the move into that key only; spring overrides the ease's own.
 Clip-wide: "idle": { "amount": 1, "seed": 0 } is a small breathing movement so a held hand
 never freezes (0 turns it off); "follow": 1 scales how much relaxed fingers trail fast hand
 moves.
@@ -87,9 +91,12 @@ past. A goal with only "vary" (no touch or aim) does the same in a pose file: it
 parts it varies from passing through anything.
 
 Commands: `handkit check clip.json` (held goals, penetrations, joint speeds, pops, fingertips
-leaving the camera's view; fix everything it reports), `handkit sheet clip.json -n 12 --mesh`
+leaving the camera's view, elbows in view; fix everything it reports), `handkit sheet clip.json -n 12 --mesh`
 (a contact sheet; --at 1.2,1.3,1.4 for chosen times), `handkit sample clip.json 1.5` (the pose
-file at a time, to query or render), `handkit preview clip.json` (a quick MP4).
+file at a time, to query or render; --wrist writes its placement as wrist, palm_facing and
+fingers_toward), `handkit preview clip.json` (a quick MP4). To match a reference video:
+`python tools/motion/compare.py ref.mp4 out.mp4 cmp` writes cmp.sheet.png (both at the same
+times, in rows) and cmp.side.mp4 (side by side).
 ```
 
 A fist that opens, points, makes an OK sign and turns while holding the pinch (`clips/demo_basics.json`; the OK pinch is held through the last move because both keys take it from the `ok` gesture):
@@ -129,6 +136,10 @@ Placement, per hand, one of:
       The right thumb is on the side of fingers_toward x palm_facing (cross product); the left
       thumb on the opposite side. Example: palm_facing [0,-1,0], fingers_toward [1,0,0] puts the
       right thumb toward -Z and the left thumb toward +Z.
+      Add forearm_toward: [x, y, z] (the direction from the wrist toward the elbow) to aim the
+      forearm: it sets wrist_flex and wrist_dev (any written are replaced), so the hand stays
+      exactly where placed and the arm comes in from that side. `query` reports the wrist
+      angles as limit violations if the bend is more than a wrist can do.
   place: { elbow, forearm_rotation_deg: [rx, ry, rz] }   rotates the rest pose about the elbow,
       matrix Rx*Ry*Rz (rz applied first, about world axes). For a left hand it rotates the
       mirrored rest pose.
@@ -209,8 +220,8 @@ Motion: `handkit explain clips` (keyed poses over time, checked and previewed as
 
 Parameters (key, range in degrees, meaning):
   twist [-100, 100]: Turns the hand about the forearm's long axis. +90 makes the palm face the side the thumb pointed to at rest (right hand: +X, the thumb then points to -Z).
-  wrist_flex [-70, 80]: Bends the hand toward the palm side; negative bends it toward the back of the hand.
-  wrist_dev [-25, 35]: Bends the hand sideways toward the thumb (radial); negative toward the pinky. Applied before wrist_flex.
+  wrist_flex [-80, 85]: Bends the hand toward the palm side; negative bends it toward the back of the hand.
+  wrist_dev [-35, 35]: Bends the hand sideways toward the thumb (radial); negative toward the pinky. Applied before wrist_flex.
   palm_cup [0, 25]: Hollows the palm: the pinky knuckle comes 0.03*sin(cup) m forward and turns `cup` degrees toward the thumb, the ring knuckle half that. Use in fists, grips and thumb-to-pinky contact.
   thumb.cmc_flex [-30, 50]: Swings the whole thumb in the palm plane toward the pinky side (across the palm). Negative swings it further out.
   thumb.cmc_abd [-10, 75]: Lifts the whole thumb out of the palm plane toward the palm side, like opening the hand around a can.
