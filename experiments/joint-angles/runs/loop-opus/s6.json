@@ -1,0 +1,2 @@
+{"pose":"T6.json","out":"T6.json","vars":[["hands.right.thumb.cmc_flex",-20,50],["hands.right.thumb.cmc_abd",-10,75],["hands.right.thumb.cmc_rot",-15,60],["hands.right.thumb.mcp_flex",-15,65],["hands.right.thumb.ip_flex",-20,85]],
+"goals":[["dist","right","index","right","thumb",0.0172,10]]}

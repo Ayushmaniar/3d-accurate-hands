@@ -1,0 +1,1 @@
+{"pose": "T3.json", "out": "T3.json", "vars": [["hands.right.pinky.mcp_flex", 0, 95], ["hands.right.pinky.pip_flex", 50, 110], ["hands.right.pinky.dip_flex", 35, 80]], "goals": [["axis", "right", "pinky", 3, 0, 0.035, 0.3], ["axis", "right", "pinky", 3, 1, 0.036, 0.3]]}

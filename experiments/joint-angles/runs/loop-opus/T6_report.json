@@ -1,0 +1,18 @@
+{
+ "joint_limit_violations": [],
+ "penetrations": [],
+ "fingertip_world_m": {
+  "right.index": [0.001, 0.062, 0.07],
+  "right.middle": [-0.002, 0.148, 0.017],
+  "right.ring": [-0.029, 0.137, 0.012],
+  "right.pinky": [-0.057, 0.105, 0.001],
+  "right.thumb": [-0.008, 0.053, 0.081]
+ },
+ "fingertip_surface_gaps_mm": {
+  "right.index~right.thumb": 0.5,
+  "right.middle~right.thumb": 97.7,
+  "right.ring~right.thumb": 94.4,
+  "right.pinky~right.thumb": 90.9
+ },
+ "image": "C:\\Users\\Rajat\\Documents\\3D Accurate Hands\\experiments\\joint-angles\\runs\\loop-opus\\T6.png"
+}

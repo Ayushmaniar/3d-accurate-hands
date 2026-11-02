@@ -1,0 +1,15 @@
+node_modules/
+target/
+*.log
+
+# Reference videos: large and partly copyrighted, kept local. Only their notes are tracked.
+Reference videos to Animate/**/*.mp4
+Reference videos to Animate/**/*.webm
+Reference videos to Animate/**/*.mkv
+Reference videos to Animate/**/*.m4a
+Reference videos to Animate/**/*.wav
+Reference videos to Animate/**/*.jpg
+Reference videos to Animate/**/*.png
+Reference videos to Animate/raw/
+Reference videos to Animate/**/frames*/
+Reference videos to Animate/**/thumbs*/

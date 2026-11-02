@@ -1,0 +1,2 @@
+{"pose":"T5.json","out":"T5.json","step":16,"minstep":0.05,"vars":[["hands.right.forearm_rotation_deg.0",-180,180],["hands.right.forearm_rotation_deg.2",-180,180],["hands.right.wrist_flex",-20,20],["hands.right.wrist_dev",-10,10]],
+"goals":[["line","right","index",[-0.6,0.3,-0.4],100]]}

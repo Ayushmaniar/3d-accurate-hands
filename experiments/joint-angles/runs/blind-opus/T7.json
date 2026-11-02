@@ -1,0 +1,14 @@
+{
+  "hands": {
+    "right": {
+      "elbow": [0, -0.3, 0],
+      "forearm_rotation_deg": [0, 180, 0],
+      "twist": 0, "wrist_flex": 0, "wrist_dev": 0, "palm_cup": 8,
+      "thumb":  { "cmc_flex": 35, "cmc_abd": 28, "cmc_rot": 60, "mcp_flex": 30, "ip_flex": 40 },
+      "index":  { "mcp_flex": 0, "mcp_abd": 14, "pip_flex": 0, "dip_flex": 0 },
+      "middle": { "mcp_flex": 0, "mcp_abd": -6, "pip_flex": 0, "dip_flex": 0 },
+      "ring":   { "mcp_flex": 80, "mcp_abd": 0, "pip_flex": 100, "dip_flex": 60 },
+      "pinky":  { "mcp_flex": 80, "mcp_abd": 0, "pip_flex": 100, "dip_flex": 60 }
+    }
+  }
+}

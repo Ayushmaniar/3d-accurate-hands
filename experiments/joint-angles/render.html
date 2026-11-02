@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js" } }</script>
+<style>
+  html, body { margin: 0; background: #2b2e33; }
+  #wrap { position: relative; width: 1024px; height: 1024px; }
+  .label { position: absolute; color: #e8e8e8; font: 600 15px system-ui, sans-serif; padding: 6px 10px; }
+</style>
+</head>
+<body>
+<div id="wrap"></div>
+<script type="module">
+import * as THREE from 'three';
+import { buildHand, analyze } from './hand.js';
+
+const SKIN = { right: 0xd9a383, left: 0xb98466 };
+const NAIL = 0xf0d2c8;
+
+function capsule(s, mat) {
+  const a = new THREE.Vector3(...s.a), b = new THREE.Vector3(...s.b);
+  const len = a.distanceTo(b);
+  const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(s.r, len, 6, 16), mat);
+  mesh.position.copy(a).add(b).multiplyScalar(0.5);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+  return mesh;
+}
+
+function nail(n) {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8), new THREE.MeshStandardMaterial({ color: NAIL, roughness: 0.25 }));
+  const up = new THREE.Vector3(...n.up), out = new THREE.Vector3(...n.out);
+  const x = new THREE.Vector3().crossVectors(up, out).normalize();
+  mesh.matrix.makeBasis(x, up, out).scale(new THREE.Vector3(n.w * 0.55, n.w * 0.75, n.w * 0.18)).setPosition(...n.pos);
+  mesh.matrixAutoUpdate = false;
+  return mesh;
+}
+
+window.renderPose = (pose) => {
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x404050, 1.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(0.6, 1, 0.8); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.8); fill.position.set(-0.8, -0.3, -0.6); scene.add(fill);
+
+  const hands = Object.entries(pose.hands || {}).map(([side, p]) => buildHand(p, side));
+  for (const h of hands) {
+    for (const s of h.segs) {
+      const mat = new THREE.MeshStandardMaterial({ color: SKIN[s.side], roughness: 0.6, transparent: s.kind === 'arm', opacity: s.kind === 'arm' ? 0.55 : 1 });
+      scene.add(capsule(s, mat));
+    }
+    for (const n of h.nails) scene.add(nail(n));
+  }
+
+  // Frame on the hands (forearms are allowed to leave the frame).
+  const box = new THREE.Box3();
+  for (const h of hands) for (const s of h.segs) if (s.kind !== 'arm') { box.expandByPoint(new THREE.Vector3(...s.a)); box.expandByPoint(new THREE.Vector3(...s.b)); }
+  const center = box.getCenter(new THREE.Vector3());
+  const radius = Math.max(box.getSize(new THREE.Vector3()).length() * 0.62, 0.08);
+
+  const views = [
+    { name: 'FRONT (camera at +Z, looking -Z)', dir: [0, 0, 1], up: [0, 1, 0] },
+    { name: 'RIGHT SIDE (camera at +X)', dir: [1, 0, 0], up: [0, 1, 0] },
+    { name: 'TOP (camera at +Y, -Z is up in image)', dir: [0, 1, 0], up: [0, 0, -1] },
+    pose.camera
+      ? { name: 'HERO (pose.camera)', pos: pose.camera.position, target: pose.camera.target, fov: pose.camera.fov || 35 }
+      : { name: 'THREE-QUARTER (from +X +Y +Z)', dir: [0.7, 0.45, 0.85], up: [0, 1, 0] },
+  ];
+
+  const wrap = document.getElementById('wrap');
+  wrap.innerHTML = '';
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(1024, 1024);
+  renderer.setScissorTest(true);
+  wrap.appendChild(renderer.domElement);
+
+  views.forEach((v, i) => {
+    let cam;
+    if (v.pos) {
+      cam = new THREE.PerspectiveCamera(v.fov, 1, 0.01, 50);
+      cam.position.set(...v.pos); cam.lookAt(new THREE.Vector3(...v.target));
+    } else {
+      cam = new THREE.OrthographicCamera(-radius, radius, radius, -radius, 0.01, 50);
+      cam.position.copy(center).addScaledVector(new THREE.Vector3(...v.dir).normalize(), 3);
+      cam.up.set(...v.up); cam.lookAt(center);
+    }
+    const x = (i % 2) * 512, y = i < 2 ? 512 : 0;
+    renderer.setViewport(x, y, 512, 512); renderer.setScissor(x, y, 512, 512);
+    renderer.setClearColor(i % 3 === 0 ? 0x30343a : 0x34383e);
+    renderer.render(scene, cam);
+    const label = document.createElement('div');
+    label.className = 'label'; label.textContent = v.name;
+    label.style.left = `${(i % 2) * 512}px`; label.style.top = `${i < 2 ? 0 : 512}px`;
+    wrap.appendChild(label);
+  });
+
+  return { joint_limit_violations: hands.flatMap((h) => h.violations), ...analyze(hands) };
+};
+window.ready = true;
+</script>
+</body>
+</html>

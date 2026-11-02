@@ -1,0 +1,92 @@
+{
+  "joint_limit_violations": [],
+  "penetrations": [],
+  "fingertip_world_m": {
+    "right.index": [
+      0.136,
+      0.138,
+      0
+    ],
+    "right.middle": [
+      0.11,
+      0.15,
+      0
+    ],
+    "right.ring": [
+      0.084,
+      0.141,
+      0
+    ],
+    "right.pinky": [
+      0.06,
+      0.112,
+      0
+    ],
+    "right.thumb": [
+      0.141,
+      0.008,
+      0.109
+    ],
+    "left.index": [
+      -0.136,
+      0.138,
+      0
+    ],
+    "left.middle": [
+      -0.11,
+      0.15,
+      0
+    ],
+    "left.ring": [
+      -0.084,
+      0.141,
+      0.006
+    ],
+    "left.pinky": [
+      -0.091,
+      0.039,
+      0.065
+    ],
+    "left.thumb": [
+      -0.1,
+      0.04,
+      0.086
+    ]
+  },
+  "fingertip_surface_gaps_mm": {
+    "right.index~right.thumb": 152.2,
+    "right.index~left.index": 256.7,
+    "right.index~left.middle": 230.8,
+    "right.index~left.ring": 204.9,
+    "right.index~left.pinky": 241.9,
+    "right.index~left.thumb": 252.2,
+    "right.middle~right.thumb": 164.1,
+    "right.middle~left.index": 230.8,
+    "right.middle~left.middle": 204.3,
+    "right.middle~left.ring": 178.9,
+    "right.middle~left.pinky": 224.3,
+    "right.middle~left.thumb": 234.6,
+    "right.ring~right.thumb": 164,
+    "right.ring~left.index": 204.7,
+    "right.ring~left.middle": 178.7,
+    "right.ring~left.ring": 152.9,
+    "right.ring~left.pinky": 198.5,
+    "right.ring~left.thumb": 209.4,
+    "right.pinky~right.thumb": 154.8,
+    "right.pinky~left.index": 183.5,
+    "right.pinky~left.middle": 159.8,
+    "right.pinky~left.ring": 132.9,
+    "right.pinky~left.pinky": 166.9,
+    "right.pinky~left.thumb": 179.2,
+    "right.thumb~left.index": 307.4,
+    "right.thumb~left.middle": 290.8,
+    "right.thumb~left.ring": 263.6,
+    "right.thumb~left.pinky": 222.5,
+    "right.thumb~left.thumb": 225.1,
+    "left.index~left.thumb": 117.8,
+    "left.middle~left.thumb": 122.4,
+    "left.ring~left.thumb": 112.4,
+    "left.pinky~left.thumb": 7
+  },
+  "image": "C:\\Users\\Rajat\\Documents\\3D Accurate Hands\\experiments\\joint-angles\\sanity\\thumb.png"
+}

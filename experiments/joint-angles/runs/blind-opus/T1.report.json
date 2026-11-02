@@ -1,0 +1,22 @@
+{
+ "joint_limit_violations": [],
+ "penetrations": [
+  "right.index.distal x right.thumb.proximal: 5.5 mm deep",
+  "right.index.distal x right.thumb.distal: 4.0 mm deep",
+  "right.palm.metacarpal x right.pinky.distal: 5.3 mm deep"
+ ],
+ "fingertip_world_m": {
+  "right.index": [-0.028, 0.031, -0.057],
+  "right.middle": [-0.01, 0.025, -0.023],
+  "right.ring": [0.006, 0.02, -0.02],
+  "right.pinky": [0.023, 0.018, -0.017],
+  "right.thumb": [-0.048, 0.061, -0.07]
+ },
+ "fingertip_surface_gaps_mm": {
+  "right.index~right.thumb": 20,
+  "right.middle~right.thumb": 53,
+  "right.ring~right.thumb": 67.1,
+  "right.pinky~right.thumb": 81.8
+ },
+ "image": "C:\\Users\\Rajat\\Documents\\3D Accurate Hands\\experiments\\joint-angles\\runs\\blind-opus\\T1.png"
+}
