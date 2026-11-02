@@ -8,15 +8,26 @@ import sys
 from head2 import *
 
 CAM9 = {'position': [0.0, 0.07, 0.34], 'target': [0.0, 0.085, 0.0], 'fov': 26}
-THUMB_UP = {'cmc_flex': 20, 'cmc_abd': 20, 'cmc_rot': 20, 'mcp_flex': 10, 'ip_flex': 10}
+THUMB_UP = {'cmc_flex': 25, 'cmc_abd': 25, 'cmc_rot': 35, 'mcp_flex': 30, 'ip_flex': 35}
 SIDE = {'touch': ['right.thumb.side_palmar', 'left.thumb.side_palmar'], 'vary': ['right.thumb.*', 'left.thumb.*']}
 
 
-def cupped(half=0.05, lean=0.5):
+# The eyes (the tutorial: the right little finger is the snake's left eye, the left ring finger
+# its right eye): those two rise and fold over, their middle knuckles standing on top; the left
+# little finger, held with the ring finger in the first step, tucks under lower.
+EYE = {'mcp_abd': 0, 'mcp_flex': 20, 'pip_flex': 105, 'dip_flex': 50}
+TUCKED = {'mcp_abd': 0, 'mcp_flex': 70, 'pip_flex': 95, 'dip_flex': 45}
+
+
+def cupped(half=0.05, lean=0.5, eyes=True):
     DOME.update(zip(('mcp_flex', 'pip_flex', 'dip_flex'), (float(x) for x in os.environ.get('DOME9', '15,95,45').split(','))))
     h = hands2(half, 0.006, lean)
     for s in h:
         h[s]['thumb'] = dict(THUMB_UP)
+    if eyes:
+        h['right']['pinky'] = dict(EYE)
+        h['left']['ring'] = dict(EYE)
+        h['left']['pinky'] = dict(TUCKED)
     return h
 
 
