@@ -121,11 +121,21 @@ pub fn check_people(v: &Value) -> Result<(), String> {
                 "look" => {
                     crate::look::Look::from_value(x).map_err(|e| format!("people.{name}: {e}"))?;
                 }
-                _ => return Err(format!("people.{name}: unknown field \"{k}\" (fields: look)")),
+                "scale" => {
+                    if !x.as_f64().is_some_and(|s| (0.5..=1.5).contains(&s)) {
+                        return Err(format!("people.{name}.scale is the size of the person's hands, 0.5 to 1.5 (e.g. 0.75 for a child's)"));
+                    }
+                }
+                _ => return Err(format!("people.{name}: unknown field \"{k}\" (fields: look, scale)")),
             }
         }
     }
     Ok(())
+}
+
+/// The size of a person's hands (`people.<person>.scale`); none for the default size.
+pub fn person_scale(people: Option<&Value>, person: &str) -> Option<f64> {
+    people.and_then(|p| p.get(person)).and_then(|p| p.get("scale")).and_then(Value::as_f64).filter(|s| *s != 1.0)
 }
 
 /// The look a person's hands are drawn with: the top-level look with the person's own over it.
@@ -267,6 +277,10 @@ pub struct HandPose {
     pub middle: Option<FingerPose>,
     pub ring: Option<FingerPose>,
     pub pinky: Option<FingerPose>,
+    /// The size of the person's hand (`people.<person>.scale`, 1 when unset): not written in a
+    /// hand, filled in from the file's people when its hands are built.
+    #[serde(skip)]
+    pub scale: Option<f64>,
 }
 
 /// Either the hand (wrist position, palm and finger directions) or the forearm (elbow and an

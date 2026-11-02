@@ -1,38 +1,28 @@
 {
   "name": "pinky_promise",
-  "description": "Pinky promise: two people's right pinkies hook around each other, the other fingers closed in fists; seen from below the hook.",
+  "description": "Pinky promise: two people's right hands in loose fists, thumbs resting on the index, both pinkies bent and hooked round each other; seen from below the hook.",
   "version": 1,
   "hands": {
     "ana.right": {
-      "palm_cup": 3.7,
-      "thumb": { "cmc_abd": 44.9, "cmc_flex": 3.0, "cmc_rot": 48.7, "mcp_flex": 48.6, "ip_flex": 23.9 },
-      "index": { "mcp_abd": 0.0, "mcp_flex": 82.0, "pip_flex": 92.0, "dip_flex": 61.0, "mcp_roll": 0.0 },
-      "middle": { "mcp_abd": 0.0, "mcp_flex": 86.0, "pip_flex": 96.0, "dip_flex": 64.0, "mcp_roll": 0.0 },
-      "ring": { "mcp_abd": -1.1, "mcp_flex": 83.4, "pip_flex": 99.9, "dip_flex": 73.1, "mcp_roll": 0.0 },
-      "pinky": { "mcp_abd": 9.8, "mcp_flex": 7.4, "pip_flex": 10.0, "dip_flex": 4.3, "mcp_roll": 0.0 },
-      "place": {
-        "wrist": [-0.08, 0.0, 0.0],
-        "palm_facing": [0.0, 0.0, -1.0],
-        "fingers_toward": [1.0, 0.0, 0.0],
-        "forearm_toward": [-1.0, 0.0, 0.0]
-      }
+      "place": { "wrist": [-0.08, 0.0, 0.0], "palm_facing": [0.0, 0.0, -1.0], "fingers_toward": [1.0, 0.0, 0.0], "forearm_toward": [-1.0, 0.0, 0.0] },
+      "palm_cup": 8.0,
+      "thumb": { "cmc_flex": -11.2, "cmc_abd": 37.7, "cmc_rot": 48.9, "mcp_flex": 44.1, "ip_flex": 26.8 },
+      "index": { "mcp_abd": 0.0, "mcp_flex": 80.0, "pip_flex": 95.0, "dip_flex": 58.0, "mcp_roll": 0.0 },
+      "middle": { "mcp_abd": 0.0, "mcp_flex": 83.0, "pip_flex": 97.0, "dip_flex": 60.0, "mcp_roll": 0.0 },
+      "ring": { "mcp_abd": 0.0, "mcp_flex": 85.0, "pip_flex": 98.0, "dip_flex": 60.0, "mcp_roll": 0.0 },
+      "pinky": { "mcp_abd": -0.9, "mcp_flex": 9.1, "pip_flex": 80.5, "dip_flex": 45.1, "mcp_roll": -3.9 }
     },
     "ben.right": {
-      "palm_cup": 3.7,
-      "thumb": { "cmc_abd": 44.9, "cmc_flex": 3.0, "cmc_rot": 48.7, "mcp_flex": 48.6, "ip_flex": 23.9 },
-      "index": { "mcp_abd": 0.0, "mcp_flex": 82.0, "pip_flex": 92.0, "dip_flex": 61.0, "mcp_roll": 0.0 },
-      "middle": { "mcp_abd": 0.0, "mcp_flex": 86.0, "pip_flex": 96.0, "dip_flex": 64.0, "mcp_roll": 0.0 },
-      "ring": { "mcp_abd": -1.1, "mcp_flex": 83.4, "pip_flex": 99.9, "dip_flex": 73.1, "mcp_roll": 0.0 },
-      "pinky": { "mcp_abd": 9.9, "mcp_flex": 10.3, "pip_flex": 10.2, "dip_flex": 5.1, "mcp_roll": 0.0 },
-      "place": {
-        "wrist": [0.1204, -0.0597, -0.0377],
-        "palm_facing": [-0.004, -0.007, 1.0],
-        "fingers_toward": [-0.859, 0.507, -0.033],
-        "forearm_toward": [0.86602, -0.50001, 0.0]
-      }
+      "palm_cup": 8.0,
+      "thumb": { "cmc_flex": -10.6, "cmc_abd": 37.1, "cmc_rot": 48.9, "mcp_flex": 43.2, "ip_flex": 26.9 },
+      "index": { "mcp_abd": 0.0, "mcp_flex": 80.0, "pip_flex": 95.0, "dip_flex": 58.0, "mcp_roll": 0.0 },
+      "middle": { "mcp_abd": 0.0, "mcp_flex": 83.0, "pip_flex": 97.0, "dip_flex": 60.0, "mcp_roll": 0.0 },
+      "ring": { "mcp_abd": 0.0, "mcp_flex": 85.0, "pip_flex": 98.0, "dip_flex": 60.0, "mcp_roll": 0.0 },
+      "pinky": { "mcp_abd": -0.9, "mcp_flex": 10.0, "pip_flex": 82.3, "dip_flex": 45.7, "mcp_roll": -3.8 },
+      "place": { "wrist": [0.1447, -0.0561, -0.0443], "palm_facing": [-0.038, -0.103, 0.989], "fingers_toward": [-0.919, 0.378, -0.031], "forearm_toward": [0.9397, -0.342, 0.0] }
     }
   },
   "people": { "ana": { "look": { "skin": "brown" } }, "ben": { "look": { "skin": "light" } } },
   "goals": [{ "grip": ["ana.right", "ben.right"], "style": "pinky" }],
-  "camera": { "position": [0.0, -0.06, 0.3], "target": [-0.02, -0.01, 0], "fov": 40 }
+  "camera": { "position": [0.035, -0.263, 0.127], "target": [0.035, -0.013, -0.023], "fov": 30 }
 }

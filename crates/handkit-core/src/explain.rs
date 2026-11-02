@@ -43,6 +43,8 @@ The name is the prefix everywhere a hand is named: sites (ana.right.index.tip), 
 patterns (ana.left.*), checks, mirror (\"mirror\": \"ana.right\" on ana.left), `bones`. Every hand
 is placed in the same world. A top-level \"people\": { \"ana\": { \"look\": { \"skin\": \"brown\" } } }
 gives a person their own look (over the file's look); right and left belong to no person.
+\"scale\": 0.75 on a person (0.5 to 1.5) sizes their hands and forearms (a child's): every length,
+site, reach and mesh scales; angles do not. Grips between hands of two sizes still solve.
 
 Chains: wrist = twist (about the forearm) -> wrist_dev -> wrist_flex. Fingers: knuckle spread
 (rest fan + mcp_abd) -> mcp_roll -> mcp_flex -> pip_flex -> dip_flex. Thumb: base at (0.020, 0.018, 0.008)
@@ -102,18 +104,23 @@ the hand.
   { \"grip\": [a, b], \"style\": s }   two people's hands hold each other; a and b are whole hands
       (\"ana.right\"), a the leader, b the follower. Styles: handshake (two right or two left
       hands, palms together, thumbs over the backs, fingers wrapped round), interlaced (a right
-      and a left side by side, fingers alternating, closed over the backs), cupped (right with
-      left: holding hands side by side, fingers crossing and closed over the other's back; two
+      and a left side by side, fingers spread and alternating, each curled over the back of the
+      other hand, both thumbs over the other's back), cupped (right with left: holding hands
+      side by side, the leader's palm in the follower's, the follower's fingers curled round
+      the leader's pinky edge onto its back and its thumb closed over the leader's index; two
       rights: a palm up cradles the other's fingers), high_five (palms flat, fingers up and
-      spread), fist_bump (fists knuckles to knuckles), pinky (two rights, pinkies hooked).
+      spread), fist_bump (fists knuckles to knuckles), pinky (two rights in loose fists,
+      thumbs resting on the index, both pinkies bent and hooked round each other).
       Unless the grip already holds, `solve` gives both hands the style's open shape, places
       the follower on the leader where the style puts it (only the follower placed: the
       leader moves to it; neither: the leader goes to a default spot near the origin), slides
       it in until the hands touch, then closes each gripping digit until it meets the other
       hand (or its own) and stops; the solver then tidies what is left. The result is plain
       joint values and placements, free to edit. It holds when every closing digit's last
-      segment is within 1 mm of the other hand (`query` lists each tip's gap in mm), the
-      hands touch, and nothing overlaps more than 2 mm. A grip takes no touch or aim; its
+      segment is within 1 mm of the other hand, or of the part the style lands it on (the
+      pinkies on each other's middle segment, an interlaced fingertip on the back of the
+      other hand; `query` lists each tip's gap in mm), the hands touch, and nothing overlaps
+      more than 2 mm. A grip takes no touch or aim; its
       vary defaults to the closing digits and the follower's place.
   \"vary\": [...] on a goal chooses what may change (default: every joint of each digit a touch
       names, plus palm_cup for ring and pinky and the wrist for palm sites; for aim, the wrist

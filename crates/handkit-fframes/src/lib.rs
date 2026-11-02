@@ -121,12 +121,16 @@ impl Hand {
     /// as it is).
     pub fn pose(&self, scene: &mut Scene, solved: &Solved) {
         let Some(h) = solved.hands.iter().find(|h| h.id == self.id) else { return };
-        for (local, id) in h.locals().iter().zip(&self.joints) {
+        for ((local, id), bone) in h.locals().iter().zip(&self.joints).zip(&h.bones) {
             let Some(id) = id else { continue };
             let t = local.translation;
             let r = local.rotation;
             scene[*id].position = Vec3::new(t.x as f32, t.y as f32, t.z as f32);
             scene[*id].rotation = Quat::from_xyzw(r.x as f32, r.y as f32, r.z as f32, r.w as f32);
+            // A smaller or larger person's hand: the root scales the whole skeleton.
+            if bone.parent.is_none() {
+                scene[*id].scale = Vec3::splat(h.scale as f32);
+            }
         }
         if let Some(mesh) = self.mesh.and_then(|id| scene[id].mesh_mut()) {
             mesh.morph_weights = h.corrective_weights().iter().map(|w| *w as f32).collect();

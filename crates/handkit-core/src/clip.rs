@@ -855,7 +855,9 @@ impl Clip {
             for (who, hand) in [h.leader, h.follower].into_iter().enumerate() {
                 if hand == si {
                     let w = h.weight(t);
-                    for &j in &h.closing[who] {
+                    // The palm's hollow moves the ring and pinky knuckles: it holds still too.
+                    let cup = PARAMS.iter().position(|p| p.key == "palm_cup").filter(|_| !h.closing[who].is_empty());
+                    for &j in h.closing[who].iter().chain(cup.iter()) {
                         quiet[j] = f64::min(quiet[j], 1.0 - w);
                     }
                 }
@@ -876,7 +878,9 @@ impl Clip {
                 values[j] += k * drag * (1.0 - 0.7 * curl) * quiet[j];
             }
             values[j] += self.idle * idle(self.seed, ch, j, p.key, t) * quiet[j];
-            values[j] = soft_clamp(values[j], p.min, p.max);
+            // A held grip keeps its solved values exactly, even near a limit.
+            let hard = values[j].clamp(p.min, p.max);
+            values[j] = hard + (soft_clamp(values[j], p.min, p.max) - hard) * quiet[j];
         }
         for (a, axis) in [(0, DVec3::X), (1, DVec3::Y), (2, DVec3::Z)] {
             wrist += axis * self.idle * 0.0012 * noise(self.seed, ch * 100 + 90 + a, t, 0.2);
@@ -961,7 +965,8 @@ impl Clip {
     fn free_hands(&self, t: f64) -> Result<(Vec<HandGeom>, Vec<DVec3>), String> {
         let build = |si: usize, follow: bool| -> Result<(HandGeom, DVec3), String> {
             let (values, wrist, rot) = self.attached(si, t, follow);
-            let hp: pose::HandPose = serde_json::from_value(Self::hand_value(&values, wrist, rot)).map_err(|e| e.to_string())?;
+            let mut hp: pose::HandPose = serde_json::from_value(Self::hand_value(&values, wrist, rot)).map_err(|e| e.to_string())?;
+            hp.scale = pose::person_scale(self.people.as_ref(), &self.ids[si].person);
             Ok((crate::rig::build_hand(&self.ids[si], &hp, Some(1), None)?, wrist))
         };
         let (mut geoms, mut wrists): (Vec<HandGeom>, Vec<DVec3>) = (0..self.ids.len()).map(|si| build(si, false)).collect::<Result<Vec<_>, _>>()?.into_iter().unzip();

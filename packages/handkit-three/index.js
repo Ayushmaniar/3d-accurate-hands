@@ -25,6 +25,9 @@ export function handRig(root) {
       if (!node) continue;
       node.position.set(b.t[0], b.t[1], b.t[2]);
       node.quaternion.set(b.r[0], b.r[1], b.r[2], b.r[3]);
+      // The root joint of a smaller or larger person's hand scales the skeleton.
+      const s = b.s ?? 1;
+      node.scale.set(s, s, s);
     }
     root.updateMatrixWorld(true);
   };

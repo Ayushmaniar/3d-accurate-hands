@@ -165,6 +165,8 @@ pub struct HandGeom {
     pub wrist_angles: [f64; 2],
     /// Whether `place.forearm_toward` set the wrist angles.
     pub forearm_aimed: bool,
+    /// The person's hand size (1 by default): every length is this times the default hand's.
+    pub scale: f64,
 }
 
 /// A skeleton joint's transform relative to its parent (the forearm's is in the world).
@@ -207,7 +209,9 @@ impl HandGeom {
     }
 
     /// Every bone's transform relative to its parent, in `bones` order: what a skinned mesh
-    /// bound to this skeleton needs per frame.
+    /// bound to this skeleton needs per frame. For a hand of another size (`scale`), the root
+    /// (the forearm) is scaled by `scale` and the other translations are the default hand's,
+    /// so a mesh of the default hand comes out that size.
     pub fn locals(&self) -> Vec<JointLocal> {
         self.bones
             .iter()
@@ -216,7 +220,8 @@ impl HandGeom {
                     Some(p) => self.bones[p].frame.inverse() * b.frame,
                     None => b.frame,
                 };
-                JointLocal { translation: local.translation, rotation: DQuat::from_mat3(&local.matrix3).normalize() }
+                let t = if b.parent.is_some() { local.translation / self.scale } else { local.translation };
+                JointLocal { translation: t, rotation: DQuat::from_mat3(&local.matrix3).normalize() }
             })
             .collect()
     }
@@ -278,7 +283,9 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
     check("wrist_dev", wrist_dev);
     check("palm_cup", cup);
 
-    let wrist = tr(0.0, FOREARM, 0.0) * ry(twist);
+    // A person's hand size scales every length; angles stay.
+    let k = hp.scale.unwrap_or(1.0);
+    let wrist = tr(0.0, FOREARM * k, 0.0) * ry(twist);
     let hand = wrist * rz(-wrist_dev) * rx(wrist_flex);
     let left = side == Side::Left;
     let world = match mirror_of {
@@ -307,12 +314,12 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
         sites.push(Site { name: format!("{prefix}.{name}"), pos: at(m, p), normal: dir(m, n) });
     };
 
-    capsule(at(DAffine3::IDENTITY, o), at(wrist, dvec3(0.0, -FOREARM_END, 0.0)), FOREARM_R, "forearm", None, Seg::Arm);
-    let forearm_bone = bone("forearm".into(), DAffine3::IDENTITY, FOREARM, None);
-    let hand_bone = bone("hand".into(), hand, 0.095, Some(forearm_bone));
-    site("palm_center".into(), hand, dvec3(0.0, 0.055, 0.013), DVec3::Z);
-    site("palm_heel".into(), hand, dvec3(0.0, 0.02, 0.013), DVec3::Z);
-    site("wrist_back".into(), hand, dvec3(0.0, 0.0, -0.016), DVec3::NEG_Z);
+    capsule(at(DAffine3::IDENTITY, o), at(wrist, dvec3(0.0, -FOREARM_END * k, 0.0)), FOREARM_R * k, "forearm", None, Seg::Arm);
+    let forearm_bone = bone("forearm".into(), DAffine3::IDENTITY, FOREARM * k, None);
+    let hand_bone = bone("hand".into(), hand, 0.095 * k, Some(forearm_bone));
+    site("palm_center".into(), hand, dvec3(0.0, 0.055, 0.013) * k, DVec3::Z);
+    site("palm_heel".into(), hand, dvec3(0.0, 0.02, 0.013) * k, DVec3::Z);
+    site("wrist_back".into(), hand, dvec3(0.0, 0.0, -0.016) * k, DVec3::NEG_Z);
 
     let digit_pose = |d: Digit| match d {
         Digit::Index => hp.index.clone().unwrap_or_default(),
@@ -350,9 +357,9 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
             Digit::Ring => 0.5,
             _ => 0.0,
         };
-        let base = hand * tr(f.base[0], f.base[1], 0.0);
-        let mut m = hand * tr(f.mcp[0], f.mcp[1], 0.03 * (cup * cup_k).to_radians().sin()) * ry(cup * cup_k);
-        capsule(at(base, o), at(m, o), METACARPAL_R, "palm", Some(f.digit), Seg::Metacarpal);
+        let base = hand * tr(f.base[0] * k, f.base[1] * k, 0.0);
+        let mut m = hand * tr(f.mcp[0] * k, f.mcp[1] * k, 0.03 * k * (cup * cup_k).to_radians().sin()) * ry(cup * cup_k);
+        capsule(at(base, o), at(m, o), METACARPAL_R * k, "palm", Some(f.digit), Seg::Metacarpal);
         // Positive abduction spreads away from the middle finger (middle: toward the index).
         let abd_sign = if matches!(f.digit, Digit::Ring | Digit::Pinky) { 1.0 } else { -1.0 };
         // Positive roll turns the pad toward the thumb (+X in the right hand's frame).
@@ -362,10 +369,10 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
         let mut parent = hand_bone;
         for i in 0..3 {
             m = m * rx(flex[i]);
-            let r = f.r * (1.0 - 0.1 * i as f64);
-            let next = m * tr(0.0, f.len[i], 0.0);
+            let r = f.r * k * (1.0 - 0.1 * i as f64);
+            let next = m * tr(0.0, f.len[i] * k, 0.0);
             capsule(at(m, o), at(next, o), r, name, Some(f.digit), segs[i]);
-            parent = bone(format!("{name}_{}", joints[i]), m, f.len[i], Some(parent));
+            parent = bone(format!("{name}_{}", joints[i]), m, f.len[i] * k, Some(parent));
             match segs[i] {
                 Seg::Proximal => site(format!("{name}.knuckle"), m, dvec3(0.0, 0.0, -r), DVec3::NEG_Z),
                 Seg::Middle => {
@@ -373,7 +380,7 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
                     site(format!("{name}.dip_ulnar"), next, dvec3(-r, 0.0, 0.0), DVec3::NEG_X);
                 }
                 _ => {
-                    let l = f.len[2];
+                    let l = f.len[2] * k;
                     site(format!("{name}.tip"), m, dvec3(0.0, l + r, 0.0), DVec3::Y);
                     site(format!("{name}.pad"), m, dvec3(0.0, 0.55 * l, r), DVec3::Z);
                     site(format!("{name}.nail"), m, dvec3(0.0, 0.6 * l, -r), DVec3::NEG_Z);
@@ -396,7 +403,7 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
     check("thumb.ip_flex", tflex[2]);
     let [lean, lift, turn] = THUMB_REST_DEG;
     let mut m = hand
-        * tr(THUMB_CMC[0], THUMB_CMC[1], THUMB_CMC[2])
+        * tr(THUMB_CMC[0] * k, THUMB_CMC[1] * k, THUMB_CMC[2] * k)
         * rz(lean + cmc_flex)
         * rx(lift + cmc_abd)
         * ry(turn - cmc_rot);
@@ -405,14 +412,14 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
     let mut parent = hand_bone;
     for i in 0..3 {
         m = m * rx(tflex[i]);
-        let r = THUMB_R[i];
-        let next = m * tr(0.0, THUMB_LEN[i], 0.0);
+        let r = THUMB_R[i] * k;
+        let next = m * tr(0.0, THUMB_LEN[i] * k, 0.0);
         capsule(at(m, o), at(next, o), r, "thumb", Some(Digit::Thumb), segs[i]);
-        parent = bone(format!("thumb_{}", joints[i]), m, THUMB_LEN[i], Some(parent));
+        parent = bone(format!("thumb_{}", joints[i]), m, THUMB_LEN[i] * k, Some(parent));
         match segs[i] {
             Seg::Proximal => site("thumb.knuckle".into(), m, dvec3(0.0, 0.0, -r), DVec3::NEG_Z),
             Seg::Distal => {
-                let l = THUMB_LEN[2];
+                let l = THUMB_LEN[2] * k;
                 site("thumb.tip".into(), m, dvec3(0.0, l + r, 0.0), DVec3::Y);
                 site("thumb.pad".into(), m, dvec3(0.0, 0.55 * l, r), DVec3::Z);
                 site("thumb.nail".into(), m, dvec3(0.0, 0.6 * l, -r), DVec3::NEG_Z);
@@ -427,7 +434,7 @@ pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: O
         m = next;
     }
 
-    Ok(HandGeom { side, id: id.clone(), name, capsules, sites, bones, nails, violations, coupled, world, wrist_angles: [wrist_flex, wrist_dev], forearm_aimed })
+    Ok(HandGeom { side, id: id.clone(), name, capsules, sites, bones, nails, violations, coupled, world, wrist_angles: [wrist_flex, wrist_dev], forearm_aimed, scale: k })
 }
 
 /// The wrist_flex and wrist_dev that make the forearm point along `place.forearm_toward`

@@ -50,7 +50,9 @@ fn build(pose: PoseFile, mirrors: pose::Mirrors) -> Result<Solved, String> {
     let (plain, mirrored): (Vec<_>, Vec<_>) = pose.hands.iter().partition(|(id, _)| mirrors.source(id).is_none());
     for (id, hp) in plain.into_iter().chain(mirrored) {
         let other = mirrors.source(id).and_then(|s| hands.iter().find(|h| h.id == *s));
-        let geom = rig::build_hand(id, hp, version, other)?;
+        let mut hp = hp.clone();
+        hp.scale = pose::person_scale(pose.people.as_ref(), &id.person);
+        let geom = rig::build_hand(id, &hp, version, other)?;
         hands.push(geom);
     }
     let order = pose::hand_order(pose.hands.iter().map(|(id, _)| id));
@@ -95,10 +97,15 @@ impl Solved {
         let r = |x: f64| (x * 1e6).round() / 1e6;
         let mut joints = serde_json::Map::new();
         for (i, l) in h.locals().iter().enumerate() {
-            joints.insert(h.joint_name(i), json!({
+            let mut j = json!({
                 "t": [r(l.translation.x), r(l.translation.y), r(l.translation.z)],
                 "r": [r(l.rotation.x), r(l.rotation.y), r(l.rotation.z), r(l.rotation.w)],
-            }));
+            });
+            // A smaller or larger person's hand: the root joint scales the whole skeleton.
+            if h.bones[i].parent.is_none() && h.scale != 1.0 {
+                j["s"] = json!(r(h.scale));
+            }
+            joints.insert(h.joint_name(i), j);
         }
         let suffix = if h.side == pose::Side::Left { "L" } else { "R" };
         (joints, format!("skin_{suffix}"), json!(h.corrective_weights().iter().map(|w| r(*w)).collect::<Vec<_>>()))

@@ -19,41 +19,46 @@ use crate::pose::{Goal, HandId, Side};
 use crate::query::{PENETRATION_MM, seg_dist};
 use crate::rig::{Capsule, Digit, HandGeom, Seg};
 
-/// The follower's hand frame in a right leader's frame (x toward the thumb, y along the fingers,
-/// z out of the palm): its wrist, the directions its palm faces and its fingers point, and the
-/// direction from its wrist toward its elbow.
-#[derive(Clone, Copy)]
-struct Offset {
+/// One way two hands hold each other: where the follower goes and how both hands close.
+struct Hold {
+    /// The follower's hand frame in a right leader's frame (x toward the thumb, y along the
+    /// fingers, z out of the palm): its wrist, the directions its palm faces and its fingers
+    /// point, and the direction from its wrist toward its elbow.
     wrist: [f64; 3],
     palm: [f64; 3],
     fingers: [f64; 3],
     forearm: [f64; 3],
-}
-
-/// Joint values a hand starts from before its digits close.
-type Shape = &'static [(&'static str, f64)];
-
-struct Style {
-    name: &'static str,
-    /// The follower when it is the same side as the leader (right with right), and the other.
-    same: Option<Offset>,
-    other: Option<Offset>,
     /// The direction, in the leader's frame, the follower comes in along (it starts 6 cm back
     /// and slides until the hands touch); none places it exactly.
     approach: Option<[f64; 3]>,
     /// Per hand (leader, follower): the shape before closing, and the digits that close.
     shape: [Shape; 2],
     close: [&'static [Digit]; 2],
-    /// A closing digit's tip must land on this digit of the other hand (any part when none).
-    onto: Option<Digit>,
+    /// Contacts the grip makes, each like a touch goal: (hand, site or segment, hand, site or
+    /// segment) with 0 the leader and 1 the follower, e.g. (0, "pinky.distal", 1, "pinky.middle").
+    /// A closing digit named here lands where this says instead of anywhere on the other hand.
+    lands: &'static [Land],
     /// Where the leader goes when neither hand is placed: wrist, palm_facing, fingers_toward,
     /// forearm_toward (a right leader; a left one is mirrored in x).
     home: [[f64; 3]; 4],
 }
 
+/// Joint values a hand starts from before its digits close.
+type Shape = &'static [(&'static str, f64)];
+
+type Land = (usize, &'static str, usize, &'static str);
+
+struct Style {
+    name: &'static str,
+    /// The hold when the follower is the same side as the leader (right with right), and the
+    /// other.
+    same: Option<Hold>,
+    other: Option<Hold>,
+}
+
 const ALL: &[Digit] = &[Digit::Thumb, Digit::Index, Digit::Middle, Digit::Ring, Digit::Pinky];
 const FINGERS: &[Digit] = &[Digit::Index, Digit::Middle, Digit::Ring, Digit::Pinky];
-const PINKY: &[Digit] = &[Digit::Pinky];
+const THUMB_PINKY: &[Digit] = &[Digit::Thumb, Digit::Pinky];
 
 /// A hand open to take another: fingers nearly straight, the thumb out of the way.
 const OPEN: Shape = &[
@@ -82,18 +87,18 @@ const SHAKE: Shape = &[
 const SPREAD_LEADER: Shape = &[
     ("palm_cup", 0.0),
     ("thumb.cmc_flex", -25.0), ("thumb.cmc_abd", -10.0), ("thumb.cmc_rot", 0.0), ("thumb.mcp_flex", 0.0), ("thumb.ip_flex", 0.0),
-    ("index.mcp_flex", -4.0), ("index.pip_flex", 0.0), ("index.dip_flex", 0.0), ("index.mcp_abd", 14.6), ("index.mcp_roll", 0.0),
-    ("middle.mcp_flex", -4.0), ("middle.pip_flex", 0.0), ("middle.dip_flex", 0.0), ("middle.mcp_abd", -2.2), ("middle.mcp_roll", 0.0),
-    ("ring.mcp_flex", -4.0), ("ring.pip_flex", 0.0), ("ring.dip_flex", 0.0), ("ring.mcp_abd", 19.0), ("ring.mcp_roll", 0.0),
-    ("pinky.mcp_flex", -4.0), ("pinky.pip_flex", 0.0), ("pinky.dip_flex", 0.0), ("pinky.mcp_abd", 34.8), ("pinky.mcp_roll", 0.0),
+    ("index.mcp_flex", 30.0), ("index.pip_flex", 40.0), ("index.dip_flex", 24.0), ("index.mcp_abd", 14.6), ("index.mcp_roll", 0.0),
+    ("middle.mcp_flex", 30.0), ("middle.pip_flex", 40.0), ("middle.dip_flex", 24.0), ("middle.mcp_abd", -2.2), ("middle.mcp_roll", 0.0),
+    ("ring.mcp_flex", 30.0), ("ring.pip_flex", 40.0), ("ring.dip_flex", 24.0), ("ring.mcp_abd", 19.0), ("ring.mcp_roll", 0.0),
+    ("pinky.mcp_flex", 30.0), ("pinky.pip_flex", 40.0), ("pinky.dip_flex", 24.0), ("pinky.mcp_abd", 34.8), ("pinky.mcp_roll", 0.0),
 ];
 const SPREAD_FOLLOWER: Shape = &[
     ("palm_cup", 0.0),
     ("thumb.cmc_flex", -25.0), ("thumb.cmc_abd", -10.0), ("thumb.cmc_rot", 0.0), ("thumb.mcp_flex", 0.0), ("thumb.ip_flex", 0.0),
-    ("index.mcp_flex", -4.0), ("index.pip_flex", 0.0), ("index.dip_flex", 0.0), ("index.mcp_abd", 25.0), ("index.mcp_roll", 0.0),
-    ("middle.mcp_flex", -4.0), ("middle.pip_flex", 0.0), ("middle.dip_flex", 0.0), ("middle.mcp_abd", 8.2), ("middle.mcp_roll", 0.0),
-    ("ring.mcp_flex", -4.0), ("ring.pip_flex", 0.0), ("ring.dip_flex", 0.0), ("ring.mcp_abd", 8.6), ("ring.mcp_roll", 0.0),
-    ("pinky.mcp_flex", -4.0), ("pinky.pip_flex", 0.0), ("pinky.dip_flex", 0.0), ("pinky.mcp_abd", 24.4), ("pinky.mcp_roll", 0.0),
+    ("index.mcp_flex", 30.0), ("index.pip_flex", 40.0), ("index.dip_flex", 24.0), ("index.mcp_abd", 25.0), ("index.mcp_roll", 0.0),
+    ("middle.mcp_flex", 30.0), ("middle.pip_flex", 40.0), ("middle.dip_flex", 24.0), ("middle.mcp_abd", 8.2), ("middle.mcp_roll", 0.0),
+    ("ring.mcp_flex", 30.0), ("ring.pip_flex", 40.0), ("ring.dip_flex", 24.0), ("ring.mcp_abd", 8.6), ("ring.mcp_roll", 0.0),
+    ("pinky.mcp_flex", 30.0), ("pinky.pip_flex", 40.0), ("pinky.dip_flex", 24.0), ("pinky.mcp_abd", 24.4), ("pinky.mcp_roll", 0.0),
 ];
 
 /// Flat and spread, the fingers a little back: a high five.
@@ -115,14 +120,33 @@ const FIST: Shape = &[
     ("pinky.mcp_abd", 0.0), ("pinky.mcp_flex", 85.0), ("pinky.pip_flex", 88.0), ("pinky.dip_flex", 58.0), ("pinky.mcp_roll", 0.0),
 ];
 
-/// A fist with the pinky out, to hook.
-const PINKY_OUT: Shape = &[
-    ("palm_cup", 3.7),
-    ("thumb.cmc_abd", 44.9), ("thumb.cmc_flex", 3.0), ("thumb.cmc_rot", 48.7), ("thumb.mcp_flex", 48.6), ("thumb.ip_flex", 23.9),
-    ("index.mcp_abd", 0.0), ("index.mcp_flex", 82.0), ("index.pip_flex", 92.0), ("index.dip_flex", 61.0), ("index.mcp_roll", 0.0),
-    ("middle.mcp_abd", 0.0), ("middle.mcp_flex", 86.0), ("middle.pip_flex", 96.0), ("middle.dip_flex", 64.0), ("middle.mcp_roll", 0.0),
-    ("ring.mcp_abd", -1.1), ("ring.mcp_flex", 83.4), ("ring.pip_flex", 99.9), ("ring.dip_flex", 73.1), ("ring.mcp_roll", 0.0),
-    ("pinky.mcp_abd", 10.0), ("pinky.mcp_flex", 10.0), ("pinky.pip_flex", 10.0), ("pinky.dip_flex", 5.0), ("pinky.mcp_roll", 0.0),
+/// A loose fist, the thumb over the index, the pinky out and bent to hook.
+const PINKY_HOOK: Shape = &[
+    ("palm_cup", 8.0),
+    ("thumb.cmc_flex", 3.0), ("thumb.cmc_abd", 45.0), ("thumb.cmc_rot", 48.0), ("thumb.mcp_flex", 30.0), ("thumb.ip_flex", 10.0),
+    ("index.mcp_abd", 0.0), ("index.mcp_flex", 80.0), ("index.pip_flex", 95.0), ("index.dip_flex", 58.0), ("index.mcp_roll", 0.0),
+    ("middle.mcp_abd", 0.0), ("middle.mcp_flex", 83.0), ("middle.pip_flex", 97.0), ("middle.dip_flex", 60.0), ("middle.mcp_roll", 0.0),
+    ("ring.mcp_abd", 0.0), ("ring.mcp_flex", 85.0), ("ring.pip_flex", 98.0), ("ring.dip_flex", 60.0), ("ring.mcp_roll", 0.0),
+    ("pinky.mcp_abd", 0.0), ("pinky.mcp_flex", 10.0), ("pinky.pip_flex", 80.0), ("pinky.dip_flex", 45.0), ("pinky.mcp_roll", 0.0),
+];
+
+/// Holding hands side by side: the inner hand's fingers a little bent, its thumb lifted to come
+/// over the other hand; the outer hand's fingers curved to wrap round the inner hand's edge.
+const CUP_INNER: Shape = &[
+    ("palm_cup", 6.0),
+    ("thumb.cmc_flex", -30.0), ("thumb.cmc_abd", -5.0), ("thumb.cmc_rot", 0.0), ("thumb.mcp_flex", 0.0), ("thumb.ip_flex", 0.0),
+    ("index.mcp_flex", 15.0), ("index.pip_flex", 20.0), ("index.dip_flex", 10.0), ("index.mcp_abd", 0.0), ("index.mcp_roll", 0.0),
+    ("middle.mcp_flex", 15.0), ("middle.pip_flex", 20.0), ("middle.dip_flex", 10.0), ("middle.mcp_abd", 0.0), ("middle.mcp_roll", 0.0),
+    ("ring.mcp_flex", 15.0), ("ring.pip_flex", 20.0), ("ring.dip_flex", 10.0), ("ring.mcp_abd", 0.0), ("ring.mcp_roll", 0.0),
+    ("pinky.mcp_flex", 15.0), ("pinky.pip_flex", 20.0), ("pinky.dip_flex", 10.0), ("pinky.mcp_abd", 0.0), ("pinky.mcp_roll", 0.0),
+];
+const CUP_OUTER: Shape = &[
+    ("palm_cup", 10.0),
+    ("thumb.cmc_flex", -5.0), ("thumb.cmc_abd", 25.0), ("thumb.cmc_rot", 15.0), ("thumb.mcp_flex", 15.0), ("thumb.ip_flex", 15.0),
+    ("index.mcp_flex", 10.0), ("index.pip_flex", 40.0), ("index.dip_flex", 20.0), ("index.mcp_abd", 0.0), ("index.mcp_roll", 0.0),
+    ("middle.mcp_flex", 10.0), ("middle.pip_flex", 40.0), ("middle.dip_flex", 20.0), ("middle.mcp_abd", 0.0), ("middle.mcp_roll", 0.0),
+    ("ring.mcp_flex", 10.0), ("ring.pip_flex", 40.0), ("ring.dip_flex", 20.0), ("ring.mcp_abd", 0.0), ("ring.mcp_roll", 0.0),
+    ("pinky.mcp_flex", 10.0), ("pinky.pip_flex", 40.0), ("pinky.dip_flex", 20.0), ("pinky.mcp_abd", 0.0), ("pinky.mcp_roll", 0.0),
 ];
 
 const STYLES: &[Style] = &[
@@ -130,77 +154,120 @@ const STYLES: &[Style] = &[
     // the other's pinky edge, the thumb lies over the back of the other's hand.
     Style {
         name: "handshake",
-        same: Some(Offset { wrist: [0.044, 0.15, 0.03], palm: [0.0, 0.0, -1.0], fingers: [-0.643, -0.766, 0.0], forearm: [0.643, 0.766, 0.25] }),
+        same: Some(Hold {
+            wrist: [0.044, 0.15, 0.03], palm: [0.0, 0.0, -1.0], fingers: [-0.643, -0.766, 0.0], forearm: [0.643, 0.766, 0.25],
+            approach: Some([0.0, 0.0, 1.0]),
+            shape: [SHAKE, SHAKE],
+            close: [ALL, ALL],
+            lands: &[],
+            home: [[-0.075, 0.0, 0.0], [0.0, 0.0, -1.0], [1.0, -0.4, 0.0], [-1.0, 0.0, 0.25]],
+        }),
         other: None,
-        approach: Some([0.0, 0.0, 1.0]),
-        shape: [SHAKE, SHAKE],
-        close: [ALL, ALL],
-        onto: None,
-        home: [[-0.075, 0.0, 0.0], [0.0, 0.0, -1.0], [1.0, -0.4, 0.0], [-1.0, 0.0, 0.25]],
     },
     // A right and a left hand side by side, palms together and fingers pointing the same way,
     // every finger between two of the other's, curled over the back of the other's hand.
     Style {
         name: "interlaced",
         same: None,
-        other: Some(Offset { wrist: [0.01, -0.03, 0.03], palm: [0.0, 0.0, -1.0], fingers: [0.0, 1.0, 0.0], forearm: [0.0, -1.0, 0.6] }),
-        approach: Some([0.0, 0.0, 1.0]),
-        shape: [SPREAD_LEADER, SPREAD_FOLLOWER],
-        close: [ALL, ALL],
-        onto: None,
-        home: [[-0.013, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [-0.6, 1.0, 0.0]],
+        other: Some(Hold {
+            wrist: [0.01, 0.0, 0.045], palm: [0.0, 0.0, -1.0], fingers: [0.0, 1.0, 0.0], forearm: [0.0, -1.0, 0.6],
+            approach: None,
+            shape: [SPREAD_LEADER, SPREAD_FOLLOWER],
+            close: [ALL, ALL],
+            lands: &[
+                (0, "index.pad", 1, "middle.metacarpal"), (0, "middle.pad", 1, "ring.metacarpal"), (0, "ring.pad", 1, "pinky.metacarpal"), (0, "pinky.pad", 1, "pinky.metacarpal"),
+                (1, "index.pad", 0, "index.metacarpal"), (1, "middle.pad", 0, "middle.metacarpal"), (1, "ring.pad", 0, "ring.metacarpal"), (1, "pinky.pad", 0, "pinky.metacarpal"),
+                (0, "thumb.pad", 1, "index.metacarpal"), (1, "thumb.pad", 0, "index.metacarpal"),
+            ],
+            home: HANG,
+        }),
     },
     // One hand wraps the other without interlacing. Right with right: the first, palm up,
     // cradles the second's fingers and closes over them, its thumb on the back of the second's
     // knuckles; the second lies palm down across it, fingers draped. Right with left: holding
-    // hands side by side, palms together, the second's fingers crossing the first's at about
-    // 37 deg toward its pinky edge, each hand's fingers closed over the other's back.
+    // hands side by side, palm in palm, the second's fingers crossing the first's at 60 deg
+    // toward its pinky edge and curled round that edge onto its back, the second's thumb over
+    // the back of the first's index; the first's fingers close round the second's index edge.
     Style {
         name: "cupped",
-        same: Some(Offset { wrist: [0.14, 0.046, 0.06], palm: [0.0, 0.0, -1.0], fingers: [-0.95, 0.15, -0.15], forearm: [0.95, -0.15, 0.15] }),
-        other: Some(Offset { wrist: [0.06, -0.01, 0.03], palm: [0.0, 0.0, -1.0], fingers: [-0.6, 0.8, 0.0], forearm: [0.5, -0.8, 0.5] }),
-        approach: Some([0.0, 0.0, 1.0]),
-        shape: [OPEN, OPEN],
-        close: [ALL, FINGERS],
-        onto: None,
-        home: [[-0.08, 0.0, 0.0], [0.0, 1.0, 0.0], [0.6, 0.0, -0.8], [-0.6, -0.1, 0.8]],
+        same: Some(Hold {
+            wrist: [0.14, 0.046, 0.06], palm: [0.0, 0.0, -1.0], fingers: [-0.95, 0.15, -0.15], forearm: [0.95, -0.15, 0.15],
+            approach: Some([0.0, 0.0, 1.0]),
+            shape: [OPEN, OPEN],
+            close: [ALL, FINGERS],
+            lands: &[],
+            home: [[-0.08, 0.0, 0.0], [0.0, 1.0, 0.0], [0.6, 0.0, -0.8], [-0.6, -0.1, 0.8]],
+        }),
+        other: Some(Hold {
+            wrist: [0.09, 0.02, 0.038], palm: [0.0, 0.0, -1.0], fingers: [-0.9397, 0.342, 0.0], forearm: [0.6, -0.6, 0.55],
+            approach: None,
+            shape: [CUP_INNER, CUP_OUTER],
+            close: [ALL, ALL],
+            lands: &[(1, "thumb.pad", 0, "index.metacarpal")],
+            home: HANG,
+        }),
     },
     // Palms slap flat, fingers up and spread: right with right (thumbs on opposite sides) or
     // right with left (thumbs on the same side).
     Style {
         name: "high_five",
-        same: Some(Offset { wrist: [0.0, 0.0, 0.03], palm: [0.0, 0.0, -1.0], fingers: [0.0, 1.0, 0.0], forearm: [0.0, -1.0, 0.5] }),
-        other: Some(Offset { wrist: [0.0, 0.0, 0.03], palm: [0.0, 0.0, -1.0], fingers: [0.0, 1.0, 0.0], forearm: [0.0, -1.0, 0.5] }),
-        approach: Some([0.0, 0.0, 1.0]),
-        shape: [SLAP, SLAP],
-        close: [&[], &[]],
-        onto: None,
-        home: [[-0.013, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [-0.5, -1.0, 0.0]],
+        same: Some(Hold {
+            wrist: [0.0, 0.0, 0.03], palm: [0.0, 0.0, -1.0], fingers: [0.0, 1.0, 0.0], forearm: [0.0, -1.0, 0.5],
+            approach: Some([0.0, 0.0, 1.0]),
+            shape: [SLAP, SLAP],
+            close: [&[], &[]],
+            lands: &[],
+            home: [[-0.013, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [-0.5, -1.0, 0.0]],
+        }),
+        other: Some(Hold {
+            wrist: [0.0, 0.0, 0.03], palm: [0.0, 0.0, -1.0], fingers: [0.0, 1.0, 0.0], forearm: [0.0, -1.0, 0.5],
+            approach: Some([0.0, 0.0, 1.0]),
+            shape: [SLAP, SLAP],
+            close: [&[], &[]],
+            lands: &[],
+            home: [[-0.013, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [-0.5, -1.0, 0.0]],
+        }),
     },
     // Two fists meet knuckles to knuckles, thumbs on the same side.
     Style {
         name: "fist_bump",
-        same: Some(Offset { wrist: [0.0, 0.21, 0.046], palm: [0.0, 0.0, -1.0], fingers: [0.0, -1.0, 0.0], forearm: [0.0, 1.0, 0.0] }),
-        other: Some(Offset { wrist: [0.0, 0.21, 0.0], palm: [0.0, 0.0, 1.0], fingers: [0.0, -1.0, 0.0], forearm: [0.0, 1.0, 0.0] }),
-        approach: Some([0.0, 1.0, 0.0]),
-        shape: [FIST, FIST],
-        close: [&[], &[]],
-        onto: None,
-        home: [[-0.105, 0.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]],
+        same: Some(Hold {
+            wrist: [0.0, 0.21, 0.046], palm: [0.0, 0.0, -1.0], fingers: [0.0, -1.0, 0.0], forearm: [0.0, 1.0, 0.0],
+            approach: Some([0.0, 1.0, 0.0]),
+            shape: [FIST, FIST],
+            close: [&[], &[]],
+            lands: &[],
+            home: [[-0.105, 0.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]],
+        }),
+        other: Some(Hold {
+            wrist: [0.0, 0.21, 0.0], palm: [0.0, 0.0, 1.0], fingers: [0.0, -1.0, 0.0], forearm: [0.0, 1.0, 0.0],
+            approach: Some([0.0, 1.0, 0.0]),
+            shape: [FIST, FIST],
+            close: [&[], &[]],
+            lands: &[],
+            home: [[-0.105, 0.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]],
+        }),
     },
-    // Pinky promise: two right hands, fists with the pinkies out, the pinkies crossed and
-    // curled around each other.
+    // Pinky promise: two right hands in loose fists, thumbs up and resting on the index, the
+    // follower turned half round about a line across the pinkies (crossing at 20 deg) and
+    // 1.6 cm lower, each pinky bent into a hook round the other's middle segment.
     Style {
         name: "pinky",
-        same: Some(Offset { wrist: [-0.06, 0.2, 0.03], palm: [0.0, 0.0, -1.0], fingers: [0.5, -0.866, 0.0], forearm: [-0.5, 0.866, 0.0] }),
+        same: Some(Hold {
+            wrist: [-0.0556, 0.2228, 0.04], palm: [0.0, 0.0, -1.0], fingers: [0.342, -0.9397, 0.0], forearm: [-0.342, 0.9397, 0.0],
+            approach: None,
+            shape: [PINKY_HOOK, PINKY_HOOK],
+            close: [THUMB_PINKY, THUMB_PINKY],
+            lands: &[(0, "pinky.distal", 1, "pinky.middle"), (1, "pinky.distal", 0, "pinky.middle"), (0, "thumb.pad", 0, "index.middle"), (1, "thumb.pad", 1, "index.middle")],
+            home: [[-0.08, 0.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]],
+        }),
         other: None,
-        approach: None,
-        shape: [PINKY_OUT, PINKY_OUT],
-        close: [PINKY, PINKY],
-        onto: Some(Digit::Pinky),
-        home: [[-0.08, 0.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]],
     },
 ];
+
+/// A right leader hanging at the side, palm toward the other person, thumb forward: walking
+/// hand in hand.
+const HANG: [[f64; 3]; 4] = [[-0.013, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [-0.6, 1.0, 0.0]];
 
 pub const NAMES: [&str; 6] = ["handshake", "interlaced", "cupped", "high_five", "fist_bump", "pinky"];
 
@@ -209,6 +276,7 @@ pub const NAMES: [&str; 6] = ["handshake", "interlaced", "cupped", "high_five", 
 struct Grip {
     ids: [HandId; 2],
     style: &'static Style,
+    hold: &'static Hold,
     offset: DAffine3,
     forearm: DVec3,
 }
@@ -222,8 +290,8 @@ impl Grip {
         }
         let name = goal.style.as_deref().ok_or_else(|| format!("grip [{a}, {b}] needs \"style\": one of {}", NAMES.join(", ")))?;
         let style = STYLES.iter().find(|s| s.name == name).ok_or_else(|| format!("grip style \"{name}\": use one of {}", NAMES.join(", ")))?;
-        let off = if la.side == lb.side { style.same } else { style.other };
-        let Some(o) = off else {
+        let hold = if la.side == lb.side { &style.same } else { &style.other };
+        let Some(o) = hold else {
             let want = if style.same.is_some() { "two right hands or two left hands" } else { "a right and a left hand" };
             return Err(format!("grip {name} [{a}, {b}]: this style joins {want}"));
         };
@@ -235,7 +303,7 @@ impl Grip {
             offset = m * offset * m;
             forearm.x = -forearm.x;
         }
-        Ok(Grip { ids: [la, lb], style, offset, forearm })
+        Ok(Grip { ids: [la, lb], style, hold: o, offset, forearm })
     }
 
     fn label(&self) -> String {
@@ -252,7 +320,7 @@ pub fn pair(goal: &Goal) -> Option<(HandId, HandId)> {
 /// The digits each hand of a grip closes (leader, follower), by name.
 pub fn closing(goal: &Goal) -> Result<[Vec<&'static str>; 2], String> {
     let g = Grip::of(goal)?;
-    Ok(g.style.close.map(|ds| ds.iter().map(|d| d.name()).collect()))
+    Ok(g.hold.close.map(|ds| ds.iter().map(|d| d.name()).collect()))
 }
 
 /// A hand frame from a placement: x = y cross z, y along the fingers, z out of the palm.
@@ -293,9 +361,9 @@ fn joints(d: Digit) -> Vec<(String, f64, usize)> {
     }
 }
 
-/// The gap (m) from a capsule to the nearest part of `other` (of one digit, with `onto`).
-fn nearest(c: &Capsule, other: &HandGeom, onto: Option<Digit>) -> f64 {
-    other.capsules.iter().filter(|o| onto.is_none_or(|d| o.digit == Some(d))).map(|o| gap(c, o)).fold(f64::INFINITY, f64::min)
+/// The gap (m) from a capsule to the nearest part of `other`.
+fn nearest(c: &Capsule, other: &HandGeom) -> f64 {
+    other.capsules.iter().map(|o| gap(c, o)).fold(f64::INFINITY, f64::min)
 }
 
 /// The deepest overlap between two hands' parts (m, negative; 0 when none) and its pair.
@@ -320,10 +388,24 @@ pub fn evaluate(goal: &Goal, s: &Solved) -> Result<(Vec<f64>, GoalStatus), Strin
     let mut res = Vec::new();
     let mut per: [Vec<String>; 2] = [Vec::new(), Vec::new()];
     let mut worst = 0.0_f64;
+    let mut lands_met = true;
     for who in 0..2 {
-        for d in g.style.close[who] {
+        for d in g.hold.close[who] {
+            if let Some(&(_, site, other, onto)) = g.hold.lands.iter().find(|l| l.0 == who && l.1.split('.').next() == Some(d.name())) {
+                // A contact the style names: the digit lands there, like a touch goal.
+                let touch = Goal { touch: Some([format!("{}.{site}", g.ids[who]), format!("{}.{onto}", g.ids[other])]), ..Goal::default() };
+                let (r, st) = crate::goals::evaluate(&touch, s)?;
+                res.extend(r);
+                lands_met &= st.met;
+                if st.value.abs() > worst.abs() {
+                    worst = st.value;
+                }
+                let at = if other == who { onto.to_string() } else { format!("{}.{onto}", g.ids[other]) };
+                per[who].push(format!("{} {:.1} on {at}", d.name(), st.value));
+                continue;
+            }
             let tip = *segments(hands[who], *d).last().unwrap();
-            let mm = nearest(tip, hands[1 - who], g.style.onto) * 1000.0;
+            let mm = nearest(tip, hands[1 - who]) * 1000.0;
             res.push(mm / 1000.0);
             if mm.abs() > worst.abs() {
                 worst = mm;
@@ -331,14 +413,14 @@ pub fn evaluate(goal: &Goal, s: &Solved) -> Result<(Vec<f64>, GoalStatus), Strin
             per[who].push(format!("{} {mm:.1}", d.name()));
         }
     }
-    let touch = hands[0].capsules.iter().map(|c| nearest(c, hands[1], None)).fold(f64::INFINITY, f64::min) * 1000.0;
+    let touch = hands[0].capsules.iter().map(|c| nearest(c, hands[1])).fold(f64::INFINITY, f64::min) * 1000.0;
     res.push(touch.max(0.0) / 1000.0);
     if touch.max(0.0) > worst.abs() {
         worst = touch;
     }
     let (overlap, pair) = deepest(hands[0], hands[1]);
     let overlap_mm = -overlap * 1000.0;
-    let met = worst.abs() <= TOUCH_TOL_MM && overlap_mm <= PENETRATION_MM;
+    let met = lands_met && worst.abs() <= TOUCH_TOL_MM && overlap_mm <= PENETRATION_MM;
     let mut notes = Vec::new();
     for who in 0..2 {
         if !per[who].is_empty() {
@@ -359,7 +441,7 @@ pub fn vary(goal: &Goal) -> Result<Vec<String>, String> {
     let g = Grip::of(goal)?;
     let mut out: Vec<String> = Vec::new();
     for who in 0..2 {
-        for d in g.style.close[who] {
+        for d in g.hold.close[who] {
             out.push(format!("{}.{}.*", g.ids[who], d.name()));
         }
     }
@@ -424,7 +506,7 @@ fn first_hit(s: &Solved, ids: &[HandId; 2], who: usize, d: Digit) -> Result<Opti
     let (own, other) = (hand(s, &ids[who])?, hand(s, &ids[1 - who])?);
     for (i, c) in segments(own, d).into_iter().enumerate() {
         let mine = own.capsules.iter().filter(|o| o.digit != Some(d) && crate::query::collides(c, o)).map(|o| gap(c, o)).fold(f64::INFINITY, f64::min);
-        if nearest(c, other, None).min(mine) < 0.0 {
+        if nearest(c, other).min(mine) < 0.0 {
             return Ok(Some(i));
         }
     }
@@ -440,7 +522,7 @@ const STEP: f64 = 2.0;
 fn close_digits(work: &mut Value, g: &Grip) -> Result<(), String> {
     let names = [g.ids[0].name(), g.ids[1].name()];
     // (hand, digit, joints frozen from the base)
-    let mut runs: Vec<(usize, Digit, usize)> = (0..2).flat_map(|who| g.style.close[who].iter().map(move |d| (who, *d, 0))).collect();
+    let mut runs: Vec<(usize, Digit, usize)> = (0..2).flat_map(|who| g.hold.close[who].iter().map(move |d| (who, *d, 0))).collect();
     let limit = |k: &str| params::find(k).map(|p| (p.min, p.max)).unwrap();
     for _ in 0..(200.0 / STEP) as usize {
         let mut moving = false;
@@ -497,39 +579,43 @@ pub fn prepare(raw: &Value) -> Result<Value, String> {
         let g = Grip::of(&goal)?;
         let names = [g.ids[0].name(), g.ids[1].name()];
         for (who, name) in names.iter().enumerate() {
-            for (key, x) in g.style.shape[who] {
+            for (key, x) in g.hold.shape[who] {
                 set_value(&mut work, name, key, *x);
             }
         }
         let (resolved, _) = crate::pose::resolve(work.clone())?;
         let (pa, pb) = (placed(&work, &resolved, &names[0]), placed(&work, &resolved, &names[1]));
         if !pa && !pb {
-            let [w, p, f, a] = g.style.home;
+            let [w, p, f, a] = g.hold.home;
             let x = if g.ids[0].side == Side::Left { -1.0 } else { 1.0 };
             let m = |v: [f64; 3]| json!([v[0] * x, v[1], v[2]]);
             set_place(&mut work, &names[0], json!({ "wrist": m(w), "palm_facing": m(p), "fingers_toward": m(f), "forearm_toward": m(a) }));
         }
         let s = crate::solve_value(&work)?;
+        // The style's offset is for two hands of the default size; for a smaller or larger
+        // person's hand the follower sits nearer or farther, by the two hands' mean size.
+        let mut offset = g.offset;
+        offset.translation *= (hand(&s, &g.ids[0])?.scale + hand(&s, &g.ids[1])?.scale) / 2.0;
         // Where the follower goes, moved `d` back along the approach.
-        let put: Box<dyn Fn(&mut Value, f64)> =if pa || !pb {
+        let put: Box<dyn Fn(&mut Value, f64)> = if pa || !pb {
             let l = hand_frame(hand(&s, &g.ids[0])?);
-            let (off, fore) = (g.offset, l.transform_vector3(g.forearm));
-            let back = l.transform_vector3(DVec3::from(g.style.approach.unwrap_or([0.0; 3])));
+            let (off, fore) = (offset, l.transform_vector3(g.forearm));
+            let back = l.transform_vector3(DVec3::from(g.hold.approach.unwrap_or([0.0; 3])));
             let name = names[1].clone();
             Box::new(move |w: &mut Value, d: f64| set_place(w, &name, place_value(DAffine3::from_translation(back * d) * l * off, fore)))
         } else {
             // Only the follower is placed: the leader goes where the follower's frame needs it,
             // its forearm straight back from the hand.
             let f = hand_frame(hand(&s, &g.ids[1])?);
-            let l = f * g.offset.inverse();
-            let back = l.transform_vector3(DVec3::from(g.style.approach.unwrap_or([0.0; 3])));
+            let l = f * offset.inverse();
+            let back = l.transform_vector3(DVec3::from(g.hold.approach.unwrap_or([0.0; 3])));
             let name = names[0].clone();
             Box::new(move |w: &mut Value, d: f64| {
                 let moved = DAffine3::from_translation(-back * d) * l;
                 set_place(w, &name, place_value(moved, moved.transform_vector3(DVec3::NEG_Y)))
             })
         };
-        if g.style.approach.is_some() {
+        if g.hold.approach.is_some() {
             // Slide in from 6 cm back until the hands touch.
             let (mut near, mut far) = (-0.05, 0.06);
             put(&mut work, far);

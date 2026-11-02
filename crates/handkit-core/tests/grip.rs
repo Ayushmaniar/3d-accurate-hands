@@ -38,6 +38,113 @@ fn every_style_closes_without_penetrating() {
     }
 }
 
+fn hand<'a>(s: &'a handkit_core::Solved, id: &str) -> &'a handkit_core::rig::HandGeom {
+    s.hands.iter().find(|h| h.id.name() == id).unwrap()
+}
+
+fn value(s: &handkit_core::Solved, id: &str, key: &str) -> f64 {
+    let hp = s.pose.hands.0.iter().find(|(h, _)| h.name() == id).unwrap().1.clone();
+    let v = serde_json::to_value(hp).unwrap();
+    key.split('.').fold(&v, |v, k| &v[k]).as_f64().unwrap_or(0.0)
+}
+
+/// Where a point is in a hand's frame: z > 0 off its palm, z < 0 behind its back.
+fn in_frame(h: &handkit_core::rig::HandGeom, p: glam::DVec3) -> glam::DVec3 {
+    grip::hand_frame(h).inverse().transform_point3(p)
+}
+
+fn tip(h: &handkit_core::rig::HandGeom, digit: &str) -> glam::DVec3 {
+    h.sites.iter().find(|s| s.name == format!("{}.{digit}.tip", h.name)).unwrap().pos
+}
+
+const FOUR: [&str; 4] = ["index", "middle", "ring", "pinky"];
+
+#[test]
+fn interlaced_fingers_alternate_and_wrap_the_backs() {
+    let s = solved("ana.right", "ben.left", "interlaced");
+    let (a, b) = (hand(&s, "ana.right"), hand(&s, "ben.left"));
+    // Every fingertip ends behind the other hand's palm, over its back.
+    for (own, other) in [(a, b), (b, a)] {
+        for d in FOUR {
+            let z = in_frame(other, tip(own, d)).z;
+            assert!(z < 0.0, "{}.{d} tip is {:.1} mm off {}'s palm, not over its back", own.name, z * 1000.0, other.name);
+        }
+    }
+    // Across the hands (from the thumbs), the proximal segments alternate: ben's index, ana's
+    // index, ben's middle, ana's middle, ...
+    let mut order: Vec<(f64, String)> = [a, b]
+        .iter()
+        .flat_map(|h| h.capsules.iter().filter(|c| c.part != "thumb" && c.seg == handkit_core::rig::Seg::Proximal).map(move |c| (in_frame(a, (c.a + c.b) / 2.0).x, h.name.to_string())))
+        .collect();
+    order.sort_by(|x, y| y.0.total_cmp(&x.0));
+    let who: Vec<&str> = order.iter().map(|(_, n)| if n.starts_with("ana") { "a" } else { "b" }).collect();
+    assert_eq!(who.concat(), "babababa", "{order:?}");
+    // Both thumbs lie over the other hand's back.
+    for (own, other) in [(a, b), (b, a)] {
+        assert!(in_frame(other, tip(own, "thumb")).z < 0.0, "{} thumb", own.name);
+    }
+}
+
+#[test]
+fn cupped_side_by_side_wraps_the_inner_hand() {
+    let s = solved("ana.right", "ben.left", "cupped");
+    let (a, b) = (hand(&s, "ana.right"), hand(&s, "ben.left"));
+    // The outer (follower) hand's fingers curl round the inner hand's edge onto its back...
+    let behind = FOUR.iter().filter(|d| in_frame(a, tip(b, d)).z < 0.0).count();
+    assert!(behind >= 3, "{behind} of ben's fingertips over ana's back");
+    // ...and its thumb closes over the back of the inner hand too, not left open.
+    assert!(in_frame(a, tip(b, "thumb")).z < 0.0);
+    assert!(value(&s, "ben.left", "thumb.mcp_flex") + value(&s, "ben.left", "thumb.ip_flex") > 25.0);
+}
+
+#[test]
+fn pinky_promise_hooks_both_pinkies() {
+    let s = solved("ana.right", "ben.right", "pinky");
+    for h in ["ana.right", "ben.right"] {
+        // Each pinky is bent into a hook, the other fingers curled into a fist.
+        assert!(value(&s, h, "pinky.pip_flex") > 60.0, "{h} pinky pip {}", value(&s, h, "pinky.pip_flex"));
+        for d in ["index", "middle", "ring"] {
+            assert!(value(&s, h, &format!("{d}.mcp_flex")) > 60.0 && value(&s, h, &format!("{d}.pip_flex")) > 80.0, "{h} {d}");
+        }
+    }
+    // The pinkies cross: each one's tip ends on the far side of the other's middle segment.
+    let g = &s.query().unwrap().goals[0];
+    assert!(g.line().contains("pinky -0.0 on") || g.line().contains("pinky 0.0 on"), "{}", g.line());
+}
+
+#[test]
+fn a_child_and_an_adult_shake_hands() {
+    let pose = json!({
+        "version": 1,
+        "hands": { "ana.right": {}, "mia.right": {} },
+        "people": { "mia": { "scale": 0.75 } },
+        "goals": [{ "grip": ["ana.right", "mia.right"], "style": "handshake" }],
+    });
+    let (v, _) = handkit_core::solve::solve_goals(&pose).unwrap();
+    let s = solve_value(&v).unwrap();
+    let q = s.query().unwrap();
+    assert!(q.goals[0].met, "{}", q.goals[0].line());
+    assert!(q.penetrations.is_empty() && q.violations.is_empty());
+    // The child's hand is three quarters the size: segments, thickness and the forearm.
+    let len = |h: &str, part: &str| {
+        let c = hand(&s, h).capsules.iter().find(|c| c.label() == format!("{h}.{part}")).unwrap();
+        (c.a.distance(c.b), c.r)
+    };
+    for part in ["middle.proximal", "thumb.distal", "forearm"] {
+        let ((la, ra), (lm, rm)) = (len("ana.right", part), len("mia.right", part));
+        assert!((lm / la - 0.75).abs() < 1e-6 && (rm / ra - 0.75).abs() < 1e-6, "{part}");
+    }
+    // A mesh adapter gets the size on the root joint, the rest as the default hand's.
+    let bones = s.bones();
+    assert_eq!(bones["hands"]["mia.right"]["joints"]["forearm_R"]["s"], json!(0.75));
+    assert!(bones["hands"]["ana.right"]["joints"]["forearm_R"].get("s").is_none());
+    assert_eq!(bones["hands"]["mia.right"]["joints"]["index_pip_R"]["t"], bones["hands"]["ana.right"]["joints"]["index_pip_R"]["t"]);
+    // A scale out of range is refused.
+    let mut bad = pose.clone();
+    bad["people"]["mia"]["scale"] = json!(3.0);
+    assert!(handkit_core::solve::solve_goals(&bad).err().unwrap().contains("scale"));
+}
+
 #[test]
 fn a_grip_writes_editable_values() {
     let pose = json!({
