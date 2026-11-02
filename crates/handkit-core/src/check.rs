@@ -1,7 +1,7 @@
 //! `handkit check`: motion problems over a clip's frames, before anything is rendered.
 //! Held goals that come apart, fingers passing through each other mid-move, joints moving
 //! faster than a hand can, pops (a value jumping in one frame between calm frames) and hands
-//! leaving the camera's view.
+//! leaving the camera's view; and, as information, joints held at a limit.
 
 use glam::DVec3;
 use serde_json::Value;
@@ -74,23 +74,17 @@ fn values(pose: &Value, side: &str) -> Option<(Vec<f64>, DVec3)> {
 
 /// Projects a point with a pose camera ({position, target, fov}); x and y in [-1, 1] are in view.
 fn project(cam: &Value, aspect: f64, p: DVec3) -> Option<(f64, f64)> {
-    let a = |k: &str| -> Option<DVec3> {
-        let v = cam.get(k)?.as_array()?;
-        Some(DVec3::new(v.first()?.as_f64()?, v.get(1)?.as_f64()?, v.get(2)?.as_f64()?))
-    };
-    let (pos, target) = (a("position")?, a("target")?);
-    let fov = cam.get("fov").and_then(Value::as_f64).unwrap_or(35.0).to_radians();
-    let f = (target - pos).normalize();
-    let r = f.cross(DVec3::Y).normalize();
-    let u = r.cross(f);
-    let d = p - pos;
-    let z = d.dot(f);
+    let v = crate::pose::View::of(cam)?;
+    let d = p - v.pos;
+    let z = d.dot(v.f);
     if z <= 0.01 {
         return Some((9.0, 9.0));
     }
-    let k = 1.0 / (fov / 2.0).tan();
-    Some((d.dot(r) / z * k / aspect, d.dot(u) / z * k))
+    Some((d.dot(v.r) / z * v.k / aspect, d.dot(v.u) / z * v.k))
 }
+
+/// Frames, deepest overlap (mm), its time and pair, and every pair of parts.
+type HandsOverlap = (Vec<bool>, f64, f64, String, std::collections::BTreeSet<String>);
 
 pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<CheckReport, String> {
     let times: Vec<f64> = frames.iter().map(|f| f.0).collect();
@@ -99,7 +93,10 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
 
     // Per-frame geometry: goals, penetrations, framing.
     let mut goal_miss: std::collections::BTreeMap<String, (Vec<bool>, f64, f64)> = Default::default();
-    let mut pen: std::collections::BTreeMap<String, (Vec<bool>, f64)> = Default::default();
+    let mut pen: std::collections::BTreeMap<String, (Vec<bool>, f64, f64)> = Default::default();
+    // The two hands overlapping, per move (by the keys either side): the frames, the deepest
+    // overlap, when and between which parts, and every pair of parts.
+    let mut cross: std::collections::BTreeMap<(usize, String), HandsOverlap> = Default::default();
     let mut out_of_view: std::collections::BTreeMap<String, (Vec<bool>, f64)> = Default::default();
     let mut arm_end = vec![false; frames.len()];
     let mut site_tracks: std::collections::BTreeMap<String, Vec<DVec3>> = Default::default();
@@ -119,9 +116,22 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
             }
         }
         for p in &report.penetrations {
-            let e = pen.entry(format!("{} x {}", p.a, p.b)).or_insert((vec![false; frames.len()], 0.0));
+            let pair = format!("{} x {}", p.a, p.b);
+            if p.a.split('.').next() != p.b.split('.').next() {
+                let k = clip.keys_around(frames[i].0);
+                let e = cross.entry((clip.key_before(frames[i].0), k)).or_insert((vec![false; frames.len()], 0.0, 0.0, String::new(), Default::default()));
+                e.0[i] = true;
+                if p.gap_mm < e.1 {
+                    (e.1, e.2, e.3) = (p.gap_mm, frames[i].0, pair.clone());
+                }
+                e.4.insert(pair);
+                continue;
+            }
+            let e = pen.entry(pair).or_insert((vec![false; frames.len()], 0.0, 0.0));
             e.0[i] = true;
-            e.1 = e.1.min(p.gap_mm);
+            if p.gap_mm < e.1 {
+                (e.1, e.2) = (p.gap_mm, frames[i].0);
+            }
         }
         if let Some(cam) = pose.get("camera") {
             for (name, p) in &report.tips {
@@ -163,12 +173,22 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
             lines.push(format!("goal {label}: held"));
         }
     }
-    if pen.is_empty() {
+    if pen.is_empty() && cross.is_empty() {
         lines.push("penetrations: none".into());
     }
-    for (pair, (hit, deepest)) in &pen {
+    for (pair, (hit, deepest, at)) in &pen {
         problems += 1;
-        lines.push(format!("penetration {pair}: {} (deepest {:.1} mm)", ranges(&times, hit), -deepest));
+        lines.push(format!("penetration {pair}: {} (deepest {:.1} mm at {at:.2} s, {})", ranges(&times, hit), -deepest, clip.keys_around(*at)));
+    }
+    for ((_, keys), (hit, deepest, at, pair, pairs)) in &cross {
+        problems += 1;
+        lines.push(format!(
+            "penetration of the hands, {keys}: {} ({} {}; deepest {:.1} mm, {pair} at {at:.2} s)",
+            ranges(&times, hit),
+            pairs.len(),
+            if pairs.len() == 1 { "pair of parts" } else { "pairs of parts" },
+            -deepest
+        ));
     }
 
     // Speeds and pops from the joint values.
@@ -212,6 +232,35 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
             }
         }
     }
+    // Joints held at a limit (information: the pose asks for more than the joint allows, and
+    // the clip eases it to the limit).
+    for side in ["right", "left"] {
+        let tracks: Vec<Vec<f64>> = frames.iter().filter_map(|f| values(&f.1.pose, side).map(|v| v.0)).collect();
+        if tracks.len() != frames.len() {
+            continue;
+        }
+        for (j, p) in PARAMS.iter().enumerate() {
+            for (limit, name) in [(p.min, "min"), (p.max, "max")] {
+                let near: Vec<bool> = tracks.iter().map(|v| (v[j] - limit).abs() <= 1.0).collect();
+                // Only runs longer than 0.3 s.
+                let mut long = vec![false; near.len()];
+                let mut i = 0;
+                while i < near.len() {
+                    let a = i;
+                    while i < near.len() && near[i] {
+                        i += 1;
+                    }
+                    if i > a && (i - a) as f64 * dt > 0.3 {
+                        long[a..i].fill(true);
+                    }
+                    i = i.max(a + 1);
+                }
+                if long.iter().any(|x| *x) {
+                    lines.push(format!("at limit: {side}.{} at its {name} {limit} in {}", p.key, ranges(&times, &long)));
+                }
+            }
+        }
+    }
     // A pop: one frame's step is much bigger than both neighbours' and visibly large.
     let mut pops = Vec::new();
     for (name, track) in &site_tracks {
@@ -222,7 +271,7 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
         for i in 1..step.len().saturating_sub(1) {
             let calm = step[i - 1].max(step[i + 1]);
             if step[i] > 4.0 && step[i] > 3.0 * calm {
-                pops.push(format!("{name} jumps {:.1} mm at {:.2} s", step[i], times[i + 1]));
+                pops.push(format!("{name} jumps {:.1} mm at {:.2} s ({})", step[i], times[i + 1], clip.keys_around(times[i + 1])));
             }
         }
     }

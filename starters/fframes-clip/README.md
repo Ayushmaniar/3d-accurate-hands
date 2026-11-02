@@ -10,7 +10,9 @@ CARGO_TARGET_DIR=target-portrait cargo build --release --features portrait   # 1
 ```
 
 On Windows, fframes links FFmpeg: set `FFMPEG_DIR` and `LIBCLANG_PATH` (for example in a
-git-ignored `.cargo/config.toml`) and put FFmpeg's `bin` on `PATH`.
+git-ignored `.cargo/config.toml`) and put FFmpeg's `bin` on `PATH` for the build. `build.rs`
+copies FFmpeg's DLLs next to the binary, so it runs from any shell; without them Windows stops
+it before it prints anything (even `--help`).
 
 ```bash
 fframes-clip --clip clip.json --assets ../../assets strip -n 12       # strip.png
@@ -20,8 +22,11 @@ fframes-clip --clip clip.json --assets ../../assets render -o out.mp4
 
 - `--assets` is a folder with `hand_R.glb` and `hand_L.glb` (`handkit mesh`); without it the
   hands are generated at startup (about a second).
-- `--background "#2b2e33"` and `--spotlight 0.3,0.42,0.22,#e9b8b2` (x, y and radius as
-  fractions of the frame height, then the color) set the backdrop.
+- `--background "#2b2e33"` and `--spotlight 0.5,0.42,0.22,#e9b8b2` set the backdrop: the
+  spotlight is x as a fraction of the frame width (0 left, 1 right), y and radius as fractions
+  of its height (0 top), then the color. `handkit sheet clip.json --background "#2b2e33"`
+  draws a contact sheet on the same color.
+- `fframes-clip --help` lists these flags and the standard fframes commands.
 - The video runs at 30 fps; write clips at 30 fps.
 
 fframes is pinned to 1.3.0 with `fframes-media` 1.3.0: fframes 1.4.0 does not build against

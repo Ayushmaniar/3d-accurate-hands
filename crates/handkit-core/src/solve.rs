@@ -75,6 +75,12 @@ pub fn solve_goals(raw: &Value) -> Result<(Value, SolveReport), String> {
 /// `solve_goals`, optionally without rounding the values it writes (clips solve every frame,
 /// where rounding would make the hand jitter).
 pub fn solve_goals_with(raw: &Value, round: bool) -> Result<(Value, SolveReport), String> {
+    solve_goals_in(raw, round, false)
+}
+
+/// `solve_goals_with`; `own_hand` keeps only each hand's own parts apart, not one hand from
+/// the other.
+pub fn solve_goals_in(raw: &Value, round: bool, own_hand: bool) -> Result<(Value, SolveReport), String> {
     let (resolved, _) = resolve(raw.clone())?;
     let first = solve_value(raw)?;
     if first.pose.goals.is_empty() {
@@ -118,7 +124,7 @@ pub fn solve_goals_with(raw: &Value, round: bool) -> Result<(Value, SolveReport)
         for _ in 0..MAX_ITERS {
             iterations += 1;
             let current = solve_value(&apply(&u))?;
-            let pairs = near_pairs(&current);
+            let pairs = near_pairs(&current, own_hand);
             let res = |u: &[f64]| -> Result<Vec<f64>, String> {
                 let s = solve_value(&apply(u))?;
                 residuals(&s, &pairs, u, &u0, reg, overlap, &params)
@@ -181,7 +187,7 @@ pub fn solve_goals_with(raw: &Value, round: bool) -> Result<(Value, SolveReport)
         if std::env::var_os("HANDKIT_DEBUG").is_some() {
             let s = solve_value(&apply(&u))?;
             let g: Vec<String> = goals::statuses(&s)?.iter().map(|g| g.line()).collect();
-            let r = residuals(&s, &near_pairs(&s), &u, &u0, reg, overlap, &params)?;
+            let r = residuals(&s, &near_pairs(&s, own_hand), &u, &u0, reg, overlap, &params)?;
             eprintln!("stage reg={reg} overlap={overlap}: iters {iterations}, cost {:.3e}, goals {g:?}", dot(&r, &r));
         }
     }
@@ -220,14 +226,15 @@ fn dot(a: &[f64], b: &[f64]) -> f64 {
     a.iter().zip(b).map(|(x, y)| x * y).sum()
 }
 
-/// Capsule pairs (by index) that may collide and are within 5 mm of each other.
-fn near_pairs(s: &Solved) -> Vec<(usize, usize)> {
+/// Capsule pairs (by index) that may collide and are within 5 mm of each other (with
+/// `own_hand`, only pairs on one hand).
+fn near_pairs(s: &Solved, own_hand: bool) -> Vec<(usize, usize)> {
     let caps: Vec<_> = s.hands.iter().flat_map(|h| &h.capsules).collect();
     let mut out = Vec::new();
     for i in 0..caps.len() {
         for j in i + 1..caps.len() {
             let (a, b) = (caps[i], caps[j]);
-            if query::collides(a, b) && seg_dist(a.a, a.b, b.a, b.b) - a.r - b.r < 0.005 {
+            if query::collides(a, b) && (!own_hand || a.side == b.side) && seg_dist(a.a, a.b, b.a, b.b) - a.r - b.r < 0.005 {
                 out.push((i, j));
             }
         }
@@ -488,6 +495,11 @@ fn place_params(raw: &Value, resolved: &Value, side: &str, work: &mut Value, par
             if get(work, &arr).is_none_or(|v| !v.is_array()) {
                 let from = get(resolved, &arr).filter(|v| v.is_array()).cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
                 set_value(work, &arr, from);
+                // A hand placed on the screen is then placed by its wrist.
+                if let Some(place) = work["hands"][owner].get_mut("place").and_then(Value::as_object_mut).filter(|_| key == "wrist") {
+                    place.remove("screen");
+                    place.remove("depth");
+                }
             }
             for i in 0..3 {
                 let mut path = arr.clone();

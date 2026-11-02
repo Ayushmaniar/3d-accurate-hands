@@ -143,7 +143,7 @@ window.setupFrames = async (spec) => {
   const radius = Math.max(box.getSize(new THREE.Vector3()).length() * 0.55, 0.08);
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setSize(w, h);
-  renderer.setClearColor(0x30343a, 1);
+  renderer.setClearColor(spec.background || 0x30343a, 1);
   clip = { spec, scene, appliers, renderer, group: null, center, radius };
 };
 
@@ -182,7 +182,7 @@ window.drawSheet = async (cols) => {
   const sheet = document.createElement('canvas');
   sheet.width = cols * w; sheet.height = rows * h;
   const g = sheet.getContext('2d');
-  g.fillStyle = '#2b2e33'; g.fillRect(0, 0, sheet.width, sheet.height);
+  g.fillStyle = spec.background || '#2b2e33'; g.fillRect(0, 0, sheet.width, sheet.height);
   for (let i = 0; i < n; i++) {
     window.drawFrame(i);
     const x = (i % cols) * w, y = Math.floor(i / cols) * h;

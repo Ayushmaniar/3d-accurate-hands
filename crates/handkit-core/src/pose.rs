@@ -1,6 +1,7 @@
 //! The pose file format. Joint values are degrees, positions meters. Unknown keys are errors,
 //! so a typo never silently does nothing.
 
+use glam::DVec3;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -30,6 +31,9 @@ pub struct PoseFile {
     pub hands: Hands,
     /// Optional perspective camera for previews: { position, target, fov }.
     pub camera: Option<Value>,
+    /// The frame's [width, height] in pixels, for `place.screen` (default 16:9).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<[f64; 2]>,
     /// Named world points; `query` reports how well each finger aims at them.
     #[serde(default)]
     pub probes: std::collections::BTreeMap<String, [f64; 3]>,
@@ -148,6 +152,8 @@ pub fn parse_value(v: Value) -> Result<(PoseFile, Mirrors), String> {
 ///   point at world positions, do not).
 /// - A hand written as `{"mirror": "right", ...}` starts from a copy of the right hand's values
 ///   and, unless it has its own placement, takes the mirror image of its placement.
+/// - `place.screen` + `depth` become `place.wrist`, and `place.elbow_screen` becomes
+///   `forearm_toward`, through the file's camera and size.
 /// Keys written in the file always win, and goals from presets are added to the file's own.
 pub fn resolve(mut v: Value) -> Result<(Value, Mirrors), String> {
     if !v.is_object() {
@@ -198,6 +204,7 @@ pub fn resolve(mut v: Value) -> Result<(Value, Mirrors), String> {
             }
         }
     }
+    screen_places(&mut v)?;
     if !extra_goals.is_empty() {
         let obj = v.as_object_mut().unwrap();
         let goals = obj.entry("goals").or_insert(Value::Array(Vec::new()));
@@ -237,6 +244,89 @@ pub fn resolve(mut v: Value) -> Result<(Value, Mirrors), String> {
         }
     }
     Ok((v, mirrors))
+}
+
+/// A pose camera's view: position, forward, right and up, and 1 / tan(fov / 2).
+pub struct View {
+    pub pos: DVec3,
+    pub f: DVec3,
+    pub r: DVec3,
+    pub u: DVec3,
+    pub k: f64,
+}
+
+impl View {
+    /// From a pose camera ({position, target, fov}, fov vertical in degrees, default 35).
+    pub fn of(cam: &Value) -> Option<View> {
+        let a = |k: &str| -> Option<DVec3> {
+            let v = cam.get(k)?.as_array()?;
+            Some(DVec3::new(v.first()?.as_f64()?, v.get(1)?.as_f64()?, v.get(2)?.as_f64()?))
+        };
+        let (pos, target) = (a("position")?, a("target")?);
+        let fov = cam.get("fov").and_then(Value::as_f64).unwrap_or(35.0).to_radians();
+        let f = (target - pos).normalize();
+        let r = f.cross(DVec3::Y).normalize();
+        Some(View { pos, f, r, u: r.cross(f), k: 1.0 / (fov / 2.0).tan() })
+    }
+
+    /// The point at `depth` meters along the view through `screen` (fractions of the frame: x 0
+    /// left to 1 right, y 0 top to 1 bottom).
+    pub fn unproject(&self, aspect: f64, screen: [f64; 2], depth: f64) -> DVec3 {
+        let (x, y) = (2.0 * screen[0] - 1.0, 1.0 - 2.0 * screen[1]);
+        self.pos + (self.f + self.r * (x * aspect / self.k) + self.u * (y / self.k)) * depth
+    }
+}
+
+/// The frame aspect of a pose or clip: its "size" (width / height), default 16:9.
+pub fn aspect(v: &Value) -> f64 {
+    let s = v.get("size").and_then(Value::as_array);
+    s.and_then(|s| Some(s.first()?.as_f64()? / s.get(1)?.as_f64()?)).filter(|a| a.is_finite() && *a > 0.0).unwrap_or(16.0 / 9.0)
+}
+
+/// Turns `place.screen` + `depth` into `place.wrist`, and `place.elbow_screen` into
+/// `forearm_toward`, with the pose's camera and size.
+fn screen_places(v: &mut Value) -> Result<(), String> {
+    let aspect = aspect(v);
+    let cam = v.get("camera").cloned();
+    let Some(hands) = v.get_mut("hands").and_then(Value::as_object_mut) else { return Ok(()) };
+    for (side, hand) in hands.iter_mut() {
+        let Some(place) = hand.get_mut("place").and_then(Value::as_object_mut) else { continue };
+        if !place.contains_key("screen") && !place.contains_key("elbow_screen") {
+            continue;
+        }
+        let at = |e: &str| format!("hands.{side}.place: {e}");
+        let view = cam.as_ref().and_then(View::of).ok_or_else(|| at("screen and elbow_screen need the pose's \"camera\" ({ position, target, fov })"))?;
+        let pair = |x: &Value, k: &str| -> Result<[f64; 2], String> {
+            let a: Option<Vec<f64>> = x.as_array().and_then(|a| a.iter().map(Value::as_f64).collect());
+            a.filter(|a| a.len() == 2).map(|a| [a[0], a[1]]).ok_or_else(|| at(&format!("{k} is [x, y], fractions of the frame")))
+        };
+        if let Some(s) = place.remove("screen") {
+            if place.contains_key("wrist") {
+                return Err(at("give either screen + depth or wrist, not both"));
+            }
+            let depth = place.remove("depth").and_then(|d| d.as_f64()).ok_or_else(|| at("screen needs \"depth\": meters from the camera along its view"))?;
+            let p = view.unproject(aspect, pair(&s, "screen")?, depth);
+            place.insert("wrist".into(), serde_json::json!([p.x, p.y, p.z]));
+        } else if place.contains_key("depth") {
+            return Err(at("depth goes with screen"));
+        }
+        if let Some(s) = place.remove("elbow_screen") {
+            if place.contains_key("forearm_toward") {
+                return Err(at("give either elbow_screen or forearm_toward, not both"));
+            }
+            let w: Option<Vec<f64>> = place.get("wrist").and_then(Value::as_array).and_then(|a| a.iter().map(Value::as_f64).collect());
+            let w = w.filter(|w| w.len() == 3).map(|w| DVec3::new(w[0], w[1], w[2])).ok_or_else(|| at("elbow_screen needs wrist or screen"))?;
+            // The elbow on the line of sight through that point, a forearm's length from the
+            // wrist: the farther of the two such points, or the nearest point of the line.
+            let d = (view.unproject(aspect, pair(&s, "elbow_screen")?, 1.0) - view.pos).normalize();
+            let b = d.dot(w - view.pos);
+            let disc = b * b - (w - view.pos).length_squared() + crate::rig::FOREARM * crate::rig::FOREARM;
+            let elbow = view.pos + d * (b + disc.max(0.0).sqrt());
+            let t = elbow - w;
+            place.insert("forearm_toward".into(), serde_json::json!([t.x, t.y, t.z]));
+        }
+    }
+    Ok(())
 }
 
 /// A gesture library entry as JSON, by name ("ok" or "gestures/ok").

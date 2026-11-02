@@ -14,10 +14,12 @@ struct VideoArgs {
     /// A folder with hand_R.glb / hand_L.glb from `handkit mesh` (default: generate them).
     #[arg(long, global = true)]
     assets: Option<std::path::PathBuf>,
+    /// The backdrop color.
     #[arg(long, default_value = "#2b2e33", global = true)]
     background: String,
-    /// A soft round light behind the hands: x,y,radius,color with x, y and radius as
-    /// fractions of the frame height (e.g. 0.3,0.45,0.28,#e8b4b0).
+    /// A soft round light behind the hands: x,y,radius,color with x a fraction of the frame
+    /// width (0 left, 1 right) and y and radius fractions of its height (0 top), e.g.
+    /// 0.5,0.45,0.28,#e8b4b0 centred.
     #[arg(long, global = true)]
     spotlight: Option<String>,
 }

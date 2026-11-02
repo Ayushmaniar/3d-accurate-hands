@@ -28,8 +28,8 @@ pub struct FframesClipVideo<'a> {
     stage: Scene,
     renderer: Renderer,
     background: String,
-    /// A soft round light behind the hands: centre x, y and radius as fractions of the
-    /// height, and its color.
+    /// A soft round light behind the hands: centre x as a fraction of the width, y and radius
+    /// as fractions of the height, and its color.
     spotlight: Option<(f32, f32, f32, String)>,
 }
 
@@ -44,7 +44,7 @@ impl<'a> FframesClipVideo<'a> {
                 let n = |i: usize| p.get(i).and_then(|x| x.parse::<f32>().ok());
                 match (n(0), n(1), n(2), p.get(3)) {
                     (Some(x), Some(y), Some(r), Some(c)) => Some((x, y, r, c.to_string())),
-                    _ => return Err(format!("--spotlight {s}: write x,y,radius,color (fractions of the height, e.g. 0.3,0.45,0.28,#e8b4b0)")),
+                    _ => return Err(format!("--spotlight {s}: write x,y,radius,color (x a fraction of the width, y and radius of the height, e.g. 0.5,0.45,0.28,#e8b4b0)")),
                 }
             }
         };
@@ -120,7 +120,7 @@ impl Video for FframesClipVideo<'_> {
 
     fn render_frame<'a>(&'a self, frame: Frame, _ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
         let hands = self.hands_image(frame.seconds() as f64);
-        let h = HEIGHT as f32;
+        let (w, h) = (WIDTH as f32, HEIGHT as f32);
         fframes::svgr!(
             <svg xmlns="http://www.w3.org/2000/svg" viewBox={format!("0 0 {WIDTH} {HEIGHT}")} width={WIDTH} height={HEIGHT}>
                 <defs>
@@ -132,7 +132,7 @@ impl Video for FframesClipVideo<'_> {
                 </defs>
                 <rect width={WIDTH} height={HEIGHT} fill={self.background.as_str()} />
                 {match &self.spotlight {
-                    Some((x, y, r, _)) => fframes::svgr!(<circle cx={x * h} cy={y * h} r={r * h} fill="url(#spot)" />),
+                    Some((x, y, r, _)) => fframes::svgr!(<circle cx={x * w} cy={y * h} r={r * h} fill="url(#spot)" />),
                     None => Svgr::empty(),
                 }}
                 {match &hands {

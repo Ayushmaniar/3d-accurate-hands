@@ -24,7 +24,8 @@ enum Cmd {
         #[arg(long)]
         sites: bool,
     },
-    /// Change joint values until the file's goals hold, and write them back.
+    /// Change joint values until the file's goals hold, and write them back. Exits with code 2
+    /// (after writing) when a goal is still missed.
     Solve {
         pose: PathBuf,
         /// Output file (default: overwrite the pose file).
@@ -97,11 +98,14 @@ enum Cmd {
         /// Comma-separated times in seconds instead of evenly spaced ones (e.g. 1,1.2,1.4).
         #[arg(long)]
         at: Option<String>,
-        /// Width x height of each frame.
-        #[arg(long, default_value = "384x216")]
-        size: String,
+        /// Width x height of each frame (default: 216 high, at the clip's aspect).
+        #[arg(long)]
+        size: Option<String>,
         #[arg(long)]
         mesh: bool,
+        /// Background color as hex, e.g. "#2b2e33" (match the video player's).
+        #[arg(long)]
+        background: Option<String>,
     },
     /// A quick MP4 of a clip from the three.js preview (needs node and ffmpeg).
     Preview {
@@ -185,16 +189,6 @@ fn run_renderer(spec: &serde_json::Value, out: &Path) -> Result<()> {
     Ok(())
 }
 
-/// The clip's frame aspect (its "size", default 16:9), for the framing check.
-fn clip_aspect(path: &Path) -> f64 {
-    let v: Option<serde_json::Value> = std::fs::read_to_string(path).ok().and_then(|t| serde_json::from_str(&t).ok());
-    v.and_then(|v| {
-        let s = v.get("size")?.as_array()?.clone();
-        Some(s.first()?.as_f64()? / s.get(1)?.as_f64()?)
-    })
-    .unwrap_or(16.0 / 9.0)
-}
-
 fn load(path: &Path) -> Result<handkit_core::Solved> {
     let text = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
     handkit_core::solve(&text).map_err(|e| anyhow!(e))
@@ -250,6 +244,11 @@ fn run() -> Result<()> {
             let out = out.unwrap_or(pose);
             std::fs::write(&out, handkit_core::pose::to_text(&solved))?;
             emit(report.text() + &format!("wrote {}\n", out.display()));
+            let missed = report.goals.iter().filter(|g| !g.met).count();
+            if missed > 0 {
+                eprintln!("{missed} goal(s) missed; the pose is written as far as it got (exit code 2)");
+                std::process::exit(2);
+            }
         }
         Cmd::Sample { clip, t, bones, wrist } => {
             let c = load_clip(&clip)?;
@@ -283,10 +282,10 @@ fn run() -> Result<()> {
             // The frames a video of the clip renders.
             let times: Vec<f64> = (0..c.frames()).map(|i| i as f64 / c.fps).collect();
             let frames = sample_frames(&c, &times)?;
-            let report = handkit_core::check::analyze(&c, &frames, clip_aspect(&clip)).map_err(|e| anyhow!(e))?;
+            let report = handkit_core::check::analyze(&c, &frames, c.aspect()).map_err(|e| anyhow!(e))?;
             emit(report.text());
         }
-        Cmd::Sheet { clip, out, n, at, size, mesh } => {
+        Cmd::Sheet { clip, out, n, at, size, mesh, background } => {
             let c = load_clip(&clip)?;
             let times: Vec<f64> = match at {
                 Some(list) => list.split(',').map(|s| s.trim().trim_end_matches('s').parse::<f64>()).collect::<Result<_, _>>().context("--at is a comma-separated list of seconds")?,
@@ -294,8 +293,19 @@ fn run() -> Result<()> {
                 None => (0..n).map(|i| c.duration * i as f64 / (n - 1) as f64).collect(),
             };
             let frames = sample_frames(&c, &times)?;
-            let mut spec = frames_spec(&frames, parse_size(&size)?, mesh)?;
+            let size = match size {
+                Some(s) => parse_size(&s)?,
+                None => (((216.0 * c.aspect() / 2.0).round() * 2.0) as u32, 216),
+            };
+            let mut spec = frames_spec(&frames, size, mesh)?;
             spec["cols"] = serde_json::json!(times.len().min(4));
+            if let Some(bg) = background {
+                let hex = bg.trim_start_matches('#');
+                if hex.len() != 6 || u32::from_str_radix(hex, 16).is_err() {
+                    bail!("--background is a hex color such as \"#2b2e33\"");
+                }
+                spec["background"] = serde_json::json!(format!("#{hex}"));
+            }
             let out = out.unwrap_or_else(|| clip.with_extension("sheet.png"));
             run_renderer(&spec, &out)?;
             emit(format!("wrote {} ({} frames)\n", out.display(), times.len()));
