@@ -121,7 +121,9 @@ the hand.
       pinkies on each other's middle segment, an interlaced fingertip on the back of the
       other hand; `query` lists each tip's gap in mm), the hands touch, and nothing overlaps
       more than 2 mm. A grip takes no touch or aim; its
-      vary defaults to the closing digits and the follower's place.
+      vary defaults to the closing digits and the follower's place. With both hands placed
+      and a vary that names neither hand's place, both stay put and only the digits close
+      (one person's own two hands, e.g. the clasp of a hand viper).
   \"vary\": [...] on a goal chooses what may change (default: every joint of each digit a touch
       names, plus palm_cup for ring and pinky and the wrist for palm sites; for aim, the wrist
       and that finger's knuckle). Patterns: right.thumb.* (one digit), right.index.pip_flex
@@ -244,7 +246,9 @@ Looks: how renderers draw the hands. A pose or a clip may carry a top-level \"lo
   nail         a colour; default the skin, lighter and pinker. Nails come from the mesh.
   outline      ink line width in pixels at 1080p (scales with the frame height); defaults
                toon 3, spiderverse 4.5, arcane 1.6, realistic and clay 0 (none).
-  motion_blur  sub-frame renders averaged per frame (1 = off; 3 to 6 for fast moves).
+  motion_blur  sub-frame renders averaged per frame (1 = off; 3 to 6 for fast moves). A frame
+               whose hands move far renders more, up to 6 times as many, so a fast move
+               smears instead of leaving a row of copies.
   shutter      shutter angle in degrees (default 180: half the frame time).
   halftone     spiderverse dot spacing in pixels at 1080p (default 8; 0 = no dots).
   misregister  spiderverse plate offset in pixels at 1080p (default 3; 0 = none).

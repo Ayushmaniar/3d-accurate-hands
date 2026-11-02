@@ -101,6 +101,12 @@ enum Flat {
 /// it fades stay readable.
 const FOG_SPAN: f32 = 0.6;
 
+/// Motion blur: the farthest apart (in pixels of a 1080-high frame) the sub-frame copies of a
+/// moving joint may land before more sub-frames are rendered, and how many times the look's
+/// own count that may grow to.
+const BLUR_STEP_PX: f32 = 6.0;
+const BLUR_MAX_SCALE: usize = 6;
+
 impl Styler {
     pub fn new(look: Look, width: u32, height: u32) -> Self {
         let color = Renderer::new(width, height).cpu().tone_mapping(ToneMapping::Neutral).exposure(match look.style {
@@ -266,8 +272,8 @@ impl Styler {
     /// Renders one frame. `moment(dt)` builds the scene and camera `dt` frames from the
     /// frame's time; with motion blur it is called once per sub-frame across the shutter.
     pub fn render(&self, moment: impl Fn(f32) -> (Scene, Camera)) -> Pixels {
-        let n = self.look.motion_blur.max(1) as usize;
         let shutter = self.look.shutter as f32 / 360.0;
+        let n = self.sub_frames(&moment, shutter);
         let layers: Vec<Layer> = (0..n)
             .filter_map(|i| {
                 let dt = if n == 1 { 0.0 } else { ((i as f32 + 0.5) / n as f32 - 0.5) * shutter };
@@ -297,6 +303,25 @@ impl Styler {
                 img::encode(self.width, self.height, rect, |x, y| sum[(y + y0) * w + x + x0])
             }
         }
+    }
+
+    /// How many sub-frames to average: the look's `motion_blur`, raised for a fast move so the
+    /// copies across the shutter sit at most `BLUR_STEP_PX` apart on screen (a smear, not a
+    /// row of ghosts), up to `BLUR_MAX_SCALE` times the look's count.
+    fn sub_frames(&self, moment: &impl Fn(f32) -> (Scene, Camera), shutter: f32) -> usize {
+        let n = self.look.motion_blur.max(1) as usize;
+        if n == 1 {
+            return 1;
+        }
+        // Every skinned joint on screen, at the shutter's open and close.
+        let at = |dt: f32| -> Vec<Option<Vec3>> {
+            let (scene, camera) = moment(dt);
+            let joints = scene.nodes().filter_map(|(_, node)| node.as_mesh().and_then(|m| m.skin.as_ref())).flat_map(|skin| skin.joints.clone());
+            joints.map(|j| camera.project(scene.world_position(j), self.width as f32, self.height as f32)).collect()
+        };
+        let (a, b) = (at(-0.5 * shutter), at(0.5 * shutter));
+        let travel = a.iter().zip(&b).filter_map(|(p, q)| Some((p.as_ref()?.truncate() - q.as_ref()?.truncate()).length())).fold(0.0, f32::max) / (self.height as f32 / 1080.0);
+        n.max((travel / BLUR_STEP_PX).ceil() as usize).min(n * BLUR_MAX_SCALE)
     }
 
     /// One moment through the look's passes and post-process.

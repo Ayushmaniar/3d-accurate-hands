@@ -459,6 +459,12 @@ pub fn vary(goal: &Goal) -> Result<Vec<String>, String> {
     Ok(out)
 }
 
+/// Whether the grip may move hand `name`: its vary is left to the default (which moves the
+/// follower) or names that hand's placement or everything on it.
+fn moves_place(goal: &Goal, name: &str) -> bool {
+    goal.vary.is_empty() || goal.vary.iter().any(|p| p.strip_prefix(name).and_then(|r| r.strip_prefix('.')).is_some_and(|r| r == "*" || r.starts_with("place")))
+}
+
 /// Whether a hand of the file has its own placement (or mirrors another's).
 fn placed(raw: &Value, resolved: &Value, name: &str) -> bool {
     let r = &resolved["hands"][name];
@@ -595,6 +601,11 @@ pub fn prepare(raw: &Value) -> Result<Value, String> {
         }
         let (resolved, _) = crate::pose::resolve(work.clone())?;
         let (pa, pb) = (placed(&work, &resolved, &names[0]), placed(&work, &resolved, &names[1]));
+        if pa && pb && !names.iter().any(|n| moves_place(&goal, n)) {
+            // Both hands placed and the goal's own vary keeps them there: only the digits close.
+            close_digits(&mut work, &g)?;
+            continue;
+        }
         if !pa && !pb {
             let [w, p, f, a] = g.hold.home;
             let x = if g.ids[0].side == Side::Left { -1.0 } else { 1.0 };
