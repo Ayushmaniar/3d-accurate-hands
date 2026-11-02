@@ -62,6 +62,13 @@ pub trait SkiaBackend: Sync + Send {
         None
     }
 
+    /// How many GPU queues the backend's contexts are spread over, when it knows. A render
+    /// uses at most this many contexts: contexts that share a queue corrupt frames (see
+    /// vendor/README.md).
+    fn gpu_queues(&self) -> Option<usize> {
+        None
+    }
+
     fn create_skia_surface(&self) -> FFramesRendererResult<(Surface, Option<DirectContext>)>;
 
     /// Like [`Self::create_skia_surface`], with what the context needs to share its GPU
