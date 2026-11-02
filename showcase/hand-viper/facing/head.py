@@ -39,12 +39,26 @@ def hooked(hands, lift=8, sink=0):
 FACE = [0.29, 0.17, 0.0, 0.07, 0.09, 0.0, 30]
 FACE_34 = [0.36, 0.17, 0.16, 0.06, 0.085, 0.0, 26]
 
-# The hooked fingers get out of each other by spreading, rolling and bending at the knuckle;
-# their middle and last joints stay hooked.
-SPREAD = ['%s.*.mcp_abd' % s for s in S] + ['%s.*.mcp_roll' % s for s in S] + ['%s.%s.mcp_flex' % (s, d) for s in S for d in ('middle', 'ring', 'pinky')]
+# The right ring finger is the longest on top, so its knuckle would stand highest: it and the
+# right middle finger bend further down at the knuckle (held there) so the two eyes top the head.
+SINK = {('right', 'ring'): 25, ('right', 'middle'): 10}
+
+
+def with_eyes(hands):
+    out = hooked(hands, lift=15)
+    for (s, d), deg in SINK.items():
+        out[s][d]['mcp_flex'] = min(90, out[s][d]['mcp_flex'] + deg)
+    return out
+
+
+# The hooked fingers get out of each other by spreading and rolling; the ones that are neither
+# eyes nor sunk also bend at the knuckle, and the sunk ones at their middle and last joints.
+FREE = [(s, d) for s in S for d in ('middle', 'ring', 'pinky') if (s, d) not in EYES and (s, d) not in SINK]
+SPREAD = (['%s.*.mcp_abd' % s for s in S] + ['%s.*.mcp_roll' % s for s in S] + ['%s.%s.mcp_flex' % sd for sd in FREE]
+          + ['%s.%s.%s' % (s, d, j) for (s, d) in SINK for j in ('pip_flex', 'dip_flex')])
 
 if __name__ == '__main__':
-    pose = {'version': 1, 'hands': hooked(G['hands']), 'camera': G['camera'], 'goals': SHUT + [{'vary': SPREAD}]}
+    pose = {'version': 1, 'hands': with_eyes(G['hands']), 'camera': G['camera'], 'goals': SHUT + [{'vary': SPREAD}]}
     code, text, sol = solve('head', pose)
     print(code, '\n'.join(l for l in text.splitlines() if 'touch' in l or 'penetr' in l))
     if sol:
