@@ -88,6 +88,27 @@ impl Solved {
         })
     }
 
+    /// What a Handkit hand mesh needs per frame: `joints`, every skeleton joint's transform
+    /// relative to its parent by glTF joint name ("index_pip_R": `t` translation in m, `r`
+    /// rotation quaternion [x, y, z, w]), and `morph`, the corrective shape weights of each
+    /// hand mesh ("skin_R": [..], rig::CORRECTIVES order).
+    pub fn bones(&self) -> Value {
+        let r = |x: f64| (x * 1e6).round() / 1e6;
+        let mut joints = serde_json::Map::new();
+        let mut morph = serde_json::Map::new();
+        for h in &self.hands {
+            for (i, l) in h.locals().iter().enumerate() {
+                joints.insert(h.joint_name(i), json!({
+                    "t": [r(l.translation.x), r(l.translation.y), r(l.translation.z)],
+                    "r": [r(l.rotation.x), r(l.rotation.y), r(l.rotation.z), r(l.rotation.w)],
+                }));
+            }
+            let suffix = if h.side == Side::Left { "L" } else { "R" };
+            morph.insert(format!("skin_{suffix}"), json!(h.corrective_weights().iter().map(|w| r(*w)).collect::<Vec<_>>()));
+        }
+        json!({ "joints": joints, "morph": morph })
+    }
+
     /// Every bone's joint position and axes: `along` points down the bone, `palmar` is the side
     /// it bends toward.
     pub fn fk_text(&self) -> String {

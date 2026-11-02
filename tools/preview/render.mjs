@@ -12,8 +12,19 @@ if (!geomFile || !out) { console.error('usage: node render.mjs <geometry.json> <
 const geom = JSON.parse(fs.readFileSync(geomFile, 'utf8'));
 
 const types = { '.html': 'text/html', '.js': 'text/javascript' };
+const assets = geom.mesh?.files || {};
 const server = http.createServer((req, res) => {
-  const file = path.join(root, decodeURIComponent(req.url.split('?')[0]));
+  const url = decodeURIComponent(req.url.split('?')[0]);
+  const asset = url.match(/^\/asset\/(right|left)\.glb$/);
+  if (asset && assets[asset[1]]) {
+    res.writeHead(200, { 'content-type': 'model/gltf-binary' });
+    return fs.createReadStream(assets[asset[1]]).pipe(res);
+  }
+  if (url === '/handkit-three.js') {
+    res.writeHead(200, { 'content-type': 'text/javascript' });
+    return fs.createReadStream(path.join(root, '../../packages/handkit-three/index.js')).pipe(res);
+  }
+  const file = path.join(root, url);
   if (!file.startsWith(root) || !fs.existsSync(file)) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'content-type': types[path.extname(file)] || 'application/octet-stream' });
   fs.createReadStream(file).pipe(res);
@@ -36,10 +47,10 @@ try {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`http://localhost:${server.address().port}/render.html`);
-  await page.waitForFunction(() => window.ready === true, null, { timeout: 15000 });
+  await page.waitForFunction(() => window.ready === true, null, { timeout: 30000 });
   await page.evaluate(([g, v, s]) => window.render(g, v, s), [geom, viewArg.split(',').map((s) => s.trim()), Number(sizeArg)]);
   if (errors.length) throw new Error(errors.join('\n'));
-  await page.locator('#wrap').screenshot({ path: out });
+  await page.locator('#wrap').screenshot({ path: out, omitBackground: !!geom.golden });
 } finally {
   await browser.close();
   server.close();

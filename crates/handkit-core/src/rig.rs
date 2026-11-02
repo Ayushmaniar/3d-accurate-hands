@@ -2,7 +2,7 @@
 //! forearm frame (elbow at the origin, forearm along +Y, palm facing +Z, thumb on +X), then
 //! mirrored in X for a left hand and placed in the world.
 
-use glam::{DAffine3, DMat3, DVec3, dvec3};
+use glam::{DAffine3, DMat3, DQuat, DVec3, dvec3};
 
 use crate::params;
 use crate::pose::{HandPose, Side};
@@ -125,6 +125,12 @@ pub struct Bone {
     pub along: DVec3,
     pub palmar: DVec3,
     pub len: f64,
+    /// The bone's frame in the world, always a proper rotation (a left hand's frames are the
+    /// right hand's reflected through x, so a mesh bound to the mirrored rest pose skins
+    /// correctly): y along the bone, z toward the palm side.
+    pub frame: DAffine3,
+    /// The bone it hangs from (an index into `bones`); the forearm has none.
+    pub parent: Option<usize>,
 }
 
 #[derive(Clone, Debug)]
@@ -147,6 +153,61 @@ pub struct HandGeom {
     pub coupled: Vec<String>,
     /// Placement: world = world * (mirror for a left hand) * local.
     pub world: DAffine3,
+}
+
+/// A skeleton joint's transform relative to its parent (the forearm's is in the world).
+#[derive(Clone, Copy, Debug)]
+pub struct JointLocal {
+    pub translation: DVec3,
+    pub rotation: DQuat,
+}
+
+/// Corrective blend shapes of the hand mesh, in mesh target order: (bone at the joint, the bend
+/// in degrees where the shape is fully on). The shape bulges the back of the joint and tucks in
+/// the palm side, which plain skinning flattens.
+pub const CORRECTIVES: [(&str, f64); 14] = [
+    ("index_mcp", 90.0), ("index_pip", 100.0), ("index_dip", 70.0),
+    ("middle_mcp", 90.0), ("middle_pip", 100.0), ("middle_dip", 70.0),
+    ("ring_mcp", 90.0), ("ring_pip", 100.0), ("ring_dip", 70.0),
+    ("pinky_mcp", 90.0), ("pinky_pip", 100.0), ("pinky_dip", 70.0),
+    ("thumb_mcp", 60.0), ("thumb_ip", 80.0),
+];
+
+impl HandGeom {
+    /// How far each corrective shape is on (0..1, CORRECTIVES order): the joint's bend toward
+    /// the palm over the bend where the shape is full.
+    pub fn corrective_weights(&self) -> Vec<f64> {
+        CORRECTIVES
+            .iter()
+            .map(|(name, full)| {
+                let Some(b) = self.bones.iter().find(|b| b.name == *name) else { return 0.0 };
+                let parent = &self.bones[b.parent.unwrap()];
+                let y = parent.frame.inverse().transform_vector3(b.frame.transform_vector3(DVec3::Y));
+                let bend = y.z.atan2(y.y).to_degrees();
+                (bend / full).clamp(0.0, 1.0)
+            })
+            .collect()
+    }
+
+    /// The glTF joint name of a bone: "index_pip_R".
+    pub fn joint_name(&self, bone: usize) -> String {
+        format!("{}_{}", self.bones[bone].name, if self.side == Side::Left { "L" } else { "R" })
+    }
+
+    /// Every bone's transform relative to its parent, in `bones` order: what a skinned mesh
+    /// bound to this skeleton needs per frame.
+    pub fn locals(&self) -> Vec<JointLocal> {
+        self.bones
+            .iter()
+            .map(|b| {
+                let local = match b.parent {
+                    Some(p) => self.bones[p].frame.inverse() * b.frame,
+                    None => b.frame,
+                };
+                JointLocal { translation: local.translation, rotation: DQuat::from_mat3(&local.matrix3).normalize() }
+            })
+            .collect()
+    }
 }
 
 fn rx(d: f64) -> DAffine3 {
@@ -207,16 +268,18 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
     let mut capsule = |a: DVec3, b: DVec3, r: f64, part: &'static str, digit: Option<Digit>, seg: Seg| {
         capsules.push(Capsule { a, b, r, side, part, digit, seg });
     };
-    let mut bone = |name: String, m: DAffine3, len: f64| {
-        bones.push(Bone { name, origin: at(m, o), along: dir(m, DVec3::Y), palmar: dir(m, DVec3::Z), len });
+    let mut bone = |name: String, m: DAffine3, len: f64, parent: Option<usize>| {
+        let frame = to_world(m) * if left { mirror_x() } else { DAffine3::IDENTITY };
+        bones.push(Bone { name, origin: at(m, o), along: dir(m, DVec3::Y), palmar: dir(m, DVec3::Z), len, frame, parent });
+        bones.len() - 1
     };
     let mut site = |name: String, m: DAffine3, p: DVec3, n: DVec3| {
         sites.push(Site { name: format!("{}.{}", side.name(), name), pos: at(m, p), normal: dir(m, n) });
     };
 
     capsule(at(DAffine3::IDENTITY, o), at(wrist, dvec3(0.0, -FOREARM_END, 0.0)), FOREARM_R, "forearm", None, Seg::Arm);
-    bone("forearm".into(), DAffine3::IDENTITY, FOREARM);
-    bone("hand".into(), hand, 0.095);
+    let forearm_bone = bone("forearm".into(), DAffine3::IDENTITY, FOREARM, None);
+    let hand_bone = bone("hand".into(), hand, 0.095, Some(forearm_bone));
     site("palm_center".into(), hand, dvec3(0.0, 0.055, 0.013), DVec3::Z);
     site("palm_heel".into(), hand, dvec3(0.0, 0.02, 0.013), DVec3::Z);
     site("wrist_back".into(), hand, dvec3(0.0, 0.0, -0.016), DVec3::NEG_Z);
@@ -266,12 +329,13 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         m = m * rz(-f.fan + abd_sign * abd) * ry(roll);
         let segs = [Seg::Proximal, Seg::Middle, Seg::Distal];
         let joints = ["mcp", "pip", "dip"];
+        let mut parent = hand_bone;
         for i in 0..3 {
             m = m * rx(flex[i]);
             let r = f.r * (1.0 - 0.1 * i as f64);
             let next = m * tr(0.0, f.len[i], 0.0);
             capsule(at(m, o), at(next, o), r, name, Some(f.digit), segs[i]);
-            bone(format!("{name}_{}", joints[i]), m, f.len[i]);
+            parent = bone(format!("{name}_{}", joints[i]), m, f.len[i], Some(parent));
             match segs[i] {
                 Seg::Proximal => site(format!("{name}.knuckle"), m, dvec3(0.0, 0.0, -r), DVec3::NEG_Z),
                 Seg::Middle => {
@@ -308,12 +372,13 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         * ry(turn - cmc_rot);
     let segs = [Seg::Metacarpal, Seg::Proximal, Seg::Distal];
     let joints = ["cmc", "mcp", "ip"];
+    let mut parent = hand_bone;
     for i in 0..3 {
         m = m * rx(tflex[i]);
         let r = THUMB_R[i];
         let next = m * tr(0.0, THUMB_LEN[i], 0.0);
         capsule(at(m, o), at(next, o), r, "thumb", Some(Digit::Thumb), segs[i]);
-        bone(format!("thumb_{}", joints[i]), m, THUMB_LEN[i]);
+        parent = bone(format!("thumb_{}", joints[i]), m, THUMB_LEN[i], Some(parent));
         match segs[i] {
             Seg::Proximal => site("thumb.knuckle".into(), m, dvec3(0.0, 0.0, -r), DVec3::NEG_Z),
             Seg::Distal => {

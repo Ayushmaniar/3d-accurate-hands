@@ -1,0 +1,22 @@
+{
+  "name": "@handkit/three",
+  "version": "0.1.0",
+  "description": "Pose Handkit hand meshes in three.js",
+  "type": "module",
+  "main": "index.js",
+  "peerDependencies": {
+    "three": ">=0.160"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./core.js": "./core.js"
+  },
+  "scripts": {
+    "build:wasm": "sh build-wasm.sh"
+  },
+  "files": [
+    "index.js",
+    "core.js",
+    "wasm/"
+  ]
+}
