@@ -1,0 +1,30 @@
+{
+  "name": "camera_frame",
+  "description": "Camera frame: each hand makes an L with the index straight and the thumb out at a right angle, and the two Ls join into a rectangle, the left index tip on the right thumb tip and the left thumb tip on the right index tip; seen from behind the hands, as the person framing the shot sees it.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [-0.1037, -0.019, 0.0026], "palm_facing": [0.005, 0.013, -1.049], "fingers_toward": [1.026, 0.226, 0.017] },
+      "thumb": { "cmc_flex": -20, "cmc_abd": -10, "cmc_rot": 0, "mcp_flex": -15, "ip_flex": -10 },
+      "index": { "mcp_abd": 5, "mcp_flex": 4, "pip_flex": 6 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 75, "pip_flex": 95 },
+      "ring": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 90 },
+      "palm_cup": 8
+    },
+    "left": {
+      "place": { "wrist": [0.1056, 0.1998, 0.0001], "palm_facing": [0.008, -0.003, 0.901], "fingers_toward": [-1.008, -0.222, -0.012] },
+      "thumb": { "cmc_flex": -20, "cmc_abd": -10, "cmc_rot": 0, "mcp_flex": -15, "ip_flex": -10 },
+      "index": { "mcp_abd": 5, "mcp_flex": 4, "pip_flex": 6 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 75, "pip_flex": 95 },
+      "ring": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 90 },
+      "palm_cup": 8
+    }
+  },
+  "goals": [
+    { "touch": ["left.index.tip", "right.thumb.tip"], "vary": ["right.place", "left.place"] },
+    { "touch": ["left.thumb.tip", "right.index.tip"], "vary": ["right.place", "left.place"] }
+  ],
+  "camera": { "position": [0, 0.09, -0.62], "target": [0, 0.09, 0], "fov": 35 }
+}

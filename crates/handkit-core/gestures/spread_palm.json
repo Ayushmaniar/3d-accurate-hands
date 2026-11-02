@@ -1,0 +1,17 @@
+{
+  "name": "spread_palm",
+  "description": "Spread palm: all five fingers stretched wide apart like counting five, fingers pointing up; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "fingers_toward": [0, 1, 0], "palm_facing": [0, 0, 1], "wrist": [0, 0, 0] },
+      "thumb": { "cmc_abd": 10, "cmc_flex": -18, "cmc_rot": 0, "ip_flex": 5, "mcp_flex": 3 },
+      "index": { "mcp_abd": 14, "mcp_flex": 4, "pip_flex": 5 },
+      "middle": { "mcp_abd": 1, "mcp_flex": 4, "pip_flex": 6 },
+      "ring": { "mcp_abd": 12, "mcp_flex": 5, "pip_flex": 7 },
+      "pinky": { "mcp_abd": 22, "mcp_flex": 6, "pip_flex": 8 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.distal", "right.index.distal"], "gap_mm": 78.7 }, { "touch": ["right.index.distal", "right.middle.distal"], "gap_mm": 25.7 }, { "touch": ["right.ring.distal", "right.pinky.distal"], "gap_mm": 24.2 }],
+  "camera": { "position": [0.04, 0.12, 0.44], "target": [0.0, 0.095, 0.0], "fov": 36 }
+}

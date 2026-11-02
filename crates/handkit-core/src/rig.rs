@@ -8,7 +8,10 @@ use crate::params;
 use crate::pose::{HandPose, Side};
 
 pub const FOREARM: f64 = 0.26;
-const FOREARM_R: f64 = 0.028;
+/// The forearm capsule is as thick as a wrist (front to back), not as wide, and stops short of
+/// the wrist joint so its rounded end does not bulge past the heel of the palm.
+const FOREARM_R: f64 = 0.022;
+const FOREARM_END: f64 = 0.012;
 const METACARPAL_R: f64 = 0.0125;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -211,7 +214,7 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         sites.push(Site { name: format!("{}.{}", side.name(), name), pos: at(m, p), normal: dir(m, n) });
     };
 
-    capsule(at(DAffine3::IDENTITY, o), at(wrist, o), FOREARM_R, "forearm", None, Seg::Arm);
+    capsule(at(DAffine3::IDENTITY, o), at(wrist, dvec3(0.0, -FOREARM_END, 0.0)), FOREARM_R, "forearm", None, Seg::Arm);
     bone("forearm".into(), DAffine3::IDENTITY, FOREARM);
     bone("hand".into(), hand, 0.095);
     site("palm_center".into(), hand, dvec3(0.0, 0.055, 0.013), DVec3::Z);
@@ -242,10 +245,12 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         };
         let flex = [v(q.mcp_flex), pip, dip];
         let abd = v(q.mcp_abd);
+        let roll = v(q.mcp_roll);
         check(&format!("{name}.mcp_flex"), flex[0]);
         check(&format!("{name}.pip_flex"), flex[1]);
         check(&format!("{name}.dip_flex"), flex[2]);
         check(&format!("{name}.mcp_abd"), abd);
+        check(&format!("{name}.mcp_roll"), roll);
 
         let cup_k = match f.digit {
             Digit::Pinky => 1.0,
@@ -257,7 +262,8 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         capsule(at(base, o), at(m, o), METACARPAL_R, "palm", Some(f.digit), Seg::Metacarpal);
         // Positive abduction spreads away from the middle finger (middle: toward the index).
         let abd_sign = if matches!(f.digit, Digit::Ring | Digit::Pinky) { 1.0 } else { -1.0 };
-        m = m * rz(-f.fan + abd_sign * abd);
+        // Positive roll turns the pad toward the thumb (+X in the right hand's frame).
+        m = m * rz(-f.fan + abd_sign * abd) * ry(roll);
         let segs = [Seg::Proximal, Seg::Middle, Seg::Distal];
         let joints = ["mcp", "pip", "dip"];
         for i in 0..3 {

@@ -1,0 +1,18 @@
+{
+  "name": "bunny_ears",
+  "description": "Bunny ears: index and middle up in a V, the thumb pad pressing the curled ring and pinky down into the palm; back of the hand to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, -1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 12,
+      "thumb": { "cmc_abd": 25.5, "cmc_flex": 23.6, "cmc_rot": 48.8, "mcp_flex": 32.8, "ip_flex": 0.1 },
+      "index": { "mcp_abd": 8, "mcp_flex": 6, "pip_flex": 8 },
+      "middle": { "mcp_abd": -9, "mcp_flex": 7, "pip_flex": 9 },
+      "ring": { "mcp_abd": 0, "mcp_flex": 75, "pip_flex": 95, "dip_flex": 45 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 78, "pip_flex": 92, "dip_flex": 45 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.pad", "right.ring.middle"], "vary": ["right.thumb.*"] }],
+  "camera": { "position": [-0.17, 0.14, 0.38], "target": [-0.005, 0.1, 0.0], "fov": 35 }
+}

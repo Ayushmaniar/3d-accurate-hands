@@ -1,0 +1,21 @@
+{
+  "name": "offering_palm",
+  "description": "Offering palm: open hand held palm up and reaching toward the viewer, fingers relaxed and gently curled, thumb resting out to the side.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 1, 0], "fingers_toward": [0, -0.15, 1] },
+      "wrist_flex": -10.0,
+      "thumb": { "cmc_flex": -8.5, "cmc_abd": 11.5, "cmc_rot": 15.9, "mcp_flex": 10.7, "ip_flex": 12.9 },
+      "index": { "mcp_abd": 2.0, "mcp_flex": 10.0, "pip_flex": 13.2, "dip_flex": 8.8 },
+      "middle": { "mcp_abd": -0.0, "mcp_flex": 12.7, "pip_flex": 18, "dip_flex": 10 },
+      "ring": { "mcp_abd": 3, "mcp_flex": 16, "pip_flex": 22, "dip_flex": 12 },
+      "pinky": { "mcp_abd": 6, "mcp_flex": 20, "pip_flex": 26, "dip_flex": 14 },
+      "palm_cup": 6,
+      "twist": 0.0,
+      "wrist_dev": 0.0
+    }
+  },
+  "goals": [{ "aim": "right.middle", "at": [-0.01, 0.074, 0.382] }, { "aim": "right.thumb", "at": [-0.164, 0.112, 0.313] }, { "touch": ["right.thumb.distal", "right.index.proximal"], "gap_mm": 37 }],
+  "camera": { "position": [0.1, 0.3, 0.38], "target": [0.0, 0.0, 0.08], "fov": 38 }
+}

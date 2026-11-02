@@ -1,0 +1,23 @@
+{
+  "name": "thumb_to_middle",
+  "description": "Thumb-to-middle opposition: the middle fingertip curls down onto the thumb pad in a round O, the index, ring and pinky loosely up; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 6,
+      "thumb": { "cmc_abd": 67.0, "cmc_flex": -8.7, "cmc_rot": 49.5, "mcp_flex": 39.5, "ip_flex": -6.2 },
+      "index": { "mcp_abd": 4, "mcp_flex": 10, "pip_flex": 9 },
+      "middle": { "mcp_abd": -2, "mcp_flex": 80.5, "pip_flex": 44.9, "dip_flex": 22.7 },
+      "ring": { "mcp_abd": 3, "mcp_flex": 18, "pip_flex": 15 },
+      "pinky": { "mcp_abd": 12, "mcp_flex": 22, "pip_flex": 18 }
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.thumb.pad", "right.middle.tip"],
+      "vary": ["right.thumb.*", "right.middle.mcp_flex", "right.middle.pip_flex", "right.middle.dip_flex"]
+    }
+  ],
+  "camera": { "position": [0.14, 0.14, 0.4], "target": [0.005, 0.09, 0.03], "fov": 35 }
+}

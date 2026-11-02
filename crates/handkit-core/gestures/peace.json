@@ -1,0 +1,18 @@
+{
+  "name": "peace",
+  "description": "Peace sign: index and middle fingers raised in a V, ring and pinky curled down with the thumb holding them; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "fingers_toward": [0, 1, 0], "palm_facing": [0, 0, 1], "wrist": [0, 0, 0] },
+      "palm_cup": 10,
+      "thumb": { "cmc_abd": 42.7, "cmc_flex": 15.8, "cmc_rot": 48.8, "ip_flex": 26.1, "mcp_flex": 47.2 },
+      "index": { "mcp_abd": 9, "mcp_flex": 4, "pip_flex": 6 },
+      "middle": { "mcp_abd": -9, "mcp_flex": 4, "pip_flex": 7 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.distal", "right.ring.middle"], "vary": ["right.thumb.*"] }, { "touch": ["right.index.distal", "right.middle.distal"], "gap_mm": 31.8 }],
+  "camera": { "position": [0.1, 0.14, 0.38], "target": [0.0, 0.1, 0.02], "fov": 36 }
+}

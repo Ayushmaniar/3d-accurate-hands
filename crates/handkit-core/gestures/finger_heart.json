@@ -1,0 +1,23 @@
+{
+  "name": "finger_heart",
+  "description": "Korean finger heart: the bent index and the thumb cross near their tips, the thumb pad pressed on the thumb side of the index's last joint, the other fingers curled; back of the hand to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, -1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 4,
+      "thumb": { "cmc_abd": 20.9, "cmc_flex": 13.2, "cmc_rot": 28.4, "mcp_flex": -1.8, "ip_flex": 12.7 },
+      "index": { "mcp_abd": 5, "mcp_flex": 64.0, "pip_flex": 59.5, "dip_flex": 20 },
+      "middle": { "mcp_abd": 3, "mcp_flex": 85, "pip_flex": 100, "dip_flex": 70 },
+      "ring": { "mcp_abd": -2, "mcp_flex": 84, "pip_flex": 100, "dip_flex": 72 },
+      "pinky": { "mcp_abd": 2, "mcp_flex": 80, "pip_flex": 95, "dip_flex": 70 }
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.thumb.pad", "right.index.dip_radial"],
+      "vary": ["right.thumb.*", "right.index.mcp_flex", "right.index.pip_flex"]
+    }
+  ],
+  "camera": { "position": [-0.3, 0.16, 0.3], "target": [-0.015, 0.09, -0.01], "fov": 35 }
+}

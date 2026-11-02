@@ -5,13 +5,18 @@ Angles are degrees, positions meters; anything left out is 0. Unknown keys are e
 
 ## Workflow
 
-1. Write `pose.json` (format below).
-2. `handkit query pose.json`: limit violations, fingers passing through each other, contacts,
-   the nearest part to each thumb tip, the gaps for your `checks`, aim at your `probes`, and
-   fingertip positions. Text only, no image. Run it after every edit.
-3. `handkit render pose.json --views front,hero --size 384`: a small multi-view PNG to judge
+1. Start from a library gesture when one is close: `handkit gestures` lists them,
+   `handkit gesture ok > pose.json` copies one (or write `"from": "ok"` in your file).
+2. Write the joint values for the rough shape, and `goals` for what must be exactly true:
+   which surfaces touch, where a finger points.
+3. `handkit solve pose.json`: adjusts the values until the goals hold, without fingers passing
+   through each other, and writes them back. It prints each goal's status and what changed.
+4. `handkit query pose.json`: limit violations, fingers passing through each other, contacts,
+   the nearest part to each thumb tip, goals, `checks` gaps, aim at `probes`, and fingertip
+   positions. Text only, no image.
+5. `handkit render pose.json --views front,hero --size 384`: a small multi-view PNG to judge
    the look. Views: front, back, side, top, three_quarter, hero (your `camera`).
-4. `handkit fk pose.json`: every joint's position and axes and every site, when you need exact
+6. `handkit fk pose.json`: every joint's position and axes and every site, when you need exact
    geometry. `handkit explain thumb.cmc_rot` explains one parameter.
 
 ## Format
@@ -31,13 +36,15 @@ Angles are degrees, positions meters; anything left out is 0. Unknown keys are e
     },
     "left": { "mirror": "right" }
   },
+  "goals": [{ "touch": ["right.thumb.pad", "right.index.tip"] }],
   "checks": [["right.thumb.pad", "right.index.pad"]],
   "probes": { "target": [0.0, 0.3, -0.5] },
   "camera": { "position": [0, 0.05, 0.6], "target": [0, 0.05, 0], "fov": 35 }
 }
 ```
 
-`checks`, `probes` and `camera` are optional. Leave out a hand to show only one.
+`goals`, `checks`, `probes` and `camera` are optional; `solve` needs goals. Leave out a hand to
+show only one. Goals (touch, aim, vary) are explained under "Goals" below.
 
 ## Reference
 
@@ -66,7 +73,7 @@ Placement, per hand, one of:
   mirror image of its placement across the plane x = 0; any keys given override the copy.
 
 Chains: wrist = twist (about the forearm) -> wrist_dev -> wrist_flex. Fingers: knuckle spread
-(rest fan + mcp_abd) -> mcp_flex -> pip_flex -> dip_flex. Thumb: base at (0.020, 0.018, 0.008)
+(rest fan + mcp_abd) -> mcp_roll -> mcp_flex -> pip_flex -> dip_flex. Thumb: base at (0.020, 0.018, 0.008)
 in the hand frame (x toward the thumb, y toward the fingers, z out of the palm); rest
 orientation = lean 35 deg toward the thumb side, lift 10 deg out of the palm, turn the pad 55
 deg toward the index. Exactly, with rotations about the hand frame's axes applied left to right
@@ -105,12 +112,42 @@ how well fingers aim at `probes`.
 
 Couplings (version 1 files): a dip_flex left out follows 2/3 of pip_flex.
 
+Goals: "goals": [...] says what must be true; `handkit solve` changes values until it is and
+writes them back, keeping changes small, joints inside their limits and fingers out of each
+other (it may leave a penetration it cannot fix; it says so). If every goal already holds it
+changes nothing. Note: `place` fixes the hand itself; wrist angles then swing the forearm, not
+the hand.
+  { "touch": [a, b] }   a and b are sites or segments. The surfaces meet (gap within 1 mm) and,
+      for a site, the contact lands within 6 mm of it. Fingers do not roll about their own
+      axis, so two pads seldom meet dead center: a contact a few mm toward the side of a pad
+      is expected. Add "gap_mm": 15 to hold them that far apart instead (sites are then
+      measured point to point, segments surface to surface).
+  { "aim": "right.index", "at": [x, y, z] }   the finger's line (knuckle through tip) passes
+      through the point, within 1 deg. The point is in world space, so an aim belongs to its
+      placement: a hand-level "from" leaves a gesture's aims behind.
+  "vary": [...] on a goal chooses what may change (default: every joint of each digit a touch
+      names, plus palm_cup for ring and pinky and the wrist for palm sites; for aim, the wrist
+      and that finger's knuckle). Patterns: right.thumb.* (one digit), right.index.pip_flex
+      (one value), right.*.mcp_abd (that joint on every digit), right.wrist (twist, wrist_flex,
+      wrist_dev), right.palm_cup, right.place (the hand's placement; right.place.position
+      only moves it, right.place.rotation only turns it), right.* (everything on the hand).
+      Placement is never varied unless named. A hand that mirrors the other varies the
+      other's values, so the pair stays a mirror.
+  Shapes that read right: OK circle = thumb.pad ~ index.tip; flat pinch = thumb.pad ~
+  index.pad; finger heart = thumb.pad ~ index.dip_radial. Start from roughly the right shape:
+  the solver finds the nearest solution, not the most natural one.
+
+Gestures: `handkit gestures` lists a library of finished poses; `handkit gesture <name>` prints
+one. "from": "<name>" at the top of a file starts from a whole gesture (keys you write win;
+its goals are added to yours). On a hand, { "from": "ok" } takes that gesture's joint
+values for this hand (not its placement), and its goals renamed to this hand.
+
 Parameters (key, range in degrees, meaning):
   twist [-100, 100]: Turns the hand about the forearm's long axis. +90 makes the palm face the side the thumb pointed to at rest (right hand: +X, the thumb then points to -Z).
   wrist_flex [-70, 80]: Bends the hand toward the palm side; negative bends it toward the back of the hand.
   wrist_dev [-25, 35]: Bends the hand sideways toward the thumb (radial); negative toward the pinky. Applied before wrist_flex.
   palm_cup [0, 25]: Hollows the palm: the pinky knuckle comes 0.03*sin(cup) m forward and turns `cup` degrees toward the thumb, the ring knuckle half that. Use in fists, grips and thumb-to-pinky contact.
-  thumb.cmc_flex [-20, 50]: Swings the whole thumb in the palm plane toward the pinky side (across the palm). Negative swings it further out.
+  thumb.cmc_flex [-30, 50]: Swings the whole thumb in the palm plane toward the pinky side (across the palm). Negative swings it further out.
   thumb.cmc_abd [-10, 75]: Lifts the whole thumb out of the palm plane toward the palm side, like opening the hand around a can.
   thumb.cmc_rot [-15, 60]: Rotates the thumb about its own long axis so the pad turns further toward the fingers (opposition). Applied after cmc_flex and cmc_abd.
   thumb.mcp_flex [-15, 65]: Bends the thumb's middle joint, curling the thumb toward its pad.
@@ -119,6 +156,10 @@ Parameters (key, range in degrees, meaning):
   middle.mcp_abd [-15, 15]: Tilts the middle finger toward the index side; negative toward the ring.
   ring.mcp_abd [-15, 20]: Spreads the ring finger away from the middle finger (toward the pinky); adds to its -4 deg rest fan.
   pinky.mcp_abd [-15, 35]: Spreads the pinky away from the ring finger; adds to its -9 deg rest fan.
+  index.mcp_roll [-10, 20]: Rolls the finger about its own length at the knuckle, turning the pad (and the direction the finger curls) toward the thumb; negative away. Real fingers roll a little as they curl toward the thumb, which is how a fingertip meets the thumb pad face to face.
+  middle.mcp_roll [-10, 20]: Rolls the finger about its own length at the knuckle, turning the pad (and the direction the finger curls) toward the thumb; negative away. Real fingers roll a little as they curl toward the thumb, which is how a fingertip meets the thumb pad face to face.
+  ring.mcp_roll [-10, 25]: Rolls the finger about its own length at the knuckle, turning the pad (and the direction the finger curls) toward the thumb; negative away. Real fingers roll a little as they curl toward the thumb, which is how a fingertip meets the thumb pad face to face.
+  pinky.mcp_roll [-10, 30]: Rolls the finger about its own length at the knuckle, turning the pad (and the direction the finger curls) toward the thumb; negative away. Real fingers roll a little as they curl toward the thumb, which is how a fingertip meets the thumb pad face to face.
   index.mcp_flex [-30, 95]: Bends the finger at the knuckle toward the palm; negative hyperextends.
   index.pip_flex [-5, 110]: Bends the middle joint toward the palm.
   index.dip_flex [-10, 85]: Bends the fingertip joint toward the palm. In a version 1 file, left out it follows 2/3 of pip_flex (the tendon coupling of real fingers).
@@ -131,5 +172,4 @@ Parameters (key, range in degrees, meaning):
   pinky.mcp_flex [-30, 95]: Bends the finger at the knuckle toward the palm; negative hyperextends.
   pinky.pip_flex [-5, 110]: Bends the middle joint toward the palm.
   pinky.dip_flex [-10, 85]: Bends the fingertip joint toward the palm. In a version 1 file, left out it follows 2/3 of pip_flex (the tendon coupling of real fingers).
-
 ```

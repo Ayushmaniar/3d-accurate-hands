@@ -1,0 +1,17 @@
+{
+  "name": "ok",
+  "description": "OK sign: thumb and index pads touch in a round circle, other fingers up and fanned; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "fingers_toward": [0, 1, 0], "palm_facing": [0, 0, 1], "wrist": [0, 0, 0] },
+      "thumb": { "cmc_abd": 53.6, "cmc_flex": -11.7, "cmc_rot": 51.5, "ip_flex": -1.8, "mcp_flex": 28.5 },
+      "index": { "dip_flex": 25.8, "mcp_abd": -9.5, "mcp_flex": 76.4, "pip_flex": 37.3 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 10, "pip_flex": 10 },
+      "ring": { "mcp_abd": 8, "mcp_flex": 12, "pip_flex": 12 },
+      "pinky": { "mcp_abd": 18, "mcp_flex": 15, "pip_flex": 12 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.pad", "right.index.tip"] }],
+  "camera": { "position": [0.38, 0.14, 0.32], "target": [0.02, 0.09, 0.03], "fov": 35 }
+}

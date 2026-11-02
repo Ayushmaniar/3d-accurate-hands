@@ -1,0 +1,18 @@
+{
+  "name": "pinch",
+  "description": "Precision pinch: thumb pad and index pad pressed flat together as if holding a thin card, other fingers loosely curled; seen from the thumb side.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "thumb": { "cmc_flex": 22.5, "cmc_abd": 33.1, "cmc_rot": 48.9, "mcp_flex": -6.8, "ip_flex": -16.3 },
+      "index": { "mcp_abd": -10.5, "mcp_flex": 84.9, "pip_flex": 11.4, "dip_flex": 1.6 },
+      "middle": { "mcp_abd": -2, "mcp_flex": 62, "pip_flex": 55 },
+      "ring": { "mcp_abd": 2, "mcp_flex": 68, "pip_flex": 62 },
+      "pinky": { "mcp_abd": 6, "mcp_flex": 74, "pip_flex": 66 },
+      "palm_cup": 8
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.pad", "right.index.pad"] }],
+  "camera": { "position": [0.34, 0.13, 0.13], "target": [0.02, 0.085, 0.04], "fov": 35 }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "snap_ready",
+  "description": "Ready to snap: the middle finger lies pressed down on the thumb pad, the index rests lightly curled above it, ring and pinky curled into the palm; palm to the viewer, seen from the thumb side.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 3.7,
+      "thumb": { "cmc_abd": 46, "cmc_flex": 24, "cmc_rot": 55, "mcp_flex": 10, "ip_flex": -7 },
+      "index": { "mcp_abd": 0, "mcp_flex": 55, "pip_flex": 50, "dip_flex": 25 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 78, "pip_flex": 29, "dip_flex": 26 },
+      "ring": { "mcp_abd": -1.1, "mcp_flex": 83.4, "pip_flex": 99.9, "dip_flex": 73.1 },
+      "pinky": { "mcp_abd": 1.9, "mcp_flex": 78.6, "pip_flex": 94.5, "dip_flex": 72.5 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.pad", "right.middle.distal"] }, { "touch": ["right.ring.tip", "right.ring.metacarpal"] }, { "touch": ["right.pinky.tip", "right.pinky.metacarpal"] }],
+  "camera": { "position": [0.3, 0.15, 0.3], "target": [0.01, 0.085, 0.04], "fov": 35 }
+}

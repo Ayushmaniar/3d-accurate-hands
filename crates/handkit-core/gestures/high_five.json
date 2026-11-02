@@ -1,0 +1,26 @@
+{
+  "name": "high_five",
+  "description": "High five: a right and a left hand meet palm to palm, fingers up, spread and crossing at an angle, arms rising from either side; seen from beside the left hand's back.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [-0.0271, 0.0653, -0.0278], "palm_facing": [1.158, -0.152, -0.141], "fingers_toward": [0.161, 0.868, 0.41] },
+      "wrist_flex": -30,
+      "wrist_dev": 10,
+      "thumb": { "cmc_flex": -15, "cmc_abd": -10, "cmc_rot": 0, "mcp_flex": 0, "ip_flex": 3 },
+      "index": { "mcp_abd": 8, "mcp_flex": -12.1, "pip_flex": 11.5 },
+      "middle": { "mcp_abd": 0, "mcp_flex": -13.5, "pip_flex": 10.7 },
+      "ring": { "mcp_abd": 6, "mcp_flex": -13.6, "pip_flex": 10.7 },
+      "pinky": { "mcp_abd": 14, "mcp_flex": -12.2, "pip_flex": 11.5 }
+    },
+    "left": {
+      "mirror": "right",
+      "place": { "wrist": [0.0271, 0.0643, 0.0278], "palm_facing": [-1.158, -0.205, -0.003], "fingers_toward": [-0.161, 0.934, -0.23] }
+    }
+  },
+  "goals": [
+    { "touch": ["right.middle.metacarpal", "left.middle.metacarpal"], "vary": ["right.place", "left.place"] },
+    { "touch": ["right.ring.metacarpal", "left.ring.metacarpal"], "vary": ["right.place", "left.place"] }
+  ],
+  "camera": { "position": [0.42, 0.27, 0.24], "target": [0, 0.13, 0], "fov": 35 }
+}

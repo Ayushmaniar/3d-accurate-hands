@@ -1,0 +1,18 @@
+{
+  "name": "tripod",
+  "description": "Tripod writing grip: the thumb, index and middle fingertips meet in one point as if holding a pen, ring and pinky curled loosely below; palm to the viewer, seen from the thumb side.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 10,
+      "thumb": { "cmc_abd": 65.5, "cmc_flex": -11.0, "cmc_rot": 51.1, "mcp_flex": 25.0, "ip_flex": 50.9 },
+      "index": { "mcp_abd": 11.2, "mcp_flex": 87.1, "pip_flex": 51.8, "dip_flex": 5.7 },
+      "middle": { "mcp_abd": -2.8, "mcp_flex": 72.2, "pip_flex": 35.9, "dip_flex": 36.0 },
+      "ring": { "mcp_abd": 0, "mcp_flex": 60, "pip_flex": 75, "dip_flex": 45 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 65, "pip_flex": 75, "dip_flex": 45 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.pad", "right.index.tip"] }, { "touch": ["right.thumb.tip", "right.middle.tip"] }],
+  "camera": { "position": [0.3, 0.15, 0.3], "target": [0.01, 0.085, 0.04], "fov": 35 }
+}

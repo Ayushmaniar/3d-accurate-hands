@@ -1,0 +1,24 @@
+{
+  "name": "finger_gun",
+  "description": "Finger gun: index pointing straight ahead, thumb cocked straight up, the other three fingers curled into the palm; seen from the side with the palm toward the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [-1, 0, 0] },
+      "thumb": { "cmc_flex": -15.6, "cmc_abd": -1.1, "cmc_rot": 12.3, "mcp_flex": -10.8, "ip_flex": -11.3 },
+      "index": { "mcp_abd": -4.0, "mcp_flex": -4.3, "pip_flex": 8, "dip_flex": 4 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 80, "pip_flex": 95, "dip_flex": 50 },
+      "ring": { "mcp_abd": 0, "mcp_flex": 82, "pip_flex": 95, "dip_flex": 50 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95, "dip_flex": 50 },
+      "palm_cup": 10,
+      "twist": 0.0,
+      "wrist_flex": -0.0,
+      "wrist_dev": -0.0
+    }
+  },
+  "goals": [
+    { "aim": "right.index", "at": [-0.5, 0.03, 0.01] },
+    { "aim": "right.thumb", "at": [-0.2, 0.4, 0.03], "vary": ["right.thumb.*"] }
+  ],
+  "camera": { "position": [-0.09, 0.11, 0.46], "target": [-0.085, 0.045, 0.0], "fov": 36 }
+}

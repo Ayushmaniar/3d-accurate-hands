@@ -2,10 +2,13 @@
 //! angles. `solve` turns a pose file into world-space geometry; `query` checks it.
 
 pub mod explain;
+pub mod gestures;
+pub mod goals;
 pub mod params;
 pub mod pose;
 pub mod query;
 pub mod rig;
+pub mod solve;
 
 use glam::DVec3;
 use serde_json::{Value, json};
@@ -21,6 +24,16 @@ pub struct Solved {
 /// Parses a pose file and builds every hand in it.
 pub fn solve(text: &str) -> Result<Solved, String> {
     let (pose, mirrors) = pose::parse(text)?;
+    build(pose, mirrors)
+}
+
+/// Like `solve`, from already-parsed JSON.
+pub fn solve_value(v: &Value) -> Result<Solved, String> {
+    let (pose, mirrors) = pose::parse_value(v.clone())?;
+    build(pose, mirrors)
+}
+
+fn build(pose: PoseFile, mirrors: pose::Mirrors) -> Result<Solved, String> {
     let version = pose.version;
     if let Some(v) = version {
         if v != 1 {
@@ -55,7 +68,9 @@ fn arr(p: DVec3) -> Value {
 
 impl Solved {
     pub fn query(&self) -> Result<query::Report, String> {
-        query::analyze(&self.pose, &self.hands)
+        let mut report = query::analyze(&self.pose, &self.hands)?;
+        report.goals = goals::statuses(self)?;
+        Ok(report)
     }
 
     /// Everything a preview renderer draws.
@@ -84,6 +99,12 @@ impl Solved {
             }
             for site in &h.sites {
                 s.push_str(&format!("site {}: {} facing {}\n", site.name, f(site.pos), f(site.normal)));
+            }
+            for d in rig::Digit::ALL {
+                let name = format!("{}.{}", h.side.name(), d.name());
+                if let Ok((base, dir)) = self.finger_ray(&name) {
+                    s.push_str(&format!("aim line {name}: from {} along {}\n", f(base), f(dir)));
+                }
             }
         }
         s

@@ -1,0 +1,23 @@
+{
+  "name": "heart_hands",
+  "description": "Heart hands: index to little fingers of both hands curl over to form the two top lobes with their fingertips meeting at the top center, and the thumbs point down with their tips touching at the bottom; seen from behind the hands, as the person making it sees it.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [-0.1182, 0, 0], "palm_facing": [0.644, -0.579, 0.5], "fingers_toward": [0.669, 0.743, 0] },
+      "wrist_flex": 0,
+      "wrist_dev": 0,
+      "thumb": { "cmc_flex": -10, "cmc_abd": 60, "cmc_rot": 0, "mcp_flex": 15, "ip_flex": 20 },
+      "index": { "mcp_abd": 0, "mcp_flex": -25, "pip_flex": 95, "dip_flex": 57 },
+      "middle": { "mcp_abd": 0, "mcp_flex": -21, "pip_flex": 95, "dip_flex": 57 },
+      "ring": { "mcp_abd": 0, "mcp_flex": -17, "pip_flex": 95, "dip_flex": 57 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": -13, "pip_flex": 95, "dip_flex": 57 }
+    },
+    "left": { "mirror": "right" }
+  },
+  "goals": [
+    { "touch": ["right.index.distal", "left.index.distal"], "vary": ["right.place"] },
+    { "touch": ["right.thumb.distal", "left.thumb.distal"], "vary": ["right.thumb.*"] }
+  ],
+  "camera": { "position": [0, 0.08, -0.5], "target": [0, 0.07, 0], "fov": 35 }
+}

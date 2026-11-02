@@ -1,0 +1,26 @@
+{
+  "name": "steeple",
+  "description": "Steepled fingers: the fingertips and thumb tips of both hands press together in a tent, palms held apart, fingers pointing up; seen from the front and slightly to the side.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [-0.1002, 0, 0], "palm_facing": [1, -0.364, 0], "fingers_toward": [0.364, 1, 0] },
+      "wrist_flex": -40,
+      "wrist_dev": 25,
+      "thumb": { "cmc_flex": 5, "cmc_abd": 12, "cmc_rot": -10, "mcp_flex": 8, "ip_flex": 25 },
+      "index": { "mcp_abd": 0, "mcp_flex": 15, "pip_flex": 18, "dip_flex": 12 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 10, "pip_flex": 15, "dip_flex": 10 },
+      "ring": { "mcp_abd": 2, "mcp_flex": 12, "pip_flex": 18, "dip_flex": 12 },
+      "pinky": { "mcp_abd": 4, "mcp_flex": 40, "pip_flex": 20, "dip_flex": 13 }
+    },
+    "left": { "mirror": "right" }
+  },
+  "goals": [
+    { "touch": ["right.middle.tip", "left.middle.tip"], "vary": ["right.middle.pip_flex", "right.middle.dip_flex"] },
+    { "touch": ["right.index.tip", "left.index.tip"], "vary": ["right.index.pip_flex", "right.index.dip_flex"] },
+    { "touch": ["right.ring.tip", "left.ring.tip"], "vary": ["right.ring.pip_flex", "right.ring.dip_flex"] },
+    { "touch": ["right.pinky.tip", "left.pinky.tip"], "vary": ["right.pinky.pip_flex", "right.pinky.dip_flex"] },
+    { "touch": ["right.thumb.tip", "left.thumb.tip"], "vary": ["right.thumb.cmc_flex", "right.thumb.cmc_abd", "right.thumb.mcp_flex"] }
+  ],
+  "camera": { "position": [0.2, 0.17, 0.38], "target": [0, 0.1, 0], "fov": 35 }
+}

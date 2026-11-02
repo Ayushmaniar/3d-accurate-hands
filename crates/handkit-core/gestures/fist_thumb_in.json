@@ -1,0 +1,18 @@
+{
+  "name": "fist_thumb_in",
+  "description": "Fist with the thumb tucked inside: the thumb lies across the palm under the fingers, which close over it; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 0.5,
+      "thumb": { "cmc_abd": 5, "cmc_flex": 27, "cmc_rot": 27, "mcp_flex": 29, "ip_flex": 29 },
+      "index": { "mcp_abd": 0, "mcp_flex": 73, "pip_flex": 90, "dip_flex": 35 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 52.5, "pip_flex": 86, "dip_flex": 40 },
+      "ring": { "mcp_abd": 0, "mcp_flex": 93, "pip_flex": 95, "dip_flex": 55 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95, "dip_flex": 55 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.nail", "right.middle.middle"] }, { "touch": ["right.index.middle", "right.thumb.proximal"], "gap_mm": 1 }, { "touch": ["right.ring.tip", "right.ring.metacarpal"] }, { "touch": ["right.pinky.tip", "right.pinky.metacarpal"] }],
+  "camera": { "position": [0.16, 0.12, 0.4], "target": [0.0, 0.07, 0.03], "fov": 35 }
+}
