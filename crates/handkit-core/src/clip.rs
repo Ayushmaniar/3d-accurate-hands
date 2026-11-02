@@ -571,6 +571,10 @@ impl Clip {
             if let Some(s) = &size {
                 merged["size"] = s.clone();
             }
+            // Each person's hand size, so keys are solved at the size they play at.
+            if let Some(p) = &people {
+                merged["people"] = p.clone();
+            }
             // A grip the previous key held too keeps its hold: the follower goes where the
             // previous key's grip puts it relative to the leader, fingers as they were.
             if let Some(p) = keys.last() {
@@ -631,7 +635,7 @@ impl Clip {
                     values[PARAMS.iter().position(|p| p.key == k).unwrap()] = x;
                 }
                 let rot = DQuat::from_mat3(&g.world.matrix3.into());
-                let wrist = g.world.transform_point3(DVec3::new(0.0, FOREARM, 0.0));
+                let wrist = g.world.transform_point3(DVec3::new(0.0, FOREARM * g.scale, 0.0));
                 hands[si] = Some(HandKey { values, wrist, rot });
             }
             if let Some(g) = solved.hands.iter().find(|h| !ids.contains(&h.id)) {
@@ -644,7 +648,8 @@ impl Clip {
                     for k in ["place", "elbow", "forearm_rotation_deg", "mirror"] {
                         obj.remove(k);
                     }
-                    obj.insert("place".into(), place_json(h.wrist, h.rot));
+                    let len = solved.hands.iter().find(|g| g.id == *id).map_or(FOREARM, |g| FOREARM * g.scale);
+                    obj.insert("place".into(), place_json(h.wrist, h.rot, len));
                     for k in ["wrist_flex", "wrist_dev"] {
                         let j = PARAMS.iter().position(|p| p.key == k).unwrap();
                         obj.insert(k.into(), json!(r6(h.values[j])));
@@ -889,12 +894,13 @@ impl Clip {
     }
 
     /// A hand as a pose file's hand: every joint value and the placement.
-    fn hand_value(values: &[f64], wrist: DVec3, rot: DQuat) -> Value {
+    /// `forearm` is the forearm's length (the person's size times the default).
+    fn hand_value(values: &[f64], wrist: DVec3, rot: DQuat, forearm: f64) -> Value {
         let mut hand = json!({});
         for (j, p) in PARAMS.iter().enumerate() {
             set_path(&mut hand, p.key, json!(r6(values[j])));
         }
-        hand["place"] = place_json(wrist, rot);
+        hand["place"] = place_json(wrist, rot, forearm);
         hand
     }
 
@@ -998,12 +1004,17 @@ impl Clip {
         blend(own, leader * offset, h.weight(t))
     }
 
+    /// The length of hand `si`'s forearm: its person's size times the default.
+    fn forearm(&self, si: usize) -> f64 {
+        FOREARM * pose::person_scale(self.people.as_ref(), &self.ids[si].person).unwrap_or(1.0)
+    }
+
     /// Where a held follower's elbow would be at `t` with its own wrist angles.
     fn elbow_of(&self, h: &Hold, t: f64, depth: usize) -> DVec3 {
         let f = self.held_frame(h, t, depth);
         let (v, _, _) = self.posed(h.follower, t, false);
         let idx = |k: &str| PARAMS.iter().position(|p| p.key == k).unwrap();
-        f.translation + f.matrix3 * forearm_dir(self.ids[h.follower].side, v[idx("wrist_dev")], v[idx("wrist_flex")]) * FOREARM
+        f.translation + f.matrix3 * forearm_dir(self.ids[h.follower].side, v[idx("wrist_dev")], v[idx("wrist_flex")]) * self.forearm(h.follower)
     }
 
     /// How far collisions push hand `si` at `t`; a held follower moves with its leader's push.
@@ -1020,7 +1031,7 @@ impl Clip {
     fn free_hands(&self, t: f64) -> Result<(Vec<HandGeom>, Vec<DVec3>), String> {
         let build = |si: usize, follow: bool| -> Result<(HandGeom, DVec3), String> {
             let (values, wrist, rot) = self.attached(si, t, follow);
-            let mut hp: pose::HandPose = serde_json::from_value(Self::hand_value(&values, wrist, rot)).map_err(|e| e.to_string())?;
+            let mut hp: pose::HandPose = serde_json::from_value(Self::hand_value(&values, wrist, rot, self.forearm(si))).map_err(|e| e.to_string())?;
             hp.scale = pose::person_scale(self.people.as_ref(), &self.ids[si].person);
             Ok((crate::rig::build_hand(&self.ids[si], &hp, Some(1), None)?, wrist))
         };
@@ -1098,7 +1109,7 @@ impl Clip {
         for (si, id) in self.ids.iter().enumerate() {
             let (values, mut wrist, rot) = self.attached(si, t, true);
             wrist += self.push_of(si, t);
-            hands.insert(id.name(), Self::hand_value(&values, wrist, rot));
+            hands.insert(id.name(), Self::hand_value(&values, wrist, rot, self.forearm(si)));
         }
         let mut pose = json!({ "version": 1, "hands": Value::Object(hands) });
         if let Some(c) = self.camera_at(t) {
@@ -1376,8 +1387,8 @@ fn merge_key(prev: Option<&Value>, key: Value) -> Result<Value, String> {
     Ok(base)
 }
 
-fn place_json(wrist: DVec3, rot: DQuat) -> Value {
-    let elbow = wrist - rot * DVec3::new(0.0, FOREARM, 0.0);
+fn place_json(wrist: DVec3, rot: DQuat, forearm: f64) -> Value {
+    let elbow = wrist - rot * DVec3::new(0.0, forearm, 0.0);
     let (x, y, z) = rot.to_euler(EulerRot::XYZ);
     json!({
         "elbow": [r6(elbow.x), r6(elbow.y), r6(elbow.z)],
