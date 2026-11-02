@@ -21,6 +21,9 @@ pub const SITE_TOL_MM: f64 = 6.0;
 /// file started from instead of contorting the hand to center the contact.
 const SITE_WEIGHT: f64 = 1.0;
 const SITE_FREE_MM: f64 = 3.0;
+/// A clear goal holds while no two parts overlap by more than this; the solver then pushes them
+/// to within the overlap slack (0.5 mm), so turning it on barely moves anything.
+const CLEAR_TOL_MM: f64 = 0.9;
 
 pub struct GoalStatus {
     pub label: String,
@@ -136,7 +139,21 @@ pub fn evaluate(goal: &Goal, s: &Solved) -> Result<(Vec<f64>, GoalStatus), Strin
                 GoalStatus { label: format!("aim {finger} at {:?}", goal.at.unwrap()), value: (angle * 10.0).round() / 10.0, unit: "deg", met: angle <= AIM_TOL_DEG, note: String::new() },
             ))
         }
-        _ => Err("each goal needs either \"touch\": [a, b] or \"aim\": \"<hand>.<digit>\" with \"at\"".into()),
+        // A goal with only `vary`: keep what it varies from passing through anything.
+        (None, None) if !goal.vary.is_empty() => {
+            let caps: Vec<_> = s.hands.iter().flat_map(|h| &h.capsules).collect();
+            let mut deepest = 0.0_f64;
+            for (i, a) in caps.iter().enumerate() {
+                for b in &caps[i + 1..] {
+                    if crate::query::collides(a, b) {
+                        deepest = deepest.min(crate::query::seg_dist(a.a, a.b, b.a, b.b) - a.r - b.r);
+                    }
+                }
+            }
+            let mm = deepest * 1000.0;
+            Ok((Vec::new(), GoalStatus { label: format!("clear {}", goal.vary.join(", ")), value: (mm * 10.0).round() / 10.0, unit: "mm", met: mm >= -CLEAR_TOL_MM, note: String::new() }))
+        }
+        _ => Err("each goal needs either \"touch\": [a, b], \"aim\": \"<hand>.<digit>\" with \"at\", or only \"vary\" (keep those parts from passing through anything)".into()),
     }
 }
 

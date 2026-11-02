@@ -11,4 +11,4 @@ export function init(source) {
   return ready;
 }
 
-export const { bones, query, solve, gesture } = wasm;
+export const { bones, query, solve, gesture, Clip } = wasm;

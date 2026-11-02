@@ -14,8 +14,8 @@ const fn p(key: &'static str, min: f64, max: f64, doc: &'static str) -> Param {
 
 pub const PARAMS: &[Param] = &[
     p("twist", -100.0, 100.0, "Turns the hand about the forearm's long axis. +90 makes the palm face the side the thumb pointed to at rest (right hand: +X, the thumb then points to -Z)."),
-    p("wrist_flex", -70.0, 80.0, "Bends the hand toward the palm side; negative bends it toward the back of the hand."),
-    p("wrist_dev", -25.0, 35.0, "Bends the hand sideways toward the thumb (radial); negative toward the pinky. Applied before wrist_flex."),
+    p("wrist_flex", -80.0, 85.0, "Bends the hand toward the palm side; negative bends it toward the back of the hand."),
+    p("wrist_dev", -35.0, 35.0, "Bends the hand sideways toward the thumb (radial); negative toward the pinky. Applied before wrist_flex."),
     p("palm_cup", 0.0, 25.0, "Hollows the palm: the pinky knuckle comes 0.03*sin(cup) m forward and turns `cup` degrees toward the thumb, the ring knuckle half that. Use in fists, grips and thumb-to-pinky contact."),
     p("thumb.cmc_flex", -30.0, 50.0, "Swings the whole thumb in the palm plane toward the pinky side (across the palm). Negative swings it further out."),
     p("thumb.cmc_abd", -10.0, 75.0, "Lifts the whole thumb out of the palm plane toward the palm side, like opening the hand around a can."),

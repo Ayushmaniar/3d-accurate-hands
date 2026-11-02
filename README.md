@@ -12,10 +12,13 @@ Design doc: https://claude.ai/artifact/MxBq9Ef5StLhakD7BpCRBa
 - `crates/handkit-cli/`: the `handkit` command. `docs/POSE_SPEC.md` is its agent-facing spec (`handkit explain`).
 - `crates/handkit-mesh/`: the procedural hand: a signed distance field built from the rig, meshed, skinned to the rig's 17 joints, with 14 corrective shapes for bent joints, written as glTF.
 - `crates/handkit-fframes/`: hands in fframes 3D scenes (`HandModel`, `Hand::pose`).
+- `clips/`: example clips (motion: keyed poses over time; `handkit explain clips`).
+- `starters/fframes-clip/`: an fframes video that plays a clip; copy it for a video.
 - `crates/handkit-wasm/` and `packages/handkit-three/`: the core as WebAssembly (`core.js`) and the three.js adapter (`handRig`).
 - `tools/preview/`: the headless three.js renderer behind `handkit render`.
 - `tools/golden/`: renders poses with fframes and three.js and compares them (the M3 gate).
-- `bench/`: agent benchmark runs (`gestures/`) and golden results (`golden/`).
+- `tools/motion/compare.py`: a reference video and a recreation side by side (the M4 gate).
+- `bench/`: agent benchmark runs (`gestures/`), golden results (`golden/`) and reference recreations (`motion/`).
 - `experiments/joint-angles/`: the first experiment, a JavaScript capsule rig and three agents' attempts at 7 gestures.
 - `Reference videos to Animate/`: hand-choreography videos for the final test. Video files stay local; each `clean/<slug>/NOTES.md` describes its segments.
 
@@ -26,6 +29,8 @@ cargo build --release
 handkit gesture ok > pose.json
 handkit solve pose.json
 handkit render pose.json --mesh
+handkit check clips/demo_basics.json
+handkit sheet clips/demo_basics.json -n 12 --mesh
 ```
 
 `render` needs node and a Playwright Chromium (found under `%LOCALAPPDATA%/ms-playwright`, or set `HANDKIT_CHROME`); run `npm install` in `tools/preview` once. `--mesh` draws the skinned hand, generating `assets/hand_R.glb` and `hand_L.glb` on first use (about a second each; `handkit mesh` writes them anywhere).

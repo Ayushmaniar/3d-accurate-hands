@@ -1,0 +1,8 @@
+clip: 8.90 s, 268 frames at 30 fps
+goals: none held
+penetrations: none
+speed right: ok (wrist peak 0.54 m/s at 0.10 s)
+speed left: ok (wrist peak 0.85 m/s at 0.10 s)
+pops: none
+framing: a fingertip leaves the camera's view in 0.00-0.13 s
+1 problem(s)

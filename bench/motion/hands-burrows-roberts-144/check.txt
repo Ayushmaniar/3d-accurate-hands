@@ -1,0 +1,9 @@
+clip: 12.00 s, 360 frames at 30 fps
+goals: none held
+penetrations: none
+speed right: ok (wrist peak 0.59 m/s at 1.10 s)
+speed left: ok (wrist peak 1.07 m/s at 1.60 s)
+pops: none
+framing: every fingertip stays in view
+framing: an elbow (where the forearm ends) is in view in 6.10-6.13 s, 8.40 s, 9.20-9.30 s, 10.83-10.87 s; move it out of frame
+1 problem(s)

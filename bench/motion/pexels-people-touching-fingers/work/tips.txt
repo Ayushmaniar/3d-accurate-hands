@@ -1,0 +1,33 @@
+ 0.00  bot mine (0.519,0.831) ref (0.52, 0.83) err    -1,   +2px
+ 0.10  top mine (0.926,0.553) ref (0.93, 0.552) err    -4,   +2px
+ 0.20  top mine (0.852,0.540) ref (0.85, 0.542) err    +2,   -3px  bot mine (0.521,0.717) ref (0.52, 0.715) err    +1,   +3px
+ 0.27  top mine (0.804,0.528) ref (0.79, 0.53) err   +16,   -3px
+ 0.30  bot mine (0.506,0.679) ref (0.5, 0.677) err    +7,   +3px
+ 0.37  top mine (0.751,0.513) ref (0.75, 0.51) err    +1,   +6px
+ 0.40  bot mine (0.502,0.646) ref (0.5, 0.646) err    +3,   +0px
+ 0.47  top mine (0.710,0.498) ref (0.706, 0.5) err    +4,   -3px
+ 0.50  bot mine (0.498,0.615) ref (0.5, 0.615) err    -3,   -0px
+ 0.57  top mine (0.671,0.485) ref (0.671, 0.483) err    +0,   +3px  bot mine (0.492,0.593) ref (0.467, 0.596) err   +27,   -6px
+ 0.67  top mine (0.635,0.473) ref (0.632, 0.471) err    +3,   +4px  bot mine (0.484,0.566) ref (0.484, 0.567) err    +0,   -2px
+ 0.77  top mine (0.601,0.464) ref (0.597, 0.461) err    +4,   +6px  bot mine (0.477,0.543) ref (0.475, 0.545) err    +2,   -3px
+ 0.87  top mine (0.576,0.460) ref (0.571, 0.455) err    +6,   +9px  bot mine (0.473,0.525) ref (0.474, 0.525) err    -1,   +0px
+ 0.97  top mine (0.563,0.458) ref (0.553, 0.455) err   +10,   +6px  bot mine (0.471,0.509) ref (0.473, 0.509) err    -2,   -0px
+ 1.07  top mine (0.552,0.457) ref (0.551, 0.454) err    +1,   +6px  bot mine (0.469,0.497) ref (0.47, 0.495) err    -2,   +3px
+ 1.17  top mine (0.543,0.458) ref (0.542, 0.455) err    +1,   +6px  bot mine (0.467,0.486) ref (0.467, 0.484) err    +0,   +5px
+ 1.27  top mine (0.535,0.458) ref (0.534, 0.457) err    +1,   +2px  bot mine (0.466,0.480) ref (0.467, 0.479) err    -1,   +1px
+ 1.37  top mine (0.527,0.458) ref (0.524, 0.457) err    +4,   +2px
+ 1.47  bot mine (0.465,0.469) ref (0.467, 0.471) err    -2,   -3px
+ 1.57  top mine (0.512,0.456) ref (0.513, 0.458) err    -1,   -4px
+ 1.67  bot mine (0.465,0.465) ref (0.466, 0.465) err    -1,   +1px
+ 1.77  top mine (0.503,0.455) ref (0.505, 0.457) err    -2,   -3px
+ 2.00  top mine (0.498,0.453) ref (0.502, 0.455) err    -4,   -4px  bot mine (0.466,0.464) ref (0.468, 0.466) err    -2,   -4px
+ 2.50  bot mine (0.472,0.466) ref (0.474, 0.468) err    -2,   -4px
+ 3.00  top mine (0.505,0.455) ref (0.504, 0.453) err    +1,   +4px  bot mine (0.473,0.467) ref (0.473, 0.468) err    +0,   -3px
+ 4.00  top mine (0.498,0.454) ref (0.498, 0.452) err    +1,   +3px  bot mine (0.470,0.470) ref (0.47, 0.47) err    -0,   +0px
+ 5.00  top mine (0.495,0.454) ref (0.494, 0.452) err    +2,   +4px  bot mine (0.472,0.465) ref (0.476, 0.467) err    -4,   -5px
+ 6.00  top mine (0.495,0.451) ref (0.495, 0.45) err    +0,   +2px  bot mine (0.461,0.461) ref (0.467, 0.464) err    -6,   -5px
+ 7.00  top mine (0.488,0.451) ref (0.49, 0.45) err    -2,   +2px  bot mine (0.470,0.469) ref (0.468, 0.468) err    +2,   +1px
+ 8.00  top mine (0.495,0.450) ref (0.494, 0.449) err    +2,   +2px  bot mine (0.476,0.467) ref (0.473, 0.467) err    +3,   +1px
+ 8.50  top mine (0.494,0.445) ref (0.496, 0.445) err    -2,   -0px  bot mine (0.473,0.465) ref (0.476, 0.466) err    -3,   -1px
+ 8.78  top mine (0.517,0.455) ref (0.526, 0.457) err   -10,   -3px  bot mine (0.476,0.481) ref (0.484, 0.477) err    -9,   +8px
+ 8.88  top mine (0.538,0.466) ref (0.54, 0.462) err    -2,   +7px  bot mine (0.481,0.495) ref (0.49, 0.5) err   -10,   -9px

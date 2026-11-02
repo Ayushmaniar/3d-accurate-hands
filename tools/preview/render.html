@@ -117,6 +117,82 @@ window.render = async (geom, viewNames, size) => {
     wrap.appendChild(label);
   });
 };
+// Clips: many frames of one motion, drawn one at a time by `drawFrame(i)` (a PNG data URL).
+// The meshes load once and are reposed per frame; the camera is the clip's, or one framing
+// that holds the hands in every frame.
+let clip = null;
+window.setupFrames = async (spec) => {
+  const [w, h] = spec.size;
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x404050, 1.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(0.6, 1, 0.8); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.8); fill.position.set(-0.8, -0.3, -0.6); scene.add(fill);
+  const appliers = [];
+  if (spec.mesh) {
+    const loader = new GLTFLoader();
+    for (const side of Object.keys(spec.mesh.files)) {
+      const gltf = await loader.loadAsync(`/asset/${side}.glb`);
+      gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE); o.frustumCulled = false; } });
+      appliers.push(handRig(gltf.scene));
+      scene.add(gltf.scene);
+    }
+  }
+  const box = new THREE.Box3();
+  spec.frames.forEach((f) => f.capsules.filter((c) => !c.arm).forEach((c) => { box.expandByPoint(V(c.a)); box.expandByPoint(V(c.b)); }));
+  const center = box.getCenter(new THREE.Vector3());
+  const radius = Math.max(box.getSize(new THREE.Vector3()).length() * 0.55, 0.08);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(w, h);
+  renderer.setClearColor(spec.background || 0x30343a, 1);
+  clip = { spec, scene, appliers, renderer, group: null, center, radius };
+};
+
+window.drawFrame = (i) => {
+  const { spec, scene, appliers, renderer, center, radius } = clip;
+  const f = spec.frames[i];
+  const [w, h] = spec.size;
+  if (appliers.length) {
+    appliers.forEach((apply) => apply(f.bones));
+  } else {
+    if (clip.group) { scene.remove(clip.group); clip.group.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); }); }
+    clip.group = new THREE.Group();
+    f.capsules.forEach((c) => clip.group.add(capsule(c)));
+    f.nails.forEach((n) => clip.group.add(nail(n)));
+    scene.add(clip.group);
+  }
+  let cam;
+  if (f.camera) {
+    cam = new THREE.PerspectiveCamera(f.camera.fov || 35, w / h, 0.01, 50);
+    cam.position.set(...f.camera.position); cam.lookAt(V(f.camera.target));
+  } else {
+    const a = w / h;
+    cam = new THREE.OrthographicCamera(-radius * a, radius * a, radius, -radius, 0.01, 50);
+    cam.position.copy(center).addScaledVector(V(VIEWS.three_quarter.dir).normalize(), 3);
+    cam.lookAt(center);
+  }
+  renderer.render(scene, cam);
+  return renderer.domElement.toDataURL('image/png');
+};
+
+// A contact sheet: every frame in a grid, each labelled with its time.
+window.drawSheet = async (cols) => {
+  const { spec, renderer } = clip;
+  const [w, h] = spec.size;
+  const n = spec.frames.length, rows = Math.ceil(n / cols);
+  const sheet = document.createElement('canvas');
+  sheet.width = cols * w; sheet.height = rows * h;
+  const g = sheet.getContext('2d');
+  g.fillStyle = spec.background || '#2b2e33'; g.fillRect(0, 0, sheet.width, sheet.height);
+  for (let i = 0; i < n; i++) {
+    window.drawFrame(i);
+    const x = (i % cols) * w, y = Math.floor(i / cols) * h;
+    g.drawImage(renderer.domElement, x, y);
+    g.strokeStyle = '#1d1f23'; g.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    g.fillStyle = '#e8e8e8'; g.font = '600 13px system-ui, sans-serif';
+    g.fillText(spec.frames[i].label, x + 8, y + 18);
+  }
+  return sheet.toDataURL('image/png');
+};
 window.ready = true;
 </script>
 </body>

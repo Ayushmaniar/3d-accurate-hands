@@ -20,3 +20,20 @@ target-docs/
 # Generated: `handkit mesh` (or the first `render --mesh`) rebuilds them.
 assets/*.glb
 bench/golden/*.png
+clips/*.png
+clips/*.mp4
+starters/*/target/
+starters/*/.cargo/
+starters/*/out*.mp4
+starters/*/frames/
+starters/*/strip.png
+starters/*/target-portrait/
+bench/motion/**/*.mp4
+bench/motion/**/*.png
+bench/motion/**/frames/
+
+# Low-res review videos for the phone
+phone/
+experiments/looks/gen/*.png
+experiments/looks/gen/*.jpg
+.claude/worktrees/
