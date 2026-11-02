@@ -68,7 +68,8 @@ fn values(pose: &Value, side: &str) -> Option<(Vec<f64>, DVec3)> {
     let r = h.pointer("/place/forearm_rotation_deg")?;
     let a = |v: &Value, i: usize| v[i].as_f64().unwrap_or(0.0);
     let rot = glam::DQuat::from_euler(glam::EulerRot::XYZ, a(r, 0).to_radians(), a(r, 1).to_radians(), a(r, 2).to_radians());
-    let wrist = DVec3::new(a(e, 0), a(e, 1), a(e, 2)) + rot * DVec3::new(0.0, crate::rig::FOREARM, 0.0);
+    let k = crate::pose::split_hand(side).and_then(|(id, _)| crate::pose::person_scale(pose.get("people"), &id.person)).unwrap_or(1.0);
+    let wrist = DVec3::new(a(e, 0), a(e, 1), a(e, 2)) + rot * DVec3::new(0.0, crate::rig::FOREARM * k, 0.0);
     Some((v, wrist))
 }
 

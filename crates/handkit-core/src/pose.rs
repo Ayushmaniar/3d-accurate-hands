@@ -502,6 +502,7 @@ pub fn aspect(v: &Value) -> f64 {
 fn screen_places(v: &mut Value) -> Result<(), String> {
     let aspect = aspect(v);
     let cam = v.get("camera").cloned();
+    let people = v.get("people").cloned();
     let Some(hands) = v.get_mut("hands").and_then(Value::as_object_mut) else { return Ok(()) };
     for (side, hand) in hands.iter_mut() {
         let Some(place) = hand.get_mut("place").and_then(Value::as_object_mut) else { continue };
@@ -534,7 +535,8 @@ fn screen_places(v: &mut Value) -> Result<(), String> {
             // wrist: the farther of the two such points, or the nearest point of the line.
             let d = (view.unproject(aspect, pair(&s, "elbow_screen")?, 1.0) - view.pos).normalize();
             let b = d.dot(w - view.pos);
-            let disc = b * b - (w - view.pos).length_squared() + crate::rig::FOREARM * crate::rig::FOREARM;
+            let len = crate::rig::FOREARM * split_hand(side).and_then(|(id, _)| person_scale(people.as_ref(), &id.person)).unwrap_or(1.0);
+            let disc = b * b - (w - view.pos).length_squared() + len * len;
             let elbow = view.pos + d * (b + disc.max(0.0).sqrt());
             let t = elbow - w;
             place.insert("forearm_toward".into(), serde_json::json!([t.x, t.y, t.z]));

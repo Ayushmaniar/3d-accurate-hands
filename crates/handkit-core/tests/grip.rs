@@ -195,6 +195,22 @@ fn the_grip_demos_pass_check() {
 }
 
 #[test]
+fn a_childs_hand_is_solved_and_played_at_its_size() {
+    // The demo handshake with Ben as a child: each key is solved at the size it plays at, and
+    // the forearm between wrist and elbow is the child's, so the grip holds without overlap.
+    let path = format!("{}/../../clips/demo_handshake.json", env!("CARGO_MANIFEST_DIR"));
+    let mut v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    v["people"]["ben"]["scale"] = json!(0.75);
+    let clip = Clip::parse(&v.to_string()).unwrap();
+    let text = check(&clip);
+    assert!(!text.contains("penetration of the hands"), "{text}");
+    let s = solve_value(&clip.sample(2.0).unwrap().pose).unwrap();
+    let ben = s.hands.iter().find(|h| h.id.name() == "ben.right").unwrap();
+    let arm = ben.capsules.iter().find(|c| c.part == "forearm").unwrap();
+    assert!(((grip::hand_frame(ben).translation - arm.a).length() - 0.26 * 0.75).abs() < 1e-6);
+}
+
+#[test]
 fn gripped_hands_move_together_and_the_follower_trails() {
     let clip = demo("demo_handshake");
     let (fps, from, to) = (60.0, 1.6, 3.3);
