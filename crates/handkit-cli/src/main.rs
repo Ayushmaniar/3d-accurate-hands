@@ -52,7 +52,7 @@ enum Cmd {
         #[arg(short, long)]
         out: PathBuf,
         /// Grid spacing in millimeters (smaller = finer, slower).
-        #[arg(long, default_value_t = 1.6)]
+        #[arg(long, default_value_t = 1.2)]
         voxel_mm: f64,
     },
     /// A multi-view PNG preview (needs node; uses tools/preview).
@@ -388,6 +388,10 @@ fn run() -> Result<()> {
             // A clean transparent image for comparing renderers (tools/golden).
             if std::env::var_os("HANDKIT_GOLDEN").is_some() {
                 g["golden"] = serde_json::json!(true);
+            }
+            // Studio light and a portrait frame with the wrist, for comparing with photos.
+            if std::env::var_os("HANDKIT_STUDIO").is_some() {
+                g["studio"] = serde_json::json!(true);
             }
             std::fs::write(&geom, serde_json::to_string(&g)?)?;
             let script = preview_script();

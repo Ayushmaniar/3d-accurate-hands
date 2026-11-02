@@ -60,9 +60,20 @@ async function addMeshes(scene, mesh) {
 window.render = async (geom, viewNames, size) => {
   if (geom.golden) document.documentElement.style.background = document.body.style.background = 'transparent';
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x404050, 1.6));
-  const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(0.6, 1, 0.8); scene.add(sun);
-  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.8); fill.position.set(-0.8, -0.3, -0.6); scene.add(fill);
+  // Studio (HANDKIT_STUDIO): a warm key, a fill and a rim that follow each view's camera, a grey
+  // backdrop and a portrait frame that includes the wrist, like a product photo of a hand.
+  const studio = !!geom.studio;
+  const lights = [];
+  if (studio) {
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x505055, 0.9));
+    for (const [color, power, at] of [[0xfff4ea, 2.6, [-0.6, 0.8, 1.0]], [0xe8f0ff, 0.7, [1.0, -0.2, 0.6]], [0xffffff, 1.2, [0.5, 0.6, -1.0]]]) {
+      const l = new THREE.DirectionalLight(color, power); scene.add(l); scene.add(l.target); lights.push([l, at]);
+    }
+  } else {
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x404050, 1.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(0.6, 1, 0.8); scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xbfd4ff, 0.8); fill.position.set(-0.8, -0.3, -0.6); scene.add(fill);
+  }
   if (geom.mesh) {
     await addMeshes(scene, geom.mesh);
   } else {
@@ -77,8 +88,12 @@ window.render = async (geom, viewNames, size) => {
   // Frame the hands; forearms may leave the frame.
   const box = new THREE.Box3();
   geom.capsules.filter((c) => !c.arm).forEach((c) => { box.expandByPoint(V(c.a)); box.expandByPoint(V(c.b)); });
+  if (studio) geom.capsules.filter((c) => c.arm).forEach((c) => {
+    const a = V(c.a), b = V(c.b); box.expandByPoint(b.clone().add(a.sub(b).normalize().multiplyScalar(0.06)));
+  });
   const center = box.getCenter(new THREE.Vector3());
-  const radius = Math.max(box.getSize(new THREE.Vector3()).length() * 0.62, 0.08);
+  const radius = Math.max(box.getSize(new THREE.Vector3()).length() * (studio ? 0.5 : 0.62), 0.08);
+  const H = studio ? Math.round(size * 1.5) : size, aspect = size / H;
 
   const views = viewNames.map((name) => {
     if (name === 'hero') return geom.camera ? { name: 'HERO (pose camera)', cam: geom.camera } : { ...VIEWS.three_quarter };
@@ -88,32 +103,38 @@ window.render = async (geom, viewNames, size) => {
   const cols = views.length === 1 ? 1 : 2, rows = Math.ceil(views.length / cols);
   const wrap = document.getElementById('wrap');
   wrap.innerHTML = '';
-  wrap.style.width = `${cols * size}px`; wrap.style.height = `${rows * size}px`;
+  wrap.style.width = `${cols * size}px`; wrap.style.height = `${rows * H}px`;
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: !!geom.golden });
-  renderer.setSize(cols * size, rows * size);
+  renderer.setSize(cols * size, rows * H);
   renderer.setScissorTest(true);
   wrap.appendChild(renderer.domElement);
 
   views.forEach((v, i) => {
     let cam;
     if (v.cam) {
-      cam = new THREE.PerspectiveCamera(v.cam.fov || 35, 1, 0.01, 50);
+      cam = new THREE.PerspectiveCamera(v.cam.fov || 35, aspect, 0.01, 50);
       cam.position.set(...v.cam.position); cam.lookAt(V(v.cam.target));
     } else {
-      cam = new THREE.OrthographicCamera(-radius, radius, radius, -radius, 0.01, 50);
+      cam = new THREE.OrthographicCamera(-radius * aspect, radius * aspect, radius, -radius, 0.01, 50);
       cam.position.copy(center).addScaledVector(V(v.dir).normalize(), 3);
       cam.up.set(...v.up); cam.lookAt(center);
     }
     const col = i % cols, row = Math.floor(i / cols);
-    const x = col * size, y = (rows - 1 - row) * size;
-    renderer.setViewport(x, y, size, size); renderer.setScissor(x, y, size, size);
+    const x = col * size, y = (rows - 1 - row) * H;
+    renderer.setViewport(x, y, size, H); renderer.setScissor(x, y, size, H);
+    cam.updateMatrixWorld();
+    const axis = (i) => new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, i);
+    for (const [l, at] of lights) {
+      l.target.position.copy(center);
+      l.position.copy(center).addScaledVector(axis(0), at[0]).addScaledVector(axis(1), at[1]).addScaledVector(axis(2), at[2]);
+    }
     // Golden renders (compared with fframes): transparent, no labels.
-    renderer.setClearColor((col + row) % 2 ? 0x34383e : 0x30343a, geom.golden ? 0 : 1);
+    renderer.setClearColor(studio ? 0x76797d : (col + row) % 2 ? 0x34383e : 0x30343a, geom.golden ? 0 : 1);
     renderer.render(scene, cam);
     if (geom.golden) return;
     const label = document.createElement('div');
     label.className = 'label'; label.textContent = v.name;
-    label.style.left = `${col * size}px`; label.style.top = `${row * size}px`;
+    label.style.left = `${col * size}px`; label.style.top = `${row * H}px`;
     wrap.appendChild(label);
   });
 };

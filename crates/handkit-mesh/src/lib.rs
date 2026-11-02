@@ -46,14 +46,26 @@ pub struct HandMesh {
 }
 
 pub struct Options {
-    /// Grid spacing in meters; 0.0016 gives about 60k triangles.
+    /// Grid spacing over the hand in meters (the forearm's grid is coarser along its length);
+    /// 0.0012 gives about 130k triangles.
     pub voxel: f64,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Options { voxel: 0.0016 }
+        Options { voxel: 0.0012 }
     }
+}
+
+/// `f` over `items` on every core, in order.
+fn par_map<T: Sync, R: Send>(items: &[T], f: impl Fn(&T) -> R + Sync) -> Vec<R> {
+    let threads = std::thread::available_parallelism().map(|x| x.get()).unwrap_or(4);
+    let chunk = items.len().div_ceil(threads).max(1);
+    std::thread::scope(|s| {
+        let f = &f;
+        let parts: Vec<_> = items.chunks(chunk).map(|c| s.spawn(move || c.iter().map(f).collect::<Vec<R>>())).collect();
+        parts.into_iter().flat_map(|p| p.join().unwrap()).collect()
+    })
 }
 
 pub const SKIN: [f32; 3] = [0.86, 0.64, 0.53];
@@ -64,19 +76,19 @@ pub fn generate(side: Side, opts: &Options) -> HandMesh {
     // the rig's own left bind skeleton, which is the same reflection.
     let right = bind_geom(Side::Right);
     let field = sdf::hand_field(&right);
-    let (mut positions, mut indices) = surface_nets(&field, &right, opts.voxel);
+    let (positions, mut indices) = surface_nets(&field, &right, opts.voxel);
     // Pull each vertex onto the surface.
-    for p in positions.iter_mut() {
+    let mut positions = par_map(&positions, |p| {
+        let mut p = *p;
         for _ in 0..3 {
-            let d = field.eval(*p);
-            *p -= field.gradient(*p) * d;
+            let d = field.eval(p);
+            p -= field.gradient(p) * d;
         }
-    }
-    let normals: Vec<DVec3> = positions.iter().map(|p| field.gradient(*p)).collect();
+        p
+    });
+    let normals: Vec<DVec3> = par_map(&positions, |p| field.gradient(*p));
     let band = 0.0025;
-    let mut joints = Vec::with_capacity(positions.len());
-    let mut weights = Vec::with_capacity(positions.len());
-    for p in &positions {
+    let skin: Vec<([u16; 4], [f32; 4])> = par_map(&positions, |p| {
         let w = sdf::weights(&field, &right, *p, band);
         let mut j4 = [0u16; 4];
         let mut w4 = [0f32; 4];
@@ -84,10 +96,10 @@ pub fn generate(side: Side, opts: &Options) -> HandMesh {
             j4[i] = *b as u16;
             w4[i] = *x as f32;
         }
-        joints.push(j4);
-        weights.push(w4);
-    }
-    let nail: Vec<f32> = positions.iter().map(|p| nail_mask(&right, *p) as f32).collect();
+        (j4, w4)
+    });
+    let (joints, weights): (Vec<_>, Vec<_>) = skin.into_iter().unzip();
+    let nail: Vec<f32> = par_map(&positions, |p| field.nail_mask(*p) as f32);
     // glTF vertex colors are linear.
     let linear = |c: f32| if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) };
     let colors = nail.iter().map(|&m| std::array::from_fn(|i| linear(SKIN[i] + (NAIL[i] - SKIN[i]) * m))).collect();
@@ -161,21 +173,6 @@ fn correctives(h: &HandGeom, positions: &[DVec3]) -> Vec<Vec<(u32, [f32; 3])>> {
         .collect()
 }
 
-/// 1 on the back of each fingertip where the nail plate sits, fading out at its edges.
-fn nail_mask(h: &HandGeom, p: DVec3) -> f64 {
-    let mut best: f64 = 0.0;
-    for b in h.bones.iter().filter(|b| b.name.ends_with("_dip") || b.name == "thumb_ip") {
-        let q = b.frame.inverse().transform_point3(p);
-        let digit = b.name.split('_').next().unwrap();
-        let r = h.capsules.iter().find(|c| c.label() == format!("right.{digit}.distal")).map(|c| c.r).unwrap_or(0.008);
-        let l = b.len;
-        let edge = |x: f64, lo: f64, hi: f64, soft: f64| ((x - lo) / soft).clamp(0.0, 1.0) * ((hi - x) / soft).clamp(0.0, 1.0);
-        let m = edge(q.y, 0.35 * l, l + 0.75 * r, 0.0012) * edge(q.x, -0.72 * r, 0.72 * r, 0.0012) * edge(-q.z, 0.3 * r, 2.0 * r, 0.0012);
-        best = best.max(m);
-    }
-    best
-}
-
 /// Surface nets: one vertex per grid cell the surface crosses, one quad per crossing edge.
 fn surface_nets(field: &sdf::Field, h: &HandGeom, voxel: f64) -> (Vec<DVec3>, Vec<u32>) {
     let (mut lo, mut hi) = (DVec3::splat(f64::INFINITY), DVec3::splat(f64::NEG_INFINITY));
@@ -187,9 +184,18 @@ fn surface_nets(field: &sdf::Field, h: &HandGeom, voxel: f64) -> (Vec<DVec3>, Ve
     }
     lo -= DVec3::splat(0.02);
     hi += DVec3::splat(0.02);
+    // Along the forearm the surface barely curves: there the grid's rows are up to 2.5 times
+    // farther apart, easing to the full resolution 3 cm before the wrist.
+    let fine_from = h.bones.iter().find(|b| b.name == "hand").map(|b| b.origin.y).unwrap_or(lo.y) - 0.03;
+    let mut ys = vec![lo.y];
+    while *ys.last().unwrap() < hi.y {
+        let y = *ys.last().unwrap();
+        let t = ((fine_from - y) / 0.03).clamp(0.0, 1.0);
+        ys.push(y + voxel * (1.0 + 1.5 * t * t * (3.0 - 2.0 * t)));
+    }
     let n = ((hi - lo) / voxel).ceil().as_uvec3() + 1;
-    let (nx, ny, nz) = (n.x as usize, n.y as usize, n.z as usize);
-    let at = |i: usize, j: usize, k: usize| lo + dvec3(i as f64, j as f64, k as f64) * voxel;
+    let (nx, ny, nz) = (n.x as usize, ys.len(), n.z as usize);
+    let at = |i: usize, j: usize, k: usize| dvec3(lo.x + i as f64 * voxel, ys[j], lo.z + k as f64 * voxel);
     let idx = |i: usize, j: usize, k: usize| (k * ny + j) * nx + i;
 
     // Sample the field, slab by slab on every core.
@@ -238,7 +244,8 @@ fn surface_nets(field: &sdf::Field, h: &HandGeom, voxel: f64) -> (Vec<DVec3>, Ve
                     }
                 }
                 cell_vertex[cells(i, j, k)] = positions.len() as u32;
-                positions.push(at(i, j, k) + sum / count * voxel);
+                let size = dvec3(voxel, ys[j + 1] - ys[j], voxel);
+                positions.push(at(i, j, k) + sum / count * size);
             }
         }
     }
