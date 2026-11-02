@@ -69,6 +69,12 @@ impl SolveReport {
 }
 
 pub fn solve_goals(raw: &Value) -> Result<(Value, SolveReport), String> {
+    solve_goals_with(raw, true)
+}
+
+/// `solve_goals`, optionally without rounding the values it writes (clips solve every frame,
+/// where rounding would make the hand jitter).
+pub fn solve_goals_with(raw: &Value, round: bool) -> Result<(Value, SolveReport), String> {
     let (resolved, _) = resolve(raw.clone())?;
     let first = solve_value(raw)?;
     if first.pose.goals.is_empty() {
@@ -185,7 +191,7 @@ pub fn solve_goals(raw: &Value) -> Result<(Value, SolveReport), String> {
     let mut out = work.clone();
     let mut changes = Vec::new();
     for (p, x) in params.iter().zip(&u) {
-        let v = round_for(p, x * p.scale);
+        let v = if round { round_for(p, x * p.scale) } else { x * p.scale };
         let changed = (v - round_for(p, p.start)).abs() > 1e-9;
         if changed || get(&work, &p.path).is_some() {
             set(&mut out, &p.path, v);

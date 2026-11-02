@@ -20,3 +20,5 @@ target-docs/
 # Generated: `handkit mesh` (or the first `render --mesh`) rebuilds them.
 assets/*.glb
 bench/golden/*.png
+clips/*.png
+clips/*.mp4

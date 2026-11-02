@@ -1,5 +1,7 @@
 // Usage: node render.mjs <geometry.json> <out.png> [views=front,side,top,hero] [size=384]
 // Called by `handkit render`; draws `handkit geometry` output headlessly.
+// A clip (`{"frames": [...], "size": [w, h]}` from `handkit sheet` / `handkit preview`) draws a
+// contact sheet into <out.png>, or with `"video": true` one PNG per frame into the folder <out>.
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -48,9 +50,24 @@ try {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`http://localhost:${server.address().port}/render.html`);
   await page.waitForFunction(() => window.ready === true, null, { timeout: 30000 });
-  await page.evaluate(([g, v, s]) => window.render(g, v, s), [geom, viewArg.split(',').map((s) => s.trim()), Number(sizeArg)]);
-  if (errors.length) throw new Error(errors.join('\n'));
-  await page.locator('#wrap').screenshot({ path: out, omitBackground: !!geom.golden });
+  if (geom.frames) {
+    await page.evaluate((spec) => window.setupFrames(spec), geom);
+    const png = (url) => Buffer.from(url.slice(url.indexOf(',') + 1), 'base64');
+    if (geom.video) {
+      fs.mkdirSync(out, { recursive: true });
+      for (let i = 0; i < geom.frames.length; i++) {
+        const url = await page.evaluate((i) => window.drawFrame(i), i);
+        fs.writeFileSync(path.join(out, `frame_${String(i).padStart(5, '0')}.png`), png(url));
+      }
+    } else {
+      fs.writeFileSync(out, png(await page.evaluate((c) => window.drawSheet(c), geom.cols || 4)));
+    }
+    if (errors.length) throw new Error(errors.join('\n'));
+  } else {
+    await page.evaluate(([g, v, s]) => window.render(g, v, s), [geom, viewArg.split(',').map((s) => s.trim()), Number(sizeArg)]);
+    if (errors.length) throw new Error(errors.join('\n'));
+    await page.locator('#wrap').screenshot({ path: out, omitBackground: !!geom.golden });
+  }
 } finally {
   await browser.close();
   server.close();

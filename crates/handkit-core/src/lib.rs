@@ -1,6 +1,8 @@
 //! Handkit core: an anatomically constrained hand and forearm rig that agents pose in joint
 //! angles. `solve` turns a pose file into world-space geometry; `query` checks it.
 
+pub mod check;
+pub mod clip;
 pub mod explain;
 pub mod gestures;
 pub mod goals;

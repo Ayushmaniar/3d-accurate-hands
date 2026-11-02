@@ -251,7 +251,7 @@ pub struct Mirrors {
     pub right: bool,
 }
 
-fn merge(base: &mut Value, over: Value) {
+pub(crate) fn merge(base: &mut Value, over: Value) {
     match (base, over) {
         (Value::Object(b), Value::Object(o)) => {
             for (k, v) in o {
