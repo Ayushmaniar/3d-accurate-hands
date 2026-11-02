@@ -1,0 +1,77 @@
+{
+ "version": 1,
+ "hands": {
+  "right": {
+   "place": {
+    "wrist": [
+     0,
+     0,
+     0
+    ],
+    "palm_facing": [
+     0,
+     0,
+     -1
+    ],
+    "fingers_toward": [
+     0,
+     1,
+     0
+    ]
+   },
+   "palm_cup": 15,
+   "thumb": {
+    "cmc_flex": 35,
+    "cmc_abd": 50,
+    "cmc_rot": 50,
+    "mcp_flex": 50,
+    "ip_flex": 42
+   },
+   "index": {
+    "mcp_flex": 0,
+    "mcp_abd": 8,
+    "pip_flex": 0,
+    "dip_flex": 0
+   },
+   "middle": {
+    "mcp_flex": 0,
+    "mcp_abd": -12,
+    "pip_flex": 0,
+    "dip_flex": 0
+   },
+   "ring": {
+    "mcp_flex": 85,
+    "pip_flex": 95,
+    "dip_flex": 55
+   },
+   "pinky": {
+    "mcp_flex": 85,
+    "pip_flex": 95,
+    "dip_flex": 55
+   }
+  }
+ },
+ "checks": [
+  [
+   "right.thumb.pad",
+   "right.ring.dip_ulnar"
+  ],
+  [
+   "right.thumb.pad",
+   "right.pinky.dip_radial"
+  ]
+ ],
+ "camera": {
+  "position": [
+   0.15,
+   0.12,
+   -0.32
+  ],
+  "target": [
+   0.0,
+   0.07,
+   -0.02
+  ],
+  "fov": 40
+ }
+}

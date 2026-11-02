@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "hands": {
+    "left": {
+      "place": { "wrist": [-0.11, 0.06, -0.026], "palm_facing": [0, -0.96, -0.29], "fingers_toward": [1, 0, 0] },
+      "thumb":  { "cmc_flex": -20, "cmc_abd": 60, "cmc_rot": 0, "mcp_flex": 0, "ip_flex": 0 },
+      "index":  { "mcp_flex": 0, "mcp_abd": 0, "pip_flex": 0, "dip_flex": 0 },
+      "middle": { "mcp_flex": 85, "mcp_abd": 0, "pip_flex": 100 },
+      "ring":   { "mcp_flex": 85, "mcp_abd": 0, "pip_flex": 100 },
+      "pinky":  { "mcp_flex": 85, "mcp_abd": 0, "pip_flex": 100 }
+    },
+    "right": {
+      "place": { "wrist": [0.107, -0.068, 0.026], "palm_facing": [0, 0.96, 0.29], "fingers_toward": [-1, 0, 0] },
+      "thumb":  { "cmc_flex": -20, "cmc_abd": 60, "cmc_rot": 0, "mcp_flex": 0, "ip_flex": 0 },
+      "index":  { "mcp_flex": 0, "mcp_abd": 0, "pip_flex": 0, "dip_flex": 0 },
+      "middle": { "mcp_flex": 85, "mcp_abd": 0, "pip_flex": 100 },
+      "ring":   { "mcp_flex": 85, "mcp_abd": 0, "pip_flex": 100 },
+      "pinky":  { "mcp_flex": 85, "mcp_abd": 0, "pip_flex": 100 }
+    }
+  },
+  "checks": [["left.index.tip", "right.thumb.tip"], ["left.thumb.tip", "right.index.tip"]],
+  "camera": { "position": [0, 0, 0.6], "target": [0, 0, 0], "fov": 35 }
+}

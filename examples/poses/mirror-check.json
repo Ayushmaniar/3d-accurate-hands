@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0.08, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "twist": 20, "wrist_flex": 15,
+      "index": { "mcp_flex": 60, "pip_flex": 60 },
+      "thumb": { "cmc_abd": 40 }
+    },
+    "left": { "mirror": "right" }
+  },
+  "probes": { "target": [0, 0.3, 0.3] },
+  "checks": [["right.index.tip", "left.index.tip"]]
+}
