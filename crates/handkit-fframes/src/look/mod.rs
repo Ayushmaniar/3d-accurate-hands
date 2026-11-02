@@ -34,6 +34,7 @@
 //! ```
 
 mod arm;
+mod gpu;
 mod img;
 mod shade;
 mod surface;
@@ -533,7 +534,7 @@ impl Styler {
         let bounds = Aabb::from_points(corners.iter().flat_map(|c| [*c, *c + front]));
         let shadow = Shadow { map_size: 4096, softness: 0.8 + 10.0 * wall.softness as f32, strength: 1.0, bias: 1.5, bounds: Some(bounds) };
         s.add(Node::light(Light::directional(Rgb::WHITE, 1.0, lamp - camera.target).with_shadow(shadow)));
-        let px = self.flat.render_pixels(&s, camera);
+        let px = gpu::render_pixels(&self.flat, s, camera);
         let full = Rect { x0: 0, y0: 0, w: self.width as usize, h: self.height as usize };
         let (rgb, alpha) = img::decode(&px, full);
         // The lamp's pool of light: centred where its ray through what the camera looks at
@@ -561,7 +562,7 @@ impl Styler {
         let mut s = scene.clone();
         s.background = Background::Transparent;
         self.light(&mut s, camera);
-        self.color.render_pixels(&s, camera)
+        gpu::render_pixels(&self.color, s, camera)
     }
 
     /// Adds the look's lights and environment, placed relative to the camera.
@@ -659,7 +660,7 @@ impl Styler {
                 }
             };
         }
-        self.flat.render_pixels(&s, camera)
+        gpu::render_pixels(&self.flat, s, camera)
     }
 }
 

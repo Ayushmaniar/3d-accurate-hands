@@ -19,7 +19,10 @@ CAM = {'position': [0.10, 0.16, 0.34], 'target': [0.0, 0.09, 0.0], 'fov': 30}
 if __name__ == '__main__':
     pose = {'version': 1, 'hands': hands(), 'camera': CAM,
             'goals': [{'grip': ['right', 'left'], 'style': 'interlaced',
-                       'vary': ['right.ring.*', 'right.pinky.*', 'left.ring.*', 'left.pinky.*']}]}
+                       'vary': ['right.ring.*', 'right.pinky.*', 'left.ring.*', 'left.pinky.*']},
+                      # The thumbs pressed side by side; the left hand settles to make room.
+                      {'touch': ['right.thumb.side_palmar', 'left.thumb.side_palmar'],
+                       'vary': ['right.thumb.*', 'left.thumb.*', 'left.place.position']}]}
     code, text, sol = solve('tiger', pose)
     print(code, text[-1500:])
     if sol:

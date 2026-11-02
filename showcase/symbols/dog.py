@@ -3,8 +3,9 @@ forward as the snout, the thumb up as the ear, the little finger dropping as the
 from sym import *
 
 CAM = {'position': [0.03, 0.15, 0.5], 'target': [0.05, 0.14, 0.0], 'fov': 30}
-SNOUT = [{'touch': ['right.index.side_ulnar', 'right.middle.side_radial'], 'vary': ['right.index.mcp_abd', 'right.middle.mcp_abd', 'right.ring.mcp_abd']},
-         {'touch': ['right.middle.side_ulnar', 'right.ring.side_radial'], 'vary': ['right.index.mcp_abd', 'right.middle.mcp_abd', 'right.ring.mcp_abd']}]
+SNOUT_VARY = ['right.index.*', 'right.middle.mcp_abd', 'right.middle.mcp_roll', 'right.ring.mcp_abd', 'right.ring.mcp_roll']
+SNOUT = [{'touch': ['right.index.side_ulnar', 'right.middle.side_radial'], 'vary': SNOUT_VARY},
+         {'touch': ['right.middle.side_ulnar', 'right.ring.side_radial'], 'vary': SNOUT_VARY}]
 
 
 def hand(jaw=0.0):
