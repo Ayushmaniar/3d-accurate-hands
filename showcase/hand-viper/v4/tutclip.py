@@ -11,7 +11,10 @@ CAM = {'position': [0.0, 0.08, 0.50], 'target': [0.0, 0.08, 0.0], 'fov': 32}
 HEAD_CAM = {'position': [0.0, 0.09, 0.40], 'target': [0.0, 0.085, 0.0], 'fov': 28}
 
 s1, s2, s3, s4a, s4, s5 = build()
-head = shut_clear(0.006, 'tut_shut')[0]
+# The head keeps step 5's knot (as the tutorial's does): only the thumbs come up to the index tips.
+code, text, sol = solve('tut_head', {'version': 1, 'hands': s5, 'goals': [ARCH] + SHUT + [clear('middle', 'ring', 'pinky')]})
+print('head', [l.strip()[:80] for l in text.splitlines() if 'MISS' in l or 'penetr' in l])
+head = sol['hands']
 
 
 def me(h):
@@ -37,14 +40,19 @@ for t, h in ((1.0, s2), (2.0, s3), (3.0, s4a), (3.9, s4), (5.0, s5)):
 keys += [
     {'t': 5.0, 'camera': CAM},
     {'t': 6.2, 'camera': HEAD_CAM, 'move': 1.2, 'ease': 'smooth'},
-    {'t': 6.2, 'hands': me(head), 'move': 0.9, 'ease': 'smooth', 'goals': SHUT_HELD},
-    {'t': 7.1, 'hands': me(head_open(head, 0.7)), 'move': 0.3, 'ease': 'snappy', 'goals': OPEN_HELD},
-    {'t': 7.6, 'hands': me(head), 'move': 0.25, 'ease': 'snappy', 'goals': SHUT_HELD},
-    {'t': 8.5, 'hands': me(moved(head_open(head, 1.0), 0.01, -0.035)), 'move': 0.5, 'ease': 'smooth', 'goals': OPEN_HELD},
-    {'t': 8.8, 'hands': me(moved(head, -0.005, 0.045)), 'move': 0.14, 'ease': 'snappy', 'goals': SHUT_HELD},
-    {'t': 9.4, 'hands': me(head), 'move': 0.5, 'goals': SHUT_HELD},
+    # The head poses are solved clear of each other: from here the clip keeps them as solved.
+    {'t': 6.2, 'hands': me(head), 'move': 0.9, 'ease': 'smooth'},
+    {'t': 7.1, 'hands': me(head_open(head, 0.7)), 'move': 0.3, 'ease': 'snappy'},
+    {'t': 7.6, 'hands': me(head), 'move': 0.25, 'ease': 'snappy'},
+    {'t': 8.5, 'hands': me(moved(head_open(head, 1.0), 0.01, -0.035)), 'move': 0.5, 'ease': 'smooth'},
+    {'t': 8.8, 'hands': me(moved(head, -0.005, 0.045)), 'move': 0.16, 'ease': 'smooth'},
+    {'t': 9.4, 'hands': me(head), 'move': 0.5},
 ]
-clip = {'version': 1, 'fps': 30, 'duration': 10.0, 'size': [1920, 1080], 'idle': {'amount': 0.1},
+for k in keys:
+    if 'hands' in k and k['t'] >= 7.1:
+        k['collide'] = False
+
+clip = {'version': 1, 'fps': 30, 'duration': 10.0, 'size': [1920, 1080], 'idle': {'amount': 0.1}, 'follow': 0,
         'camera': CAM, 'look': LOOK_CLIP, 'keys': keys}
 path = os.path.join(HERE, 'tut_clip.json')
 dump(path, clip)

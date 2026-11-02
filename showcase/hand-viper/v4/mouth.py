@@ -19,8 +19,10 @@ def head_open(shut, amount=1.0):
     out = copy.deepcopy(shut)
     for s in out:
         t, ix = out[s]['thumb'], out[s]['index']
-        t['cmc_abd'] = round(max(-10, t['cmc_abd'] - 25 * amount), 1)
+        # The thumbs swing down and out, away from the index tips (not back into the knot).
+        t['cmc_flex'] = round(max(-30, t['cmc_flex'] - 30 * amount), 1)
         t['mcp_flex'] = round(max(-15, t['mcp_flex'] - 10 * amount), 1)
+        t['ip_flex'] = round(max(-20, t['ip_flex'] - 10 * amount), 1)
         ix['mcp_flex'] = round(ix['mcp_flex'] - 15 * amount, 1)
         ix['pip_flex'] = round(ix['pip_flex'] - 15 * amount, 1)
     return out

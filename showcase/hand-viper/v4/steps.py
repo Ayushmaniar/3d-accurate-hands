@@ -58,6 +58,9 @@ def build():
     # The middle fingers cross like the ring fingers, the left over the right (32.5 s)...
     h['left']['middle'] = {'mcp_abd': -15, 'mcp_roll': 0, 'mcp_flex': 45, 'pip_flex': 30, 'dip_flex': 15}
     h['right']['middle'] = {'mcp_abd': -15, 'mcp_roll': 0, 'mcp_flex': 25, 'pip_flex': 15, 'dip_flex': 8}
+    lean2 = oriented(13, 0, -90, 0.058)
+    for s in S:
+        h[s]['place'] = dict(lean2[s]['place'], forearm_toward=h[s]['place']['forearm_toward'])
     s4a = step('s4a', h, [{'touch': ['left.middle.middle', 'right.middle.middle'], 'vary': ['right.middle.*', 'left.middle.*']}, clear('middle', 'ring', 'pinky')])
     # ...then the crossed middle and ring fingers hook round each other: a knot (34.5 s).
     h = copy.deepcopy(s4a)
