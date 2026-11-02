@@ -21,14 +21,16 @@ LOCK = ['%s.%s.*' % (s, d) for s in S for d in ('middle', 'ring', 'pinky')]
 EYES = (('right', 'pinky'), ('left', 'ring'))
 
 
-def hooked(hands):
+def hooked(hands, lift=8, sink=0):
     """The interlaced fingers hooked tight (tips tucked out of sight), the two eye fingers bent
-    less at the knuckle so their middle joints stand above the others."""
+    `lift` degrees less at the knuckle and the others `sink` more, so the eyes' middle joints
+    stand above the rest."""
     out = copy.deepcopy(hands)
     for s in S:
         for d in ('middle', 'ring', 'pinky'):
+            f = out[s][d]
             eye = (s, d) in EYES
-            out[s][d].update(mcp_flex=out[s][d]['mcp_flex'] - (8 if eye else 0), pip_flex=100 if eye else 105, dip_flex=70)
+            f.update(mcp_flex=max(-30, min(90, f['mcp_flex'] + (-lift if eye else sink))), pip_flex=100 if eye else 105, dip_flex=70)
     return out
 
 
@@ -36,8 +38,9 @@ def hooked(hands):
 FACE = [0.29, 0.17, 0.0, 0.07, 0.09, 0.0, 30]
 FACE_34 = [0.36, 0.17, 0.16, 0.06, 0.085, 0.0, 26]
 
-# Only the spread and roll of the hooked fingers move to get them out of each other.
-SPREAD = ['%s.*.mcp_abd' % s for s in S] + ['%s.*.mcp_roll' % s for s in S]
+# The hooked fingers get out of each other by spreading, rolling and bending at the knuckle;
+# their middle and last joints stay hooked.
+SPREAD = ['%s.*.mcp_abd' % s for s in S] + ['%s.*.mcp_roll' % s for s in S] + ['%s.%s.mcp_flex' % (s, d) for s in S for d in ('middle', 'ring', 'pinky')]
 
 if __name__ == '__main__':
     pose = {'version': 1, 'hands': hooked(G['hands']), 'camera': G['camera'], 'goals': SHUT + [{'vary': SPREAD}]}
