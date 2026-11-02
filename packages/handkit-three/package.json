@@ -1,15 +1,16 @@
 {
   "name": "@handkit/three",
   "version": "0.1.0",
-  "description": "Pose Handkit hand meshes in three.js",
+  "description": "Pose Handkit hand meshes in three.js and draw them in the Handkit looks",
   "type": "module",
   "main": "index.js",
   "peerDependencies": {
-    "three": ">=0.160"
+    "three": ">=0.170"
   },
   "exports": {
     ".": "./index.js",
-    "./core.js": "./core.js"
+    "./core.js": "./core.js",
+    "./look.js": "./look.js"
   },
   "scripts": {
     "build:wasm": "sh build-wasm.sh"
@@ -17,6 +18,8 @@
   "files": [
     "index.js",
     "core.js",
+    "look.js",
+    "look-glsl.js",
     "wasm/"
   ]
 }

@@ -1,0 +1,16 @@
+{
+  "name": "handkit-hyperframes-clip",
+  "private": true,
+  "type": "module",
+  "description": "Plays a Handkit clip in a HyperFrames composition, in a Handkit look",
+  "scripts": {
+    "assets": "node scripts/assets.mjs",
+    "dev": "npx --yes hyperframes@0.8.179 preview",
+    "check": "npx --yes hyperframes@0.8.179 check",
+    "render": "npx --yes hyperframes@0.8.179 render --output out/demo.mp4"
+  },
+  "dependencies": {
+    "@handkit/three": "file:../../packages/handkit-three",
+    "three": "0.186.1"
+  }
+}

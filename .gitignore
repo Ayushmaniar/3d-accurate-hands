@@ -37,3 +37,10 @@ phone/
 experiments/looks/gen/*.png
 experiments/looks/gen/*.jpg
 .claude/worktrees/
+
+# Starters: renders and the copied hands
+starters/*/out/
+starters/*/public/*.glb
+starters/*/assets/*.glb
+starters/*/renders/
+starters/*/.hyperframes/
