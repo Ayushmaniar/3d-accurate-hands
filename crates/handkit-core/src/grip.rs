@@ -61,6 +61,16 @@ const FINGERS: &[Digit] = &[Digit::Index, Digit::Middle, Digit::Ring, Digit::Pin
 const THUMB_PINKY: &[Digit] = &[Digit::Thumb, Digit::Pinky];
 
 /// A hand open to take another: fingers nearly straight, the thumb out of the way.
+/// OPEN with a resting thumb, alongside the index: a hand lying draped across another.
+const DRAPED: Shape = &[
+    ("palm_cup", 6.0),
+    ("thumb.cmc_flex", 5.0), ("thumb.cmc_abd", 12.0), ("thumb.cmc_rot", 10.0), ("thumb.mcp_flex", 10.0), ("thumb.ip_flex", 12.0),
+    ("index.mcp_flex", 0.0), ("index.pip_flex", 4.0), ("index.dip_flex", 2.0), ("index.mcp_abd", 0.0), ("index.mcp_roll", 0.0),
+    ("middle.mcp_flex", 0.0), ("middle.pip_flex", 4.0), ("middle.dip_flex", 2.0), ("middle.mcp_abd", 0.0), ("middle.mcp_roll", 0.0),
+    ("ring.mcp_flex", 0.0), ("ring.pip_flex", 4.0), ("ring.dip_flex", 2.0), ("ring.mcp_abd", 0.0), ("ring.mcp_roll", 0.0),
+    ("pinky.mcp_flex", 0.0), ("pinky.pip_flex", 4.0), ("pinky.dip_flex", 2.0), ("pinky.mcp_abd", 0.0), ("pinky.mcp_roll", 0.0),
+];
+
 const OPEN: Shape = &[
     ("palm_cup", 6.0),
     ("thumb.cmc_flex", -25.0), ("thumb.cmc_abd", -10.0), ("thumb.cmc_rot", 0.0), ("thumb.mcp_flex", 0.0), ("thumb.ip_flex", 0.0),
@@ -184,7 +194,7 @@ const STYLES: &[Style] = &[
     },
     // One hand wraps the other without interlacing. Right with right: the first, palm up,
     // cradles the second's fingers and closes over them, its thumb on the back of the second's
-    // knuckles; the second lies palm down across it, fingers draped. Right with left: holding
+    // knuckles; the second lies palm down across it, fingers draped, its thumb resting by the index. Right with left: holding
     // hands side by side, palm in palm, the second's fingers crossing the first's at 60 deg
     // toward its pinky edge and curled round that edge onto its back, the second's thumb over
     // the back of the first's index; the first's fingers close round the second's index edge.
@@ -193,7 +203,7 @@ const STYLES: &[Style] = &[
         same: Some(Hold {
             wrist: [0.14, 0.046, 0.06], palm: [0.0, 0.0, -1.0], fingers: [-0.95, 0.15, -0.15], forearm: [0.95, -0.15, 0.15],
             approach: Some([0.0, 0.0, 1.0]),
-            shape: [OPEN, OPEN],
+            shape: [OPEN, DRAPED],
             close: [ALL, FINGERS],
             lands: &[],
             home: [[-0.08, 0.0, 0.0], [0.0, 1.0, 0.0], [0.6, 0.0, -0.8], [-0.6, -0.1, 0.8]],

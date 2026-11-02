@@ -227,6 +227,7 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
             }
         })
         .collect();
+    let lines = despeckle(lines, w, h, (14.0 * s * s).max(4.0) as usize);
 
     let misreg = match style {
         Style::Spiderverse => look.misregister.unwrap_or(3.0) as f32 * s,
@@ -327,6 +328,44 @@ pub(crate) fn stylized(inp: &Inputs) -> Layer {
     Layer { rect: inp.rect, rgba }
 }
 
+/// Removes ink specks: connected pieces of ink smaller than `min_px` pixels (a crease line
+/// breaking into dots where it fades). Lines and outlines are far larger and stay.
+fn despeckle(mut lines: Vec<f32>, w: usize, h: usize, min_px: usize) -> Vec<f32> {
+    let mut seen = vec![false; w * h];
+    let mut piece = Vec::new();
+    for start in 0..w * h {
+        if seen[start] || lines[start] <= 0.02 {
+            continue;
+        }
+        piece.clear();
+        piece.push(start);
+        seen[start] = true;
+        let mut k = 0;
+        while k < piece.len() {
+            let i = piece[k];
+            k += 1;
+            let (x, y) = (i % w, i / w);
+            for (dx, dy) in [(-1isize, 0isize), (1, 0), (0, -1), (0, 1), (-1, -1), (1, -1), (-1, 1), (1, 1)] {
+                let (u, v) = (x as isize + dx, y as isize + dy);
+                if u < 0 || v < 0 || u >= w as isize || v >= h as isize {
+                    continue;
+                }
+                let j = v as usize * w + u as usize;
+                if !seen[j] && lines[j] > 0.02 {
+                    seen[j] = true;
+                    piece.push(j);
+                }
+            }
+        }
+        if piece.len() < min_px {
+            for &i in &piece {
+                lines[i] = 0.0;
+            }
+        }
+    }
+    lines
+}
+
 /// Silhouette ink for the lit looks when `outline` is set.
 fn lit_lines(inp: &Inputs) -> Option<Vec<f32>> {
     let r = inp.look.outline as f32 * 0.5 * inp.scale;
@@ -384,4 +423,25 @@ pub(crate) fn realistic(inp: &Inputs) -> Layer {
 /// Matte clay: the lit render (its lumps and fingerprints are in the normal map).
 pub(crate) fn clay(inp: &Inputs) -> Layer {
     finish(inp, |i| inp.color[i], Vec3::splat(0.01))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::despeckle;
+
+    #[test]
+    fn despeckle_drops_dots_and_keeps_lines() {
+        let (w, h) = (40, 10);
+        let mut lines = vec![0.0f32; w * h];
+        // A line 30 px long, faint at its end, and two 2-pixel specks.
+        for x in 2..32 {
+            lines[5 * w + x] = if x < 26 { 0.9 } else { 0.1 };
+        }
+        for i in [w + 36, w + 37, 8 * w + 1, 8 * w + 2] {
+            lines[i] = 0.8;
+        }
+        let out = despeckle(lines.clone(), w, h, 14);
+        assert!((2..32).all(|x| out[5 * w + x] == lines[5 * w + x]));
+        assert!([w + 36, w + 37, 8 * w + 1, 8 * w + 2].iter().all(|i| out[*i] == 0.0));
+    }
 }
