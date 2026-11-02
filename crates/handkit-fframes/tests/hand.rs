@@ -6,7 +6,7 @@ use handkit_fframes::three_d::Scene;
 
 #[test]
 fn pose_sets_the_corrective_weights() {
-    let mesh = handkit_mesh::generate(Side::Right, &handkit_mesh::Options { voxel: 0.004 });
+    let mesh = handkit_mesh::generate(Side::Right, &handkit_mesh::Options { voxel: 0.004, textures: 256 });
     let model = HandModel::from_glb(&handkit_mesh::glb::to_glb(&mesh)).unwrap();
     let mut scene = Scene::new();
     let hand = model.add_to(&mut scene);

@@ -8,7 +8,7 @@ description = "Handkit hands in fframes videos: load the hand mesh into fframes:
 fframes_three_d = "1.3"
 handkit-core = { version = "0.1.0", path = "../handkit-core" }
 handkit-mesh = { version = "0.1.0", path = "../handkit-mesh" }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+rayon = "1.10"
+serde_json = "1"
 
-[dev-dependencies]
-image = { version = "0.25", default-features = false, features = ["png"] }
-serde_json = "1.0.154"

@@ -7,6 +7,7 @@ use crate::HandMesh;
 
 const FLOAT: u32 = 5126;
 const USHORT: u32 = 5123;
+const UBYTE: u32 = 5121;
 const UINT: u32 = 5125;
 const ARRAY_BUFFER: u32 = 34962;
 const ELEMENT_ARRAY_BUFFER: u32 = 34963;
@@ -60,12 +61,36 @@ pub fn to_glb(mesh: &HandMesh) -> Vec<u8> {
     }
     let position = b.accessor(&bytes(&mesh.positions), Some(ARRAY_BUFFER), FLOAT, n, "VEC3", json!({ "min": lo, "max": hi }));
     let normal = b.accessor(&bytes(&mesh.normals), Some(ARRAY_BUFFER), FLOAT, n, "VEC3", json!({}));
-    let color = b.accessor(&bytes(&mesh.colors), Some(ARRAY_BUFFER), FLOAT, n, "VEC3", json!({}));
-    // The nail mask rides in a standard slot, TEXCOORD_1.x, so every glTF loader accepts it.
-    let nail: Vec<[f32; 2]> = mesh.nail.iter().map(|x| [*x, 0.0]).collect();
-    let nail = b.accessor(&bytes(&nail), Some(ARRAY_BUFFER), FLOAT, n, "VEC2", json!({}));
-    let joints = b.accessor(&bytes(&mesh.joints), Some(ARRAY_BUFFER), USHORT, n, "VEC4", json!({}));
-    let weights = b.accessor(&bytes(&mesh.weights), Some(ARRAY_BUFFER), FLOAT, n, "VEC4", json!({}));
+    let unorm16 = |x: f32| (x.clamp(0.0, 1.0) * 65535.0).round() as u16;
+    let mut attributes = json!({ "POSITION": position, "NORMAL": normal });
+    if !mesh.uvs.is_empty() {
+        let uv: Vec<[u16; 2]> = mesh.uvs.iter().map(|t| [unorm16(t[0]), unorm16(t[1])]).collect();
+        attributes["TEXCOORD_0"] = json!(b.accessor(&bytes(&uv), Some(ARRAY_BUFFER), USHORT, n, "VEC2", json!({ "normalized": true })));
+    }
+    // With baked maps the colour comes from the textures; vertex colors would tint them.
+    if mesh.maps.is_none() {
+        attributes["COLOR_0"] = json!(b.accessor(&bytes(&mesh.colors), Some(ARRAY_BUFFER), FLOAT, n, "VEC3", json!({})));
+    }
+    // Without maps, the nail mask rides in a standard slot, TEXCOORD_1.x, so every glTF loader
+    // accepts it (with them, it is the mask map's G).
+    if mesh.maps.is_none() {
+        let nail: Vec<[u16; 2]> = mesh.nail.iter().map(|x| [unorm16(*x), 0]).collect();
+        attributes["TEXCOORD_1"] = json!(b.accessor(&bytes(&nail), Some(ARRAY_BUFFER), USHORT, n, "VEC2", json!({ "normalized": true })));
+    }
+    let joints: Vec<[u8; 4]> = mesh.joints.iter().map(|j| j.map(|x| x as u8)).collect();
+    attributes["JOINTS_0"] = json!(b.accessor(&bytes(&joints), Some(ARRAY_BUFFER), UBYTE, n, "VEC4", json!({})));
+    // Weights as bytes that still add up to exactly 255.
+    let weights: Vec<[u8; 4]> = mesh
+        .weights
+        .iter()
+        .map(|w| {
+            let mut q = w.map(|x| (x * 255.0).round().clamp(0.0, 255.0) as i32);
+            let first = (0..4).max_by(|&a, &b| w[a].total_cmp(&w[b])).unwrap();
+            q[first] += 255 - q.iter().sum::<i32>();
+            q.map(|x| x.clamp(0, 255) as u8)
+        })
+        .collect();
+    attributes["WEIGHTS_0"] = json!(b.accessor(&bytes(&weights), Some(ARRAY_BUFFER), UBYTE, n, "VEC4", json!({ "normalized": true })));
     let tris: Vec<[u32; 1]> = mesh.indices.iter().map(|x| [*x]).collect();
     let indices = b.accessor(&bytes(&tris), Some(ELEMENT_ARRAY_BUFFER), UINT, tris.len(), "SCALAR", json!({}));
 
@@ -128,10 +153,35 @@ pub fn to_glb(mesh: &HandMesh) -> Vec<u8> {
     nodes.push(json!({ "name": format!("skin_{suffix}"), "mesh": 0, "skin": 0 }));
     let root = h.bones.iter().position(|b| b.parent.is_none()).unwrap();
 
+    // The skin maps: colour, normal, occlusion + roughness in one image (R and G), and the
+    // tone-free masks, which no standard slot takes: the material's extras point at them.
+    let mut material = json!({ "name": "skin", "pbrMetallicRoughness": { "baseColorFactor": [1.0, 1.0, 1.0, 1.0], "metallicFactor": 0.0, "roughnessFactor": 0.55 } });
+    let mut images = Vec::new();
+    if let Some(m) = &mesh.maps {
+        for (data, mime, name) in [(&m.albedo, "image/jpeg", "skin_color"), (&m.normal, "image/jpeg", "skin_normal"), (&m.orm, "image/jpeg", "skin_orm"), (&m.masks, "image/jpeg", "skin_masks")] {
+            let view = b.push(data, None);
+            images.push(json!({ "name": name, "bufferView": view, "mimeType": mime }));
+        }
+        material = json!({
+            "name": "skin",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [1.0, 1.0, 1.0, 1.0],
+                "baseColorTexture": { "index": 0 },
+                "metallicFactor": 0.0,
+                "roughnessFactor": 1.0,
+                "metallicRoughnessTexture": { "index": 2 }
+            },
+            "normalTexture": { "index": 1, "scale": 1.0 },
+            "occlusionTexture": { "index": 2, "strength": 1.0 },
+            "extras": { "handkit": { "masks": { "index": 3 }, "masksChannels": "R redness, G nail, B cavity; the palm skin mask is B of the metallic-roughness texture", "bakedTone": crate::skin::BAKED_TONE } }
+        });
+    }
+    let textures: Vec<Value> = (0..images.len()).map(|i| json!({ "sampler": 0, "source": i })).collect();
+
     while b.bin.len() % 4 != 0 {
         b.bin.push(0);
     }
-    let doc = json!({
+    let mut doc = json!({
         "asset": { "version": "2.0", "generator": "handkit-mesh" },
         "scene": 0,
         "scenes": [{ "nodes": [root, mesh_node] }],
@@ -140,7 +190,7 @@ pub fn to_glb(mesh: &HandMesh) -> Vec<u8> {
         "meshes": [{
             "name": format!("skin_{suffix}"),
             "primitives": [{
-                "attributes": { "POSITION": position, "NORMAL": normal, "COLOR_0": color, "TEXCOORD_1": nail, "JOINTS_0": joints, "WEIGHTS_0": weights },
+                "attributes": attributes,
                 "indices": indices,
                 "material": 0,
                 "targets": target_accessors
@@ -148,11 +198,17 @@ pub fn to_glb(mesh: &HandMesh) -> Vec<u8> {
             "weights": vec![0.0; target_names.len()],
             "extras": { "targetNames": target_names }
         }],
-        "materials": [{ "name": "skin", "pbrMetallicRoughness": { "baseColorFactor": [1.0, 1.0, 1.0, 1.0], "metallicFactor": 0.0, "roughnessFactor": 0.55 } }],
+        "materials": [material],
         "buffers": [{ "byteLength": b.bin.len() }],
         "bufferViews": b.views,
         "accessors": b.accessors,
     });
+    if !images.is_empty() {
+        // Linear filtering with mipmaps; clamped, since the atlas does not repeat.
+        doc["samplers"] = json!([{ "magFilter": 9729, "minFilter": 9987, "wrapS": 33071, "wrapT": 33071 }]);
+        doc["images"] = json!(images);
+        doc["textures"] = json!(textures);
+    }
     let mut text = serde_json::to_vec(&doc).unwrap();
     while text.len() % 4 != 0 {
         text.push(b' ');

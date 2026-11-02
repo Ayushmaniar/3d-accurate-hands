@@ -27,7 +27,12 @@ export function handRig(root) {
   };
 }
 
-/** The default skin look: vertex colors (skin tone, lighter nails), soft roughness. */
-export function skinMaterial(THREE, opts = {}) {
+/**
+ * The default skin look. A hand with baked skin maps (`handkit mesh`, the default) keeps its own
+ * textured material, passed as `loaded` (colour, normal, roughness and occlusion maps); one
+ * without (`--textures 0`) gets vertex colors (skin tone, lighter nails) and a soft roughness.
+ */
+export function skinMaterial(THREE, opts = {}, loaded = null) {
+  if (loaded?.map) return loaded;
   return new THREE.MeshStandardMaterial({ vertexColors: true, roughness: opts.roughness ?? 0.55, metalness: 0 });
 }
