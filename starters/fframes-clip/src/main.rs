@@ -16,6 +16,10 @@ struct VideoArgs {
     assets: Option<std::path::PathBuf>,
     #[arg(long, default_value = "#2b2e33", global = true)]
     background: String,
+    /// A soft round light behind the hands: x,y,radius,color with x, y and radius as
+    /// fractions of the frame height (e.g. 0.3,0.45,0.28,#e8b4b0).
+    #[arg(long, global = true)]
+    spotlight: Option<String>,
 }
 
 fn main() -> ExitCode {
@@ -28,7 +32,7 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    let video = match FframesClipVideo::new(&media, &text, args.app.assets.as_deref(), &args.app.background) {
+    let video = match FframesClipVideo::new(&media, &text, args.app.assets.as_deref(), &args.app.background, args.app.spotlight.as_deref()) {
         Ok(v) => v,
         Err(e) => {
             eprintln!("error: {}: {e}", args.app.clip.display());
