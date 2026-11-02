@@ -1,0 +1,24 @@
+{
+  "name": "pinch_open",
+  "description": "Open pinch: thumb pad and index pad held about 2 cm apart, about to pick something up, other fingers loosely curled; seen from the thumb side.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "thumb": { "cmc_flex": 13.2, "cmc_abd": 31.1, "cmc_rot": 47.0, "mcp_flex": -5.5, "ip_flex": -13.7 },
+      "index": { "mcp_abd": -10.2, "mcp_flex": 72.5, "pip_flex": 16, "dip_flex": 8 },
+      "middle": { "mcp_abd": -2, "mcp_flex": 62, "pip_flex": 55 },
+      "ring": { "mcp_abd": 2, "mcp_flex": 68, "pip_flex": 62 },
+      "pinky": { "mcp_abd": 6, "mcp_flex": 74, "pip_flex": 66 },
+      "palm_cup": 8
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.thumb.pad", "right.index.pad"],
+      "gap_mm": 20,
+      "vary": ["right.thumb.*", "right.index.mcp_abd", "right.index.mcp_flex"]
+    }
+  ],
+  "camera": { "position": [0.34, 0.13, 0.13], "target": [0.02, 0.085, 0.04], "fov": 35 }
+}

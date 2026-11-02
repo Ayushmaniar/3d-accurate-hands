@@ -1,0 +1,23 @@
+{
+  "name": "triangle",
+  "description": "Triangle window: index tips touch at the top and thumb tips touch at the bottom, framing a triangle, the other fingers held together beside the index; palms toward the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [-0.139, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0.466, 1, 0] },
+      "wrist_flex": 0,
+      "wrist_dev": 0,
+      "thumb": { "cmc_flex": -13.3, "cmc_abd": -0.4, "cmc_rot": 6.1, "mcp_flex": -6.5, "ip_flex": -8.4 },
+      "index": { "mcp_abd": 22, "mcp_flex": 2.1, "pip_flex": 7, "dip_flex": 4 },
+      "middle": { "mcp_abd": 13, "mcp_flex": 8, "pip_flex": 10 },
+      "ring": { "mcp_abd": -13, "mcp_flex": 11, "pip_flex": 13 },
+      "pinky": { "mcp_abd": -15, "mcp_flex": 14, "pip_flex": 15 }
+    },
+    "left": { "mirror": "right" }
+  },
+  "goals": [
+    { "touch": ["right.index.tip", "left.index.tip"], "vary": ["right.index.mcp_flex"] },
+    { "touch": ["right.thumb.tip", "left.thumb.tip"], "vary": ["right.thumb.*"] }
+  ],
+  "camera": { "position": [0, 0.1, 0.6], "target": [0, 0.09, 0], "fov": 35 }
+}

@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -23,6 +24,17 @@ enum Cmd {
         #[arg(long)]
         sites: bool,
     },
+    /// Change joint values until the file's goals hold, and write them back.
+    Solve {
+        pose: PathBuf,
+        /// Output file (default: overwrite the pose file).
+        #[arg(short, long)]
+        out: Option<PathBuf>,
+    },
+    /// List the gesture library.
+    Gestures,
+    /// Print one library gesture as a pose file to start from.
+    Gesture { name: String },
     /// Every bone's joint position and axes, and every site.
     Fk { pose: PathBuf },
     /// The conventions and every parameter, or one parameter (e.g. thumb.cmc_rot).
@@ -55,6 +67,11 @@ fn preview_script() -> PathBuf {
         .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/preview/render.mjs"))
 }
 
+/// Prints to stdout; a reader that stops early (`| head`) is not an error.
+fn emit(text: impl AsRef<str>) {
+    let _ = std::io::stdout().lock().write_all(text.as_ref().as_bytes());
+}
+
 fn main() {
     if let Err(e) = run() {
         eprintln!("error: {e:#}");
@@ -67,17 +84,34 @@ fn run() -> Result<()> {
         Cmd::Query { pose, json, sites } => {
             let report = load(&pose)?.query().map_err(|e| anyhow!(e))?;
             if json {
-                println!("{}", serde_json::to_string_pretty(&report.json())?);
+                emit(serde_json::to_string_pretty(&report.json(sites))? + "\n");
             } else {
-                print!("{}", report.text(sites));
+                emit(report.text(sites));
             }
         }
-        Cmd::Fk { pose } => print!("{}", load(&pose)?.fk_text()),
+        Cmd::Solve { pose, out } => {
+            let text = std::fs::read_to_string(&pose).with_context(|| format!("reading {}", pose.display()))?;
+            let raw: serde_json::Value = serde_json::from_str(&text).context("invalid JSON")?;
+            let (solved, report) = handkit_core::solve::solve_goals(&raw).map_err(|e| anyhow!(e))?;
+            let out = out.unwrap_or(pose);
+            std::fs::write(&out, handkit_core::pose::to_text(&solved))?;
+            emit(report.text() + &format!("wrote {}\n", out.display()));
+        }
+        Cmd::Gestures => {
+            for (name, desc) in handkit_core::gestures::list() {
+                emit(format!("{name}: {desc}\n"));
+            }
+        }
+        Cmd::Gesture { name } => {
+            let v = handkit_core::pose::gesture_value(&name).map_err(|e| anyhow!(e))?;
+            emit(handkit_core::pose::to_text(&v));
+        }
+        Cmd::Fk { pose } => emit(load(&pose)?.fk_text()),
         Cmd::Explain { key } => match key {
-            Some(k) => println!("{}", handkit_core::explain::one(&k).map_err(|e| anyhow!(e))?),
-            None => println!("{}", handkit_core::explain::all()),
+            Some(k) => emit(handkit_core::explain::one(&k).map_err(|e| anyhow!(e))? + "\n"),
+            None => emit(handkit_core::explain::all() + "\n"),
         },
-        Cmd::Geometry { pose } => println!("{}", serde_json::to_string(&load(&pose)?.geometry())?),
+        Cmd::Geometry { pose } => emit(serde_json::to_string(&load(&pose)?.geometry())? + "\n"),
         Cmd::Render { pose, out, views, size } => {
             let solved = load(&pose)?;
             let out = out.unwrap_or_else(|| pose.with_extension("png"));

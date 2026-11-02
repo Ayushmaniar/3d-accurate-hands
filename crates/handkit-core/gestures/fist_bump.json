@@ -1,0 +1,24 @@
+{
+  "name": "fist_bump",
+  "description": "Fist bump: two fists, thumbs on top, meet knuckles to knuckles with forearms level; seen from the front and slightly above.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [-0.1089, 0.05, 0], "palm_facing": [-0.025, -0.003, -1.004], "fingers_toward": [0.947, -0.142, -0.004] },
+      "wrist_flex": 0,
+      "wrist_dev": 0,
+      "palm_cup": 10,
+      "thumb": { "cmc_abd": 44.1, "cmc_flex": 2.8, "cmc_rot": 48.8, "ip_flex": 24, "mcp_flex": 48.7 },
+      "index": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    },
+    "left": { "mirror": "right" }
+  },
+  "goals": [
+    { "touch": ["right.middle.metacarpal", "left.middle.metacarpal"], "vary": ["right.place"] },
+    { "touch": ["right.index.metacarpal", "left.index.metacarpal"], "vary": ["right.place"] }
+  ],
+  "camera": { "position": [0.05, 0.22, 0.4], "target": [0, 0.04, 0], "fov": 35 }
+}

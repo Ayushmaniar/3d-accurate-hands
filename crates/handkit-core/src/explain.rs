@@ -26,7 +26,7 @@ Placement, per hand, one of:
   mirror image of its placement across the plane x = 0; any keys given override the copy.
 
 Chains: wrist = twist (about the forearm) -> wrist_dev -> wrist_flex. Fingers: knuckle spread
-(rest fan + mcp_abd) -> mcp_flex -> pip_flex -> dip_flex. Thumb: base at (0.020, 0.018, 0.008)
+(rest fan + mcp_abd) -> mcp_roll -> mcp_flex -> pip_flex -> dip_flex. Thumb: base at (0.020, 0.018, 0.008)
 in the hand frame (x toward the thumb, y toward the fingers, z out of the palm); rest
 orientation = lean 35 deg toward the thumb side, lift 10 deg out of the palm, turn the pad 55
 deg toward the index. Exactly, with rotations about the hand frame's axes applied left to right
@@ -63,7 +63,36 @@ each thumb tip, the surface gap for each pair in `checks` (a pair names sites or
 as right.index.middle; segments are metacarpal, proximal, middle, distal, and forearm), and
 how well fingers aim at `probes`.
 
-Couplings (version 1 files): a dip_flex left out follows 2/3 of pip_flex.";
+Couplings (version 1 files): a dip_flex left out follows 2/3 of pip_flex.
+
+Goals: \"goals\": [...] says what must be true; `handkit solve` changes values until it is and
+writes them back, keeping changes small, joints inside their limits and fingers out of each
+other (it may leave a penetration it cannot fix; it says so). If every goal already holds it
+changes nothing. Note: `place` fixes the hand itself; wrist angles then swing the forearm, not
+the hand.
+  { \"touch\": [a, b] }   a and b are sites or segments. The surfaces meet (gap within 1 mm) and,
+      for a site, the contact lands within 6 mm of it. Fingers do not roll about their own
+      axis, so two pads seldom meet dead center: a contact a few mm toward the side of a pad
+      is expected. Add \"gap_mm\": 15 to hold them that far apart instead (sites are then
+      measured point to point, segments surface to surface).
+  { \"aim\": \"right.index\", \"at\": [x, y, z] }   the finger's line (knuckle through tip) passes
+      through the point, within 1 deg. The point is in world space, so an aim belongs to its
+      placement: a hand-level \"from\" leaves a gesture's aims behind.
+  \"vary\": [...] on a goal chooses what may change (default: every joint of each digit a touch
+      names, plus palm_cup for ring and pinky and the wrist for palm sites; for aim, the wrist
+      and that finger's knuckle). Patterns: right.thumb.* (one digit), right.index.pip_flex
+      (one value), right.*.mcp_abd (that joint on every digit), right.wrist (twist, wrist_flex,
+      wrist_dev), right.palm_cup, right.place (the
+      hand's placement), right.* (everything on the hand). A hand that mirrors the other varies
+      the other's values, so the pair stays a mirror.
+  Shapes that read right: OK circle = thumb.pad ~ index.tip; flat pinch = thumb.pad ~
+  index.pad; finger heart = thumb.pad ~ index.dip_radial. Start from roughly the right shape:
+  the solver finds the nearest solution, not the most natural one.
+
+Gestures: `handkit gestures` lists a library of finished poses; `handkit gesture <name>` prints
+one. \"from\": \"<name>\" at the top of a file starts from a whole gesture (keys you write win;
+its goals are added to yours). On a hand, { \"from\": \"ok\" } takes that gesture's joint
+values for this hand (not its placement), and its goals renamed to this hand.";
 
 pub fn all() -> String {
     let mut s = String::from(CONVENTIONS);

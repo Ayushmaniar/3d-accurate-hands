@@ -1,0 +1,18 @@
+{
+  "name": "cupped",
+  "description": "Cupped hand as if holding water: palm up, fingers pressed together and curved, palm hollowed, thumb along the side; seen from above and in front.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 1, 0], "fingers_toward": [0, 0, -1] },
+      "palm_cup": 15,
+      "thumb": { "cmc_flex": 17.9, "cmc_abd": 6.2, "cmc_rot": 33.9, "mcp_flex": 15.2, "ip_flex": 12.6 },
+      "index": { "mcp_abd": -10, "mcp_flex": 28, "pip_flex": 30, "dip_flex": 15 },
+      "middle": { "mcp_abd": -2, "mcp_flex": 30, "pip_flex": 32, "dip_flex": 16 },
+      "ring": { "mcp_abd": 2, "mcp_flex": 30, "pip_flex": 34, "dip_flex": 17 },
+      "pinky": { "mcp_abd": -9, "mcp_flex": 30, "pip_flex": 36, "dip_flex": 18 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.distal", "right.index.middle"], "vary": ["right.thumb.*"] }, { "touch": ["right.index.distal", "right.middle.distal"], "gap_mm": 1 }],
+  "camera": { "position": [0.1, 0.24, 0.28], "target": [0.0, 0.02, -0.08], "fov": 36 }
+}

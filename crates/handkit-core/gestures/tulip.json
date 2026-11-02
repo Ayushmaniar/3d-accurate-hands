@@ -1,0 +1,18 @@
+{
+  "name": "tulip",
+  "description": "Tulip (Italian hand): palm up and all five fingertips bunched together into a point aimed upward; seen from the front with the fingernails toward the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 1, -0.3], "fingers_toward": [0, 0.3, 1] },
+      "palm_cup": 12.4,
+      "thumb": { "cmc_abd": 38.0, "cmc_flex": 13.5, "cmc_rot": 48.8, "mcp_flex": 23.2, "ip_flex": 27.8 },
+      "index": { "mcp_abd": 19.5, "mcp_flex": 41.9, "pip_flex": 72.9, "dip_flex": 40.3 },
+      "middle": { "mcp_abd": -10.7, "mcp_flex": 61.4, "pip_flex": 36.2, "dip_flex": 13.0 },
+      "ring": { "mcp_abd": 15.0, "mcp_flex": 58.2, "pip_flex": 39.0, "dip_flex": 34.1 },
+      "pinky": { "mcp_abd": 10.4, "mcp_flex": 70.6, "pip_flex": 11.2, "dip_flex": 4.9 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.tip", "right.middle.pad"] }, { "touch": ["right.index.tip", "right.thumb.side_dorsal"] }, { "touch": ["right.ring.dip_radial", "right.middle.dip_ulnar"] }, { "touch": ["right.pinky.distal", "right.ring.side_ulnar"] }],
+  "camera": { "position": [0.2, 0.18, 0.4], "target": [0.0, 0.07, 0.06], "fov": 35 }
+}

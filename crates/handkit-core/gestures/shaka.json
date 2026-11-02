@@ -1,0 +1,18 @@
+{
+  "name": "shaka",
+  "description": "Shaka (hang loose): thumb and pinky stretched out wide, index, middle and ring curled into the palm; back of the hand to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, -1], "fingers_toward": [0, 1, 0] },
+      "thumb": { "cmc_flex": -20, "cmc_abd": 4, "cmc_rot": 2, "mcp_flex": -4, "ip_flex": 2 },
+      "index": { "mcp_abd": 0, "mcp_flex": 82, "pip_flex": 95, "dip_flex": 45 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95, "dip_flex": 45 },
+      "ring": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95, "dip_flex": 45 },
+      "pinky": { "mcp_abd": 33, "mcp_flex": 2, "pip_flex": 10, "dip_flex": 6 },
+      "palm_cup": 5
+    }
+  },
+  "goals": [{ "aim": "right.pinky", "at": [0.189, 0.266, -0.059] }, { "aim": "right.thumb", "at": [-0.263, 0.175, -0.072] }],
+  "camera": { "position": [0.02, 0.1, 0.42], "target": [0.0, 0.07, 0.0], "fov": 38 }
+}

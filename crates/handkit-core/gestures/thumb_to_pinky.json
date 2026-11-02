@@ -1,0 +1,29 @@
+{
+  "name": "thumb_to_pinky",
+  "description": "Thumb-to-pinky opposition: the thumb reaches across the cupped palm and its pad meets the curled pinky tip, the index, middle and ring loosely up; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 21.5,
+      "thumb": { "cmc_abd": 62.6, "cmc_flex": 4.5, "cmc_rot": 49.5, "mcp_flex": 48.3, "ip_flex": -5.9 },
+      "index": { "mcp_abd": 4, "mcp_flex": 8, "pip_flex": 8 },
+      "middle": { "mcp_abd": 1, "mcp_flex": 10, "pip_flex": 10 },
+      "ring": { "mcp_abd": -2, "mcp_flex": 16, "pip_flex": 15 },
+      "pinky": { "mcp_abd": 5, "mcp_flex": 81.4, "pip_flex": 31.3, "dip_flex": 15.0 }
+    }
+  },
+  "goals": [
+    {
+      "touch": ["right.thumb.pad", "right.pinky.tip"],
+      "vary": [
+        "right.thumb.*",
+        "right.pinky.mcp_flex",
+        "right.pinky.pip_flex",
+        "right.pinky.dip_flex",
+        "right.palm_cup"
+      ]
+    }
+  ],
+  "camera": { "position": [0.1, 0.14, 0.41], "target": [-0.005, 0.085, 0.03], "fov": 35 }
+}

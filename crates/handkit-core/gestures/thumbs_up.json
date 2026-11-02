@@ -1,0 +1,19 @@
+{
+  "name": "thumbs_up",
+  "description": "Thumbs up: a fist held sideways with the thumb pointing straight up and the forearm coming in from the right; the palm side of the curled fingers faces the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "fingers_toward": [-0.86, 0.49, -0.14], "palm_facing": [0, 0.27, 0.96], "wrist": [0, 0, 0] },
+      "palm_cup": 10,
+      "thumb": { "cmc_abd": 15.6, "cmc_flex": -2.0, "cmc_rot": 10, "ip_flex": -15, "mcp_flex": -12 },
+      "index": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 },
+      "wrist_dev": 20.0
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.metacarpal", "right.index.distal"], "vary": ["right.thumb.cmc_flex", "right.thumb.cmc_abd"] }, { "touch": ["right.thumb.distal", "right.index.middle"], "gap_mm": 22.2 }],
+  "camera": { "position": [0.12, 0.14, 0.32], "target": [-0.04, 0.07, 0.03], "fov": 34 }
+}

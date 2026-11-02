@@ -1,0 +1,22 @@
+{
+  "name": "pinky_hook",
+  "description": "Pinky promise: the pinky sticks out bent into a hook while the other fingers close in a fist with the thumb wrapped over them; palm toward the viewer, seen from the pinky side.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 3.7,
+      "thumb": { "cmc_abd": 44.9, "cmc_flex": 3.0, "cmc_rot": 48.7, "mcp_flex": 48.6, "ip_flex": 23.9 },
+      "index": { "mcp_abd": 0, "mcp_flex": 82, "pip_flex": 92 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 86, "pip_flex": 96 },
+      "ring": { "mcp_abd": -1.1, "mcp_flex": 83.4, "pip_flex": 99.9, "dip_flex": 73.1 },
+      "pinky": { "mcp_abd": 10, "mcp_flex": 18, "pip_flex": 88, "dip_flex": 58 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.thumb.distal", "right.middle.middle"], "vary": ["right.thumb.*"] },
+    { "touch": ["right.thumb.proximal", "right.index.middle"], "vary": ["right.thumb.*"] },
+    { "touch": ["right.ring.tip", "right.ring.metacarpal"] }
+  ],
+  "camera": { "position": [-0.2, 0.15, 0.34], "target": [-0.005, 0.085, 0.03], "fov": 35 }
+}

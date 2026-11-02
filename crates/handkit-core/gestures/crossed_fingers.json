@@ -1,0 +1,18 @@
+{
+  "name": "crossed_fingers",
+  "description": "Crossed fingers for luck: middle finger crossed over the back of the index, ring and pinky curled with the thumb holding the ring down; back of the hand to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, -1], "fingers_toward": [0, 1, 0] },
+      "thumb": { "cmc_flex": 25.7, "cmc_abd": 23.5, "cmc_rot": 48.9, "mcp_flex": 32.1, "ip_flex": -4.5 },
+      "index": { "mcp_abd": -9.8, "mcp_flex": 16.6, "pip_flex": 14.7, "dip_flex": 17.0 },
+      "middle": { "mcp_abd": 11.1, "mcp_flex": -12.6, "pip_flex": 47.2, "dip_flex": 26.3 },
+      "ring": { "mcp_abd": 0, "mcp_flex": 78, "pip_flex": 95, "dip_flex": 50 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 82, "pip_flex": 95, "dip_flex": 50 },
+      "palm_cup": 8
+    }
+  },
+  "goals": [{ "touch": ["right.middle.pad", "right.index.middle"], "vary": ["right.middle.*", "right.index.*"] }, { "touch": ["right.thumb.pad", "right.ring.middle"], "vary": ["right.thumb.*"] }],
+  "camera": { "position": [-0.05, 0.34, 0.27], "target": [-0.01, 0.1, 0.0], "fov": 32 }
+}

@@ -35,6 +35,8 @@ pub struct Report {
     pub probes: Vec<ProbeHit>,
     pub tips: Vec<(String, DVec3)>,
     pub sites: Vec<(String, DVec3)>,
+    /// Filled in by `Solved::query`.
+    pub goals: Vec<crate::goals::GoalStatus>,
 }
 
 pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
@@ -123,12 +125,13 @@ pub fn analyze(pose: &PoseFile, hands: &[HandGeom]) -> Result<Report, String> {
         probes,
         tips,
         sites: hands.iter().flat_map(|h| &h.sites).map(|s| (s.name.clone(), s.pos)).collect(),
+        goals: Vec::new(),
     })
 }
 
 /// Pairs that can collide: anything across hands; within a hand, different digits where at
 /// least one is a moving segment (a proximal phalanx always touches the palm at its knuckle).
-fn collides(a: &Capsule, b: &Capsule) -> bool {
+pub fn collides(a: &Capsule, b: &Capsule) -> bool {
     if a.side != b.side {
         return true;
     }
@@ -175,6 +178,10 @@ impl Report {
             }
         };
         let pairs = |ps: &[Pair]| ps.iter().map(|p| format!("{} ~ {}: {} mm", p.a, p.b, p.gap_mm)).collect::<Vec<_>>();
+        if !self.goals.is_empty() {
+            let lines: Vec<String> = self.goals.iter().map(|g| g.line()).collect();
+            list(&mut s, "goals (run `handkit solve` to meet them)", &lines);
+        }
         list(&mut s, "limit violations", &self.violations);
         list(&mut s, &format!("penetrations (overlap > {PENETRATION_MM} mm)"), &pairs(&self.penetrations));
         list(&mut s, &format!("contacts (gap <= {CONTACT_MM} mm)"), &pairs(&self.contacts));
@@ -201,9 +208,11 @@ impl Report {
         s
     }
 
-    pub fn json(&self) -> Value {
+    /// `all_sites` adds every site's position.
+    pub fn json(&self, all_sites: bool) -> Value {
         let pairs = |ps: &[Pair]| ps.iter().map(|p| json!({"a": p.a, "b": p.b, "gap_mm": p.gap_mm})).collect::<Vec<_>>();
         json!({
+            "goals": self.goals.iter().map(|g| json!({"goal": g.label, "value": g.value, "unit": g.unit, "met": g.met, "note": g.note})).collect::<Vec<_>>(),
             "joint_limit_violations": self.violations,
             "penetrations": pairs(&self.penetrations),
             "contacts": pairs(&self.contacts),
@@ -212,17 +221,24 @@ impl Report {
             "aim": self.probes.iter().map(|p| json!({"probe": p.probe, "finger": p.finger, "angle_deg": p.angle_deg, "miss_mm": p.miss_mm})).collect::<Vec<_>>(),
             "coupled": self.coupled,
             "fingertips_m": self.tips.iter().map(|(n, p)| (n.clone(), json!([p.x, p.y, p.z]))).collect::<serde_json::Map<_, _>>(),
+            "sites_m": if all_sites { json!(self.sites.iter().map(|(n, p)| (n.clone(), json!([p.x, p.y, p.z]))).collect::<serde_json::Map<_, _>>()) } else { Value::Null },
         })
     }
 }
 
 /// Closest distance between segments p1-q1 and p2-q2.
 pub fn seg_dist(p1: DVec3, q1: DVec3, p2: DVec3, q2: DVec3) -> f64 {
+    let (a, b) = seg_closest(p1, q1, p2, q2);
+    a.distance(b)
+}
+
+/// The closest points of segments p1-q1 and p2-q2, one on each.
+pub fn seg_closest(p1: DVec3, q1: DVec3, p2: DVec3, q2: DVec3) -> (DVec3, DVec3) {
     let (d1, d2, r) = (q1 - p1, q2 - p2, p1 - p2);
     let (a, e, f) = (d1.dot(d1), d2.dot(d2), d2.dot(r));
     let (s, t);
     if a <= 1e-12 && e <= 1e-12 {
-        return p1.distance(p2);
+        return (p1, p2);
     }
     if a <= 1e-12 {
         s = 0.0;
@@ -249,5 +265,5 @@ pub fn seg_dist(p1: DVec3, q1: DVec3, p2: DVec3, q2: DVec3) -> f64 {
             }
         }
     }
-    (p1 + d1 * s).distance(p2 + d2 * t)
+    (p1 + d1 * s, p2 + d2 * t)
 }

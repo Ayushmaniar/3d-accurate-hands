@@ -1,0 +1,21 @@
+{
+  "name": "fist",
+  "description": "Tight fist: fingers curled into the palm, thumb wrapped across the middle phalanges of the index and middle fingers; palm side to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "fingers_toward": [0, 1, 0], "palm_facing": [0, 0, 1], "wrist": [0, 0, 0] },
+      "palm_cup": 10,
+      "thumb": { "cmc_abd": 44.1, "cmc_flex": 2.8, "cmc_rot": 48.8, "ip_flex": 24.0, "mcp_flex": 48.7 },
+      "index": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 95 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3.0, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.thumb.distal", "right.middle.middle"], "vary": ["right.thumb.*"] },
+    { "touch": ["right.thumb.proximal", "right.index.middle"], "vary": ["right.thumb.*"] }
+  ],
+  "camera": { "position": [0.13, 0.11, 0.28], "target": [0.01, 0.065, 0.03], "fov": 32 }
+}

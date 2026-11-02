@@ -1,0 +1,18 @@
+{
+  "name": "stop",
+  "description": "Stop: a flat hand pushed toward the viewer, fingers together pointing up, thumb tucked alongside, wrist bent back; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "fingers_toward": [0, 1, 0], "palm_facing": [0, 0, 1], "wrist": [0, 0, 0] },
+      "thumb": { "cmc_abd": 0, "cmc_flex": 10, "cmc_rot": 5, "ip_flex": 5, "mcp_flex": 5 },
+      "index": { "mcp_abd": -10.5, "mcp_flex": 2, "pip_flex": 4 },
+      "middle": { "mcp_abd": -5.0, "mcp_flex": 2, "pip_flex": 4 },
+      "ring": { "mcp_abd": -1.4, "mcp_flex": 3, "pip_flex": 5 },
+      "pinky": { "mcp_abd": -10.1, "mcp_flex": 4, "pip_flex": 6 },
+      "wrist_flex": -25
+    }
+  },
+  "goals": [{ "touch": ["right.index.middle", "right.middle.middle"], "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"] }, { "touch": ["right.middle.middle", "right.ring.middle"], "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"] }, { "touch": ["right.ring.middle", "right.pinky.middle"], "vary": ["right.index.mcp_abd", "right.middle.mcp_abd", "right.ring.mcp_abd", "right.pinky.mcp_abd"] }],
+  "camera": { "position": [0.03, 0.08, 0.4], "target": [0.0, 0.08, 0.0], "fov": 36 }
+}

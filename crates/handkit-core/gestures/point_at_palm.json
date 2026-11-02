@@ -1,0 +1,32 @@
+{
+  "name": "point_at_palm",
+  "description": "Pointing at the palm: the left hand is held open palm up, fingers forward, and the right index finger points down into the middle of its palm; seen from the front and above.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [-0.053, 0.146, -0.029], "palm_facing": [0, 0.5, -1], "fingers_toward": [0.35, -0.8, 0.5] },
+      "wrist_flex": 45,
+      "wrist_dev": -20,
+      "palm_cup": 10,
+      "thumb": { "cmc_abd": 42.7, "cmc_flex": 8.1, "cmc_rot": 48.6, "ip_flex": 25.3, "mcp_flex": 45.9 },
+      "index": { "mcp_abd": 0, "mcp_flex": 5, "pip_flex": 10 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 88, "pip_flex": 98 },
+      "ring": { "mcp_abd": -3, "mcp_flex": 88, "pip_flex": 98 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 85, "pip_flex": 88 }
+    },
+    "left": {
+      "place": { "wrist": [0.06, 0, 0], "palm_facing": [0, 1, 0], "fingers_toward": [-0.2, 0, 1] },
+      "wrist_flex": 0,
+      "wrist_dev": 0,
+      "thumb": { "cmc_flex": -12, "cmc_abd": 5, "cmc_rot": 0, "mcp_flex": 6, "ip_flex": 8 },
+      "index": { "mcp_abd": 3, "mcp_flex": 6, "pip_flex": 8 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 8, "pip_flex": 10 },
+      "ring": { "mcp_abd": 3, "mcp_flex": 10, "pip_flex": 12 },
+      "pinky": { "mcp_abd": 8, "mcp_flex": 12, "pip_flex": 14 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.index.tip", "left.palm_center"], "vary": ["right.place"] }
+  ],
+  "camera": { "position": [0.14, 0.42, 0.52], "target": [0, 0.07, 0.03], "fov": 35 }
+}

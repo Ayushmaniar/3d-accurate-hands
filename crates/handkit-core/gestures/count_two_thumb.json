@@ -1,0 +1,22 @@
+{
+  "name": "count_two_thumb",
+  "description": "German-style counting two: thumb and index stretched out in an L, middle, ring and pinky curled into the palm; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "wrist": [0, 0, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] },
+      "palm_cup": 3.7,
+      "thumb": { "cmc_abd": 12, "cmc_flex": -18, "cmc_rot": 5, "mcp_flex": 8, "ip_flex": 10 },
+      "index": { "mcp_abd": 6, "mcp_flex": 6, "pip_flex": 8 },
+      "middle": { "mcp_abd": 3.4, "mcp_flex": 85.2, "pip_flex": 101.7, "dip_flex": 72.9 },
+      "ring": { "mcp_abd": -1.7, "mcp_flex": 83.4, "pip_flex": 99.9, "dip_flex": 73.1 },
+      "pinky": { "mcp_abd": 1.9, "mcp_flex": 78.6, "pip_flex": 94.5, "dip_flex": 72.5 }
+    }
+  },
+  "goals": [
+    { "touch": ["right.middle.tip", "right.middle.metacarpal"] },
+    { "touch": ["right.ring.tip", "right.ring.metacarpal"] },
+    { "touch": ["right.pinky.tip", "right.pinky.metacarpal"] }
+  ],
+  "camera": { "position": [0.16, 0.12, 0.4], "target": [0.01, 0.08, 0.03], "fov": 35 }
+}

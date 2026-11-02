@@ -1,0 +1,18 @@
+{
+  "name": "three",
+  "description": "Three: index, middle and ring fingers raised and slightly apart, the thumb pad holding the curled pinky down; palm to the viewer.",
+  "version": 1,
+  "hands": {
+    "right": {
+      "place": { "fingers_toward": [0, 1, 0], "palm_facing": [0, 0, 1], "wrist": [0, 0, 0] },
+      "palm_cup": 18,
+      "thumb": { "cmc_abd": 33.1, "cmc_flex": 25.2, "cmc_rot": 49.1, "ip_flex": -4.7, "mcp_flex": 53.1 },
+      "index": { "mcp_abd": 6, "mcp_flex": 4, "pip_flex": 6 },
+      "middle": { "mcp_abd": 0, "mcp_flex": 4, "pip_flex": 7 },
+      "ring": { "mcp_abd": 4, "mcp_flex": 6, "pip_flex": 9 },
+      "pinky": { "mcp_abd": 0, "mcp_flex": 80, "pip_flex": 85 }
+    }
+  },
+  "goals": [{ "touch": ["right.thumb.pad", "right.pinky.middle"], "vary": ["right.thumb.*"] }, { "touch": ["right.index.distal", "right.middle.distal"], "gap_mm": 17.3 }, { "touch": ["right.middle.distal", "right.ring.distal"], "gap_mm": 15.2 }],
+  "camera": { "position": [0.1, 0.14, 0.38], "target": [0.0, 0.1, 0.02], "fov": 36 }
+}
