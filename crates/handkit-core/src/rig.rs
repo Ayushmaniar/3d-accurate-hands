@@ -5,7 +5,9 @@
 use glam::{DAffine3, DMat3, DQuat, DVec3, dvec3};
 
 use crate::params;
-use crate::pose::{HandPose, Side};
+use std::sync::Arc;
+
+use crate::pose::{HandId, HandPose, Side};
 
 pub const FOREARM: f64 = 0.26;
 /// The forearm capsule is as thick as a wrist (front to back), not as wide, and stops short of
@@ -90,6 +92,8 @@ pub struct Capsule {
     pub b: DVec3,
     pub r: f64,
     pub side: Side,
+    /// The hand's name ("right", "ana.left"), which starts its label.
+    pub hand: Arc<str>,
     /// "forearm", "palm" (finger metacarpals) or the digit name.
     pub part: &'static str,
     /// The digit a segment belongs to, metacarpals included.
@@ -100,8 +104,8 @@ pub struct Capsule {
 impl Capsule {
     pub fn label(&self) -> String {
         match self.digit {
-            Some(d) => format!("{}.{}.{}", self.side.name(), d.name(), self.seg.name()),
-            None => format!("{}.forearm", self.side.name()),
+            Some(d) => format!("{}.{}.{}", self.hand, d.name(), self.seg.name()),
+            None => format!("{}.forearm", self.hand),
         }
     }
 
@@ -144,6 +148,10 @@ pub struct Nail {
 #[derive(Clone, Debug)]
 pub struct HandGeom {
     pub side: Side,
+    /// Whose hand: the default person's "right" / "left", or e.g. "ana.right".
+    pub id: HandId,
+    /// `id` written out, as sites and labels start with it.
+    pub name: Arc<str>,
     pub capsules: Vec<Capsule>,
     pub sites: Vec<Site>,
     pub bones: Vec<Bone>,
@@ -234,13 +242,22 @@ fn v(o: Option<f64>) -> f64 {
     o.unwrap_or(0.0)
 }
 
-/// Builds one hand. `mirror_of` is the other hand when this one takes its mirrored placement.
+/// Builds one of the default person's hands. `mirror_of` is the other hand when this one takes
+/// its mirrored placement.
 pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<&HandGeom>) -> Result<HandGeom, String> {
+    build_hand(&HandId::of(side), hp, version, mirror_of)
+}
+
+/// Builds any person's hand.
+pub fn build_hand(id: &HandId, hp: &HandPose, version: Option<u32>, mirror_of: Option<&HandGeom>) -> Result<HandGeom, String> {
+    let side = id.side;
+    let name: Arc<str> = id.name().into();
+    let prefix = Arc::clone(&name);
     let mut violations = Vec::new();
     let mut check = |key: &str, value: f64| {
         let p = params::find(key).expect("every checked key is in PARAMS");
         if value < p.min - 0.01 || value > p.max + 0.01 {
-            violations.push(format!("{}.{}={} outside [{}, {}]", side.name(), key, value, p.min, p.max));
+            violations.push(format!("{}.{}={} outside [{}, {}]", name, key, value, p.min, p.max));
         }
     };
     let twist = v(hp.twist);
@@ -248,7 +265,7 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
     let mut wrist_dev = v(hp.wrist_dev);
     let own_aim = hp.place.as_ref().and_then(|p| p.forearm_toward).is_some();
     let mut forearm_aimed = false;
-    if let Some((f, d)) = forearm_angles(side, hp)? {
+    if let Some((f, d)) = forearm_angles(side, &name, hp)? {
         (wrist_flex, wrist_dev, forearm_aimed) = (f, d, true);
     } else if let Some(other) = mirror_of.filter(|o| o.forearm_aimed && !own_aim) {
         // A mirror of a hand whose forearm was aimed takes the angles that aim gave.
@@ -266,7 +283,7 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
     let left = side == Side::Left;
     let world = match mirror_of {
         Some(other) => mirror_x() * other.world * mirror_x(),
-        None => placement(side, hp, hand)?,
+        None => placement(side, &name, hp, hand)?,
     };
     let to_world = |m: DAffine3| world * if left { mirror_x() * m } else { m };
     let at = |m: DAffine3, p: DVec3| to_world(m).transform_point3(p);
@@ -279,7 +296,7 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
     let mut coupled = Vec::new();
     let o = DVec3::ZERO;
     let mut capsule = |a: DVec3, b: DVec3, r: f64, part: &'static str, digit: Option<Digit>, seg: Seg| {
-        capsules.push(Capsule { a, b, r, side, part, digit, seg });
+        capsules.push(Capsule { a, b, r, side, hand: Arc::clone(&name), part, digit, seg });
     };
     let mut bone = |name: String, m: DAffine3, len: f64, parent: Option<usize>| {
         let frame = to_world(m) * if left { mirror_x() } else { DAffine3::IDENTITY };
@@ -287,7 +304,7 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         bones.len() - 1
     };
     let mut site = |name: String, m: DAffine3, p: DVec3, n: DVec3| {
-        sites.push(Site { name: format!("{}.{}", side.name(), name), pos: at(m, p), normal: dir(m, n) });
+        sites.push(Site { name: format!("{prefix}.{name}"), pos: at(m, p), normal: dir(m, n) });
     };
 
     capsule(at(DAffine3::IDENTITY, o), at(wrist, dvec3(0.0, -FOREARM_END, 0.0)), FOREARM_R, "forearm", None, Seg::Arm);
@@ -313,7 +330,7 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
                 let dip_max = params::find("index.dip_flex").unwrap().max;
                 let d = ((pip * 2.0 / 3.0 * 10.0).round() / 10.0).min(dip_max);
                 if d != 0.0 {
-                    coupled.push(format!("{}.{}.dip_flex={} (2/3 of pip_flex)", side.name(), name, d));
+                    coupled.push(format!("{}.{}.dip_flex={} (2/3 of pip_flex)", prefix, name, d));
                 }
                 d
             }
@@ -410,16 +427,15 @@ pub fn build(side: Side, hp: &HandPose, version: Option<u32>, mirror_of: Option<
         m = next;
     }
 
-    Ok(HandGeom { side, capsules, sites, bones, nails, violations, coupled, world, wrist_angles: [wrist_flex, wrist_dev], forearm_aimed })
+    Ok(HandGeom { side, id: id.clone(), name, capsules, sites, bones, nails, violations, coupled, world, wrist_angles: [wrist_flex, wrist_dev], forearm_aimed })
 }
 
 /// The wrist_flex and wrist_dev that make the forearm point along `place.forearm_toward`
 /// (from the wrist toward the elbow), for a hand placed by `place.wrist`. In the hand's own
 /// frame the forearm points along (sin dev, -cos dev cos flex, cos dev sin flex).
-fn forearm_angles(side: Side, hp: &HandPose) -> Result<Option<(f64, f64)>, String> {
+fn forearm_angles(side: Side, s: &str, hp: &HandPose) -> Result<Option<(f64, f64)>, String> {
     let Some(p) = &hp.place else { return Ok(None) };
     let Some(toward) = p.forearm_toward else { return Ok(None) };
-    let s = side.name();
     let (Some(_), Some(palm), Some(fingers)) = (p.wrist, p.palm_facing, p.fingers_toward) else {
         return Err(format!("hands.{s}.place.forearm_toward needs wrist, palm_facing and fingers_toward"));
     };
@@ -441,9 +457,8 @@ fn forearm_angles(side: Side, hp: &HandPose) -> Result<Option<(f64, f64)>, Strin
 }
 
 /// The world transform of the forearm frame from the hand's placement.
-fn placement(side: Side, hp: &HandPose, hand: DAffine3) -> Result<DAffine3, String> {
+fn placement(side: Side, s: &str, hp: &HandPose, hand: DAffine3) -> Result<DAffine3, String> {
     let p = hp.place.clone().unwrap_or_default();
-    let s = side.name();
     let elbow = p.elbow.or(hp.elbow);
     let euler = p.forearm_rotation_deg.or(hp.forearm_rotation_deg);
     if let Some(wrist) = p.wrist {

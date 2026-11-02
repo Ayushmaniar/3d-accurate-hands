@@ -75,14 +75,15 @@ impl Solved {
         if let Some(c) = capsule(name) {
             return Ok(Target { a: c.a, b: c.b, r: c.r, site: None });
         }
-        Err(format!("unknown site or segment \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>. Segments are <hand>.<digit>.<metacarpal|proximal|middle|distal> (the thumb has metacarpal, proximal, distal) and <hand>.forearm. The hand must be in the file"))
+        Err(format!("unknown site or segment \"{name}\". Sites are <hand>.<digit>.<tip|pad|nail|knuckle>, <hand>.<index|middle|ring|pinky>.<side_radial|side_ulnar|dip_radial|dip_ulnar>, <hand>.thumb.<side_palmar|side_dorsal>, and <hand>.<palm_center|palm_heel|wrist_back>. Segments are <hand>.<digit>.<metacarpal|proximal|middle|distal> (the thumb has metacarpal, proximal, distal) and <hand>.forearm; <hand> is right, left, or <person>.right / <person>.left. The hand must be in the file"))
     }
 
     /// A finger's pointing line: from its knuckle through its tip.
     pub fn finger_ray(&self, name: &str) -> Result<(DVec3, DVec3), String> {
-        let (side, digit) = name.split_once('.').ok_or(format!("aim \"{name}\": write <hand>.<digit>, e.g. right.index"))?;
+        let (id, digit) = crate::pose::split_hand(name).filter(|(_, d)| !d.is_empty()).ok_or(format!("aim \"{name}\": write <hand>.<digit>, e.g. right.index"))?;
         let d = Digit::ALL.into_iter().find(|d| d.name() == digit).ok_or(format!("aim \"{name}\": unknown digit"))?;
-        let h = self.hands.iter().find(|h| h.side.name() == side).ok_or(format!("aim \"{name}\": no {side} hand in the file"))?;
+        let side = id.name();
+        let h = self.hands.iter().find(|h| h.id == id).ok_or(format!("aim \"{name}\": no {side} hand in the file"))?;
         let base = h.capsules.iter().find(|c| c.digit == Some(d) && c.seg == Seg::Proximal).unwrap().a;
         let tip = h.sites.iter().find(|s| s.name == format!("{side}.{digit}.tip")).unwrap().pos;
         Ok((base, (tip - base).normalize()))

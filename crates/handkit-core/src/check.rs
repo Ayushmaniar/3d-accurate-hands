@@ -88,6 +88,8 @@ type HandsOverlap = (Vec<bool>, f64, f64, String, std::collections::BTreeSet<Str
 
 pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<CheckReport, String> {
     let times: Vec<f64> = frames.iter().map(|f| f.0).collect();
+    // Every hand, in the clip's order.
+    let names: Vec<String> = clip.hands().iter().map(|h| h.name()).collect();
     let mut lines = vec![format!("clip: {:.2} s, {} frames at {} fps", clip.duration, frames.len(), clip.fps)];
     let mut problems = 0;
 
@@ -117,7 +119,7 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
         }
         for p in &report.penetrations {
             let pair = format!("{} x {}", p.a, p.b);
-            if p.a.split('.').next() != p.b.split('.').next() {
+            if crate::pose::hand_of(&p.a) != crate::pose::hand_of(&p.b) {
                 let k = clip.keys_around(frames[i].0);
                 let e = cross.entry((clip.key_before(frames[i].0), k)).or_insert((vec![false; frames.len()], 0.0, 0.0, String::new(), Default::default()));
                 e.0[i] = true;
@@ -148,8 +150,8 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
         }
         if let Some(cam) = pose.get("camera") {
             // The rig ends at the elbow: the forearm's rounded end must stay out of the frame.
-            for side in ["right", "left"] {
-                let Some(e) = pose.pointer(&format!("/hands/{side}/place/elbow")).and_then(Value::as_array) else { continue };
+            for side in &names {
+                let Some(e) = pose.get("hands").and_then(|h| h.get(side)).and_then(|h| h.pointer("/place/elbow")).and_then(Value::as_array) else { continue };
                 let e = DVec3::new(e[0].as_f64().unwrap_or(0.0), e[1].as_f64().unwrap_or(0.0), e[2].as_f64().unwrap_or(0.0));
                 if let Some((x, y)) = project(cam, aspect, e) {
                     if x.abs() < 1.0 && y.abs() < 1.0 {
@@ -193,7 +195,7 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
 
     // Speeds and pops from the joint values.
     let dt = 1.0 / clip.fps;
-    for side in ["right", "left"] {
+    for side in &names {
         let tracks: Vec<(Vec<f64>, DVec3)> = frames.iter().filter_map(|f| values(&f.1.pose, side)).collect();
         if tracks.len() != frames.len() || tracks.len() < 3 {
             continue;
@@ -234,7 +236,7 @@ pub fn analyze(clip: &Clip, frames: &[(f64, Frame)], aspect: f64) -> Result<Chec
     }
     // Joints held at a limit (information: the pose asks for more than the joint allows, and
     // the clip eases it to the limit).
-    for side in ["right", "left"] {
+    for side in &names {
         let tracks: Vec<Vec<f64>> = frames.iter().filter_map(|f| values(&f.1.pose, side).map(|v| v.0)).collect();
         if tracks.len() != frames.len() {
             continue;

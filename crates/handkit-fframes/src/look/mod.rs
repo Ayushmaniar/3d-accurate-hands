@@ -70,11 +70,17 @@ impl Styler {
     /// A copy of `model` dressed for the look: skin and nail colours per vertex, the look's
     /// material, lumpy normals for clay. Add the dressed model to the scenes you render.
     pub fn dress(&mut self, model: &HandModel) -> HandModel {
+        let colors = (self.look.skin, self.look.nail_color());
+        self.dress_in(model, colors)
+    }
+
+    /// `dress` with another skin and nail colour (sRGB), e.g. one person's in a scene of many.
+    pub fn dress_in(&mut self, model: &HandModel, (skin, nail): ([u8; 3], [u8; 3])) -> HandModel {
         let mut out = model.clone();
         let Some(id) = out.mesh() else { return out };
         let mesh = out.model.scene[id].mesh_mut().unwrap();
-        let skin = img::srgb(self.look.skin);
-        let nail = img::srgb(self.look.nail_color());
+        let skin = img::srgb(skin);
+        let nail = img::srgb(nail);
         let nail_weight = if self.look.style == Style::Clay { 0.3 } else { 1.0 };
         let mask = |i: usize| model.nail.get(i).copied().unwrap_or(0.0);
         let mut g = (*mesh.geometry).clone();

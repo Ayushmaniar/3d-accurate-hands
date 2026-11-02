@@ -10,11 +10,14 @@
 //! let hand = right.add_to(&mut scene);
 //! hand.pose(&mut scene, &pose);
 //! ```
+//!
+//! More people: one instance per hand, by its name: `right.add_as(&mut scene, &HandId::new("ana",
+//! Side::Right))` poses the hand "ana.right" of each solved pose.
 
 pub mod look;
 
 pub use fframes_three_d as three_d;
-pub use handkit_core::pose::Side;
+pub use handkit_core::pose::{HandId, Side};
 
 use std::sync::Arc;
 
@@ -36,6 +39,8 @@ pub struct HandModel {
 pub struct Hand {
     pub instance: ModelInstance,
     pub side: Side,
+    /// The pose's hand it shows ("right", "ana.left").
+    pub id: HandId,
     joints: Vec<Option<NodeId>>,
     /// The skinned mesh, which carries the corrective shapes' weights.
     mesh: Option<NodeId>,
@@ -65,11 +70,18 @@ impl HandModel {
         Self::from_glb(&handkit_mesh::glb::to_glb(&mesh)).expect("the generated hand loads")
     }
 
+    /// Adds the default person's hand of this side.
     pub fn add_to(&self, scene: &mut Scene) -> Hand {
+        self.add_as(scene, &HandId::of(self.side))
+    }
+
+    /// Adds an instance that shows hand `id` of the poses (of this model's side).
+    pub fn add_as(&self, scene: &mut Scene, id: &HandId) -> Hand {
+        debug_assert_eq!(id.side, self.side, "a {} hand model shows {} hands", self.side.name(), self.side.name());
         let instance = self.model.add_to(scene, None);
         let joints = self.joint_names.iter().map(|n| instance.find(scene, n)).collect();
         let mesh = self.mesh().map(|id| instance.node(id));
-        Hand { instance, side: self.side, joints, mesh }
+        Hand { instance, side: self.side, id: id.clone(), joints, mesh }
     }
 }
 
@@ -105,10 +117,10 @@ impl Hand {
         self.mesh
     }
 
-    /// Poses the hand from the matching hand of `solved` (a pose without this side leaves it
+    /// Poses the hand from the matching hand of `solved` (a pose without this hand leaves it
     /// as it is).
     pub fn pose(&self, scene: &mut Scene, solved: &Solved) {
-        let Some(h) = solved.hands.iter().find(|h| h.side == self.side) else { return };
+        let Some(h) = solved.hands.iter().find(|h| h.id == self.id) else { return };
         for (local, id) in h.locals().iter().zip(&self.joints) {
             let Some(id) = id else { continue };
             let t = local.translation;

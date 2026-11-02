@@ -199,23 +199,92 @@ fn hands_keep_their_own_timing() {
     assert!(at("left", 3.5).abs() < 0.2);
 }
 
+/// The right hand sweeps across in front of the left, the fingers overlapping on the way.
+const CROSSING: &str = r#"{"version": 1, "idle": 0, "camera": {"position": [0, 0.1, 0.7], "target": [0, 0.1, 0], "fov": 40}, "keys": [
+    {"t": 0, "hands": {
+        "right": {"from": "relaxed", "place": {"wrist": [0.16, 0.02, 0.012], "palm_facing": [0, 0, 1], "fingers_toward": [-0.3, 1, 0]}},
+        "left": {"from": "relaxed", "place": {"wrist": [-0.02, 0.0, -0.012], "palm_facing": [0, 0, 1], "fingers_toward": [0.3, 1, 0]}}}},
+    {"t": 1.5, "move": 1.2, "hands": {"right": {"place": {"wrist": [-0.16, 0.02, 0.012], "palm_facing": [0, 0, 1], "fingers_toward": [-0.3, 1, 0]}}}}]}"#;
+
+fn check(clip: &Clip) -> handkit_core::check::CheckReport {
+    let frames: Vec<_> = (0..clip.frames()).map(|i| i as f64 / clip.fps).map(|t| (t, clip.sample(t).unwrap())).collect();
+    handkit_core::check::analyze(clip, &frames, 16.0 / 9.0).unwrap()
+}
+
 #[test]
 fn hands_passing_each_other_do_not_pop() {
-    // The right hand sweeps across in front of the left, the fingers overlapping on the way.
-    let clip = Clip::parse(
-        r#"{"version": 1, "idle": 0, "camera": {"position": [0, 0.1, 0.7], "target": [0, 0.1, 0], "fov": 40}, "keys": [
-            {"t": 0, "hands": {
-                "right": {"from": "relaxed", "place": {"wrist": [0.16, 0.02, 0.012], "palm_facing": [0, 0, 1], "fingers_toward": [-0.3, 1, 0]}},
-                "left": {"from": "relaxed", "place": {"wrist": [-0.02, 0.0, -0.012], "palm_facing": [0, 0, 1], "fingers_toward": [0.3, 1, 0]}}}},
-            {"t": 1.5, "move": 1.2, "hands": {"right": {"place": {"wrist": [-0.16, 0.02, 0.012], "palm_facing": [0, 0, 1], "fingers_toward": [-0.3, 1, 0]}}}}]}"#,
-    )
-    .unwrap();
-    let frames: Vec<_> = (0..clip.frames()).map(|i| i as f64 / clip.fps).map(|t| (t, clip.sample(t).unwrap())).collect();
-    let report = handkit_core::check::analyze(&clip, &frames, 16.0 / 9.0).unwrap();
-    let text = report.text();
+    // With collisions off, the right hand's fingers pass through the left hand.
+    let clip = Clip::parse(&CROSSING.replacen("\"idle\": 0,", "\"idle\": 0, \"collide\": false,", 1)).unwrap();
+    let text = check(&clip).text();
     assert!(text.contains("pops: none"), "{text}");
     // The overlap is reported, with the keys around it.
     assert!(text.lines().any(|l| l.starts_with("penetration of the hands, between keys[0] (0.00 s) and keys[1] (1.50 s)")), "{text}");
+}
+
+#[test]
+fn crossing_hands_slide_past_each_other() {
+    let clip = Clip::parse(CROSSING).unwrap();
+    let report = check(&clip);
+    let text = report.text();
+    assert!(text.contains("penetrations: none"), "{text}");
+    assert!(text.contains("pops: none"), "{text}");
+    // While it crosses, the moving hand (the right) is the one pushed, toward the camera (it is
+    // keyed in front of the left). Both hands at rest at the end still overlap a little: then
+    // the later-listed hand (the left) takes the push, backward.
+    for i in 7..=12 {
+        let p = clip.pushes(i as f64 * 0.1);
+        assert!(p[0].z > 0.005 && p[1].length() < 0.002, "{p:?} at {}", i as f64 * 0.1);
+    }
+    let end = clip.pushes(2.5);
+    assert!(end[0].length() < 0.002 && end[1].z < 0.0, "{end:?}");
+    // Pushes are continuous: no jump between neighbouring samples.
+    for i in 0..300 {
+        let (a, b) = (clip.pushes(i as f64 * 0.01)[0], clip.pushes((i + 1) as f64 * 0.01)[0]);
+        assert!(a.distance(b) < 0.006, "jump at {}", i as f64 * 0.01);
+    }
+}
+
+#[test]
+fn collide_false_on_a_key_lets_hands_overlap() {
+    // The right hand is keyed resting inside the left; that key opts out.
+    let clip = Clip::parse(
+        r#"{"version": 1, "idle": 0, "keys": [
+            {"t": 0, "hands": {
+                "right": {"place": {"wrist": [0.12, 0.0, 0.0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0]}},
+                "left": {"place": {"wrist": [-0.01, 0.0, 0.0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0]}}}},
+            {"t": 1, "collide": false, "hands": {"right": {"place": {"wrist": [0.0, 0.0, 0.004], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0]}}}},
+            {"t": 2, "hands": {"right": {"collide": false}}},
+            {"t": 3, "hands": {"right": {"place": {"wrist": [0.12, 0.0, 0.0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0]}}}}]}"#,
+    )
+    .unwrap();
+    // Off from the move into keys[1] until the move out of keys[2] begins (the right hand's
+    // own keys; the left hand's collide stays on, and a pair collides only when both do).
+    for t in [0.5, 1.0, 1.5, 1.9] {
+        assert!(clip.pushes(t).iter().all(|p| p.length() < 1e-9), "{:?} at {t}", clip.pushes(t));
+    }
+    // Back on, the overlap is resolved gradually (no pop).
+    let text = check(&clip).text();
+    assert!(text.contains("penetration of the hands") && text.contains("pops: none"), "{text}");
+    assert!(clip.pushes(2.2).iter().any(|p| p.length() > 0.005), "{:?}", clip.pushes(2.2));
+    assert!(Clip::parse(r#"{"keys": [{"t": 0, "collide": 1, "hands": {"right": {}}}]}"#).err().unwrap().contains("collide is true or false"));
+    assert!(Clip::parse(r#"{"collide": "no", "keys": [{"t": 0, "hands": {"right": {}}}]}"#).is_err());
+}
+
+#[test]
+fn a_held_goal_between_hands_is_not_pushed_apart() {
+    // Steepled fingers and pressed palms: every fingertip (or palm) touches the other hand's,
+    // held from key to key while the fingers spread a little.
+    for gesture in ["steeple", "prayer"] {
+        let clip = Clip::parse(&format!(
+            r#"{{"version": 1, "idle": 0, "keys": [{{"t": 0, "from": "{gesture}"}}, {{"t": 1, "from": "{gesture}", "hands": {{"right": {{"ring": {{"mcp_abd": 4}}}}}}}}]}}"#
+        ))
+        .unwrap();
+        let text = check(&clip).text();
+        assert!(!text.contains("goal touch") || !text.contains(": off in"), "{gesture}: {text}");
+        for i in 0..=10 {
+            assert!(clip.pushes(i as f64 * 0.1).iter().all(|p| p.length() < 0.0005), "{gesture}: {:?}", clip.pushes(i as f64 * 0.1));
+        }
+    }
 }
 
 #[test]

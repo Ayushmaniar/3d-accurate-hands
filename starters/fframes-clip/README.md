@@ -33,6 +33,10 @@ fframes-clip --clip clip.json --assets ../../assets render -o out.mp4
   its name: `fframes-clip --clip ../../clips/demo_looks.json --looks
   "realistic;toon;spiderverse;arcane;clay" --look-every 2 render -o looks.mp4`.
   A 1080p frame takes about 80 ms per style on the CPU (16 threads), times N with motion blur.
+- Any number of hands: a clip with `ana.right`, `ben.left` (`handkit explain`, "Hands and
+  people") draws one mesh per hand, each in its person's skin (`"people": {"ana": {"look":
+  {"skin": "brown"}}}`; the realistic and clay styles show it). `clips/demo_four_hands.json`
+  is two people stacking four hands.
 - `fframes-clip --help` lists these flags and the standard fframes commands.
 - The video runs at 30 fps; write clips at 30 fps.
 

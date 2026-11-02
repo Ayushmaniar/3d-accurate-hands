@@ -5,7 +5,7 @@ use glam::DVec3;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Side {
     Right,
@@ -19,6 +19,119 @@ impl Side {
             Side::Left => "left",
         }
     }
+
+    pub fn parse(s: &str) -> Option<Side> {
+        match s {
+            "right" => Some(Side::Right),
+            "left" => Some(Side::Left),
+            _ => None,
+        }
+    }
+
+    pub fn other(self) -> Side {
+        match self {
+            Side::Right => Side::Left,
+            Side::Left => Side::Right,
+        }
+    }
+}
+
+/// A hand: whose (`person`, "" for the default person) and which. Written "right", "left",
+/// "ana.right", "ana.left"; every site, segment and pattern starts with it ("ana.right.index.tip").
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct HandId {
+    pub person: String,
+    pub side: Side,
+}
+
+impl HandId {
+    pub fn new(person: &str, side: Side) -> HandId {
+        HandId { person: person.to_string(), side }
+    }
+
+    /// The default person's hand: "right" or "left".
+    pub fn of(side: Side) -> HandId {
+        HandId { person: String::new(), side }
+    }
+
+    pub fn is_default(&self) -> bool {
+        self.person.is_empty()
+    }
+
+    pub fn name(&self) -> String {
+        if self.person.is_empty() { self.side.name().to_string() } else { format!("{}.{}", self.person, self.side.name()) }
+    }
+
+    /// The same person's other hand.
+    pub fn other(&self) -> HandId {
+        HandId { person: self.person.clone(), side: self.side.other() }
+    }
+
+    /// A whole hand name: "right", "left", "<person>.right" or "<person>.left".
+    pub fn parse(s: &str) -> Result<HandId, String> {
+        match split_hand(s) {
+            Some((id, "")) => Ok(id),
+            _ => Err(format!("\"{s}\" is not a hand: write right, left, or <person>.right / <person>.left (person names: lowercase letters, digits and _)")),
+        }
+    }
+}
+
+impl std::fmt::Display for HandId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.name())
+    }
+}
+
+/// A person's name: lowercase letters, digits and `_`, not "right" or "left".
+pub fn valid_person(name: &str) -> bool {
+    !name.is_empty() && Side::parse(name).is_none() && name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+}
+
+/// Splits a name that starts with a hand into the hand and the rest:
+/// "ana.right.index.tip" -> (ana.right, "index.tip"), "left.thumb" -> (left, "thumb"),
+/// "right" -> (right, "").
+pub fn split_hand(name: &str) -> Option<(HandId, &str)> {
+    let (first, rest) = name.split_once('.').unwrap_or((name, ""));
+    if let Some(side) = Side::parse(first) {
+        return Some((HandId::of(side), rest));
+    }
+    if !valid_person(first) {
+        return None;
+    }
+    let (second, rest) = rest.split_once('.').unwrap_or((rest, ""));
+    Some((HandId::new(first, Side::parse(second)?), rest))
+}
+
+/// The hand a site, segment or pattern name starts with, as written ("ana.right" of
+/// "ana.right.index.tip"); the whole name when it does not start with one.
+pub fn hand_of(name: &str) -> String {
+    split_hand(name).map(|(id, _)| id.name()).unwrap_or_else(|| name.to_string())
+}
+
+/// Checks a top-level `people`: { "<person>": { "look": {..} } }.
+pub fn check_people(v: &Value) -> Result<(), String> {
+    let obj = v.as_object().ok_or("\"people\" is an object: { \"<person>\": { \"look\": {..} } }")?;
+    for (name, p) in obj {
+        if !valid_person(name) {
+            return Err(format!("people: \"{name}\" is not a person name (lowercase letters, digits and _; not right or left)"));
+        }
+        let po = p.as_object().ok_or(format!("people.{name} is an object: {{ \"look\": {{..}} }}"))?;
+        for (k, x) in po {
+            match k.as_str() {
+                "look" => {
+                    crate::look::Look::from_value(x).map_err(|e| format!("people.{name}: {e}"))?;
+                }
+                _ => return Err(format!("people.{name}: unknown field \"{k}\" (fields: look)")),
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The look a person's hands are drawn with: the top-level look with the person's own over it.
+pub fn person_look(look: Option<&Value>, people: Option<&Value>, person: &str) -> Option<Value> {
+    let own = people.and_then(|p| p.get(person)).and_then(|p| p.get("look"));
+    crate::look::Look::merge(look, own)
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -34,6 +147,10 @@ pub struct PoseFile {
     /// How renderers draw the hands: { style, skin, nail, outline, ... } (`look::Look`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub look: Option<Value>,
+    /// Per person (the prefix of "ana.right"): { "ana": { "look": {..} } }, a look over the
+    /// top-level one for that person's hands.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub people: Option<Value>,
     /// The frame's [width, height] in pixels, for `place.screen` (default 16:9).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub size: Option<[f64; 2]>,
@@ -69,11 +186,62 @@ pub struct Goal {
     pub vary: Vec<String>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Hands {
-    pub right: Option<HandPose>,
-    pub left: Option<HandPose>,
+/// The hands of a pose, in the order the file lists them.
+#[derive(Clone, Debug, Default)]
+pub struct Hands(pub Vec<(HandId, HandPose)>);
+
+impl Hands {
+    pub fn get(&self, id: &HandId) -> Option<&HandPose> {
+        self.0.iter().find(|(h, _)| h == id).map(|(_, p)| p)
+    }
+
+    pub fn right(&self) -> Option<&HandPose> {
+        self.get(&HandId::of(Side::Right))
+    }
+
+    pub fn left(&self) -> Option<&HandPose> {
+        self.get(&HandId::of(Side::Left))
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &(HandId, HandPose)> {
+        self.0.iter()
+    }
+}
+
+/// The order hands are built and listed in: the default person's right and left, then
+/// everyone else's hands in the order given.
+pub fn hand_order<'a>(ids: impl Iterator<Item = &'a HandId>) -> Vec<HandId> {
+    let mut v: Vec<HandId> = ids.cloned().collect();
+    v.sort_by_key(|h| match (h.is_default(), h.side) {
+        (true, Side::Right) => 0,
+        (true, Side::Left) => 1,
+        _ => 2,
+    });
+    v
+}
+
+impl Serialize for Hands {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+        let mut m = s.serialize_map(Some(self.0.len()))?;
+        for (id, h) in &self.0 {
+            m.serialize_entry(&id.name(), h)?;
+        }
+        m.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Hands {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let map = serde_json::Map::<String, Value>::deserialize(d)?;
+        let mut out = Vec::new();
+        for (k, v) in map {
+            let id = HandId::parse(&k).map_err(|_| serde::de::Error::custom(format!("unknown hand \"{k}\": hands are right, left, or <person>.right / <person>.left (person names: lowercase letters, digits and _)")))?;
+            let h: HandPose = serde_json::from_value(v).map_err(|e| serde::de::Error::custom(format!("hands.{k}: {e}")))?;
+            out.push((id, h));
+        }
+        Ok(Hands(out))
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -149,6 +317,9 @@ pub fn parse_value(v: Value) -> Result<(PoseFile, Mirrors), String> {
     if let Some(l) = &pose.look {
         crate::look::Look::from_value(l)?;
     }
+    if let Some(p) = &pose.people {
+        check_people(p)?;
+    }
     Ok((pose, mirrors))
 }
 
@@ -180,10 +351,13 @@ pub fn resolve(mut v: Value) -> Result<(Value, Mirrors), String> {
         v = base;
     }
     if let Some(hands) = v.get_mut("hands").and_then(Value::as_object_mut) {
-        for side in ["right", "left"] {
-            let Some(hand) = hands.get_mut(side).and_then(Value::as_object_mut) else { continue };
+        let keys: Vec<String> = hands.keys().cloned().collect();
+        for key in keys {
+            let Ok(id) = HandId::parse(&key) else { continue };
+            let side = id.side.name();
+            let Some(hand) = hands.get_mut(&key).and_then(Value::as_object_mut) else { continue };
             let Some(name) = hand.remove("from") else { continue };
-            let name = name.as_str().ok_or(format!("hands.{side}.from must be a gesture name"))?;
+            let name = name.as_str().ok_or(format!("hands.{key}.from must be a gesture name"))?;
             let preset = gesture_value(name)?;
             let ph = preset.get("hands").and_then(Value::as_object).cloned().unwrap_or_default();
             let (from_side, base) = match ph.get(side) {
@@ -205,7 +379,7 @@ pub fn resolve(mut v: Value) -> Result<(Value, Mirrors), String> {
                 if g.get("aim").is_some() {
                     continue;
                 }
-                let text = g.to_string().replace(&format!("\"{from_side}."), &format!("\"{side}."));
+                let text = g.to_string().replace(&format!("\"{from_side}."), &format!("\"{key}."));
                 extra_goals.push(serde_json::from_str(&text).unwrap());
             }
         }
@@ -223,16 +397,19 @@ pub fn resolve(mut v: Value) -> Result<(Value, Mirrors), String> {
     }
     let mut mirrors = Mirrors::default();
     if let Some(hands) = v.get_mut("hands").and_then(Value::as_object_mut) {
-        for (side, other) in [("left", "right"), ("right", "left")] {
-            let Some(from) = hands.get(side).and_then(|h| h.get("mirror")).cloned() else { continue };
-            if from.as_str() != Some(other) {
-                return Err(format!("hands.{side}.mirror must be \"{other}\""));
+        let mirroring: Vec<(String, Value)> = hands.iter().filter_map(|(k, h)| Some((k.clone(), h.get("mirror")?.clone()))).collect();
+        for (side, from) in &mirroring {
+            let Ok(id) = HandId::parse(side) else { continue };
+            // Any hand of the other side, of this person or another; "right" for the left hand.
+            let other = from.as_str().and_then(|s| HandId::parse(s).ok()).filter(|o| o.side != id.side);
+            let Some(other) = other.map(|o| o.name()) else {
+                return Err(format!("hands.{side}.mirror must be \"{}\"", id.other().name()));
+            };
+            let base = hands.get(&other).cloned().ok_or(format!("hands.{side} mirrors \"{other}\", which is missing"))?;
+            if mirroring.iter().any(|(k, _)| *k == other) {
+                return Err(if mirroring.len() == 2 { "both hands mirror each other".into() } else { format!("hands.{side} mirrors \"{other}\", which mirrors a hand itself") });
             }
-            let base = hands.get(other).cloned().ok_or(format!("hands.{side} mirrors \"{other}\", which is missing"))?;
-            if base.get("mirror").is_some() {
-                return Err("both hands mirror each other".into());
-            }
-            let mut own = hands[side].clone();
+            let mut own = hands[side.as_str()].clone();
             own.as_object_mut().unwrap().remove("mirror");
             let has_own_place = ["place", "elbow", "forearm_rotation_deg"].iter().any(|k| own.get(*k).is_some());
             let mut merged = base;
@@ -242,10 +419,9 @@ pub fn resolve(mut v: Value) -> Result<(Value, Mirrors), String> {
                 }
             }
             merge(&mut merged, own);
-            hands.insert(side.into(), merged);
-            match side {
-                "left" => mirrors.left = !has_own_place,
-                _ => mirrors.right = !has_own_place,
+            hands.insert(side.clone(), merged);
+            if !has_own_place {
+                mirrors.of.push((id, HandId::parse(&other).unwrap()));
             }
         }
     }
@@ -344,11 +520,16 @@ pub fn gesture_value(name: &str) -> Result<Value, String> {
     serde_json::from_str(text).map_err(|e| format!("gesture {key}: {e}"))
 }
 
-/// Which hands take the mirror image of the other hand's placement.
-#[derive(Clone, Copy, Debug, Default)]
+/// Which hands take the mirror image of another hand's placement: (the hand, the one it mirrors).
+#[derive(Clone, Debug, Default)]
 pub struct Mirrors {
-    pub left: bool,
-    pub right: bool,
+    pub of: Vec<(HandId, HandId)>,
+}
+
+impl Mirrors {
+    pub fn source(&self, id: &HandId) -> Option<&HandId> {
+        self.of.iter().find(|(h, _)| h == id).map(|(_, s)| s)
+    }
 }
 
 pub(crate) fn merge(base: &mut Value, over: Value) {

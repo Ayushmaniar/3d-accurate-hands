@@ -42,7 +42,8 @@ enum Cmd {
     Explain { key: Option<String> },
     /// Capsules, nails and sites in world space as JSON, for renderers.
     Geometry { pose: PathBuf },
-    /// Each skeleton joint's local rotation and translation for a pose, as JSON for mesh adapters.
+    /// Each skeleton joint's local rotation and translation for a pose, as JSON for mesh adapters
+    /// (`hands` has each hand's by its name, for poses with more people).
     Bones { pose: PathBuf },
     /// Generate the procedural hand as a skinned binary glTF (.glb).
     Mesh {
@@ -154,7 +155,7 @@ fn parse_size(s: &str) -> Result<(u32, u32)> {
 /// The renderer's input for clip frames: geometry (and bones, for meshes) per frame.
 fn frames_spec(frames: &Frames, size: (u32, u32), mesh: bool) -> Result<serde_json::Value> {
     let mut out = Vec::new();
-    let mut sides = Vec::new();
+    let mut hands = Vec::new();
     for (t, f) in frames {
         let solved = handkit_core::solve_value(&f.pose).map_err(|e| anyhow!(e))?;
         let mut g = solved.geometry();
@@ -162,16 +163,18 @@ fn frames_spec(frames: &Frames, size: (u32, u32), mesh: bool) -> Result<serde_js
         if mesh {
             g["bones"] = solved.bones();
         }
-        sides = solved.hands.iter().map(|h| h.side).collect();
+        hands = solved.hands.iter().map(|h| (h.name.to_string(), h.side)).collect();
         out.push(g);
     }
     let mut spec = serde_json::json!({ "frames": out, "size": [size.0, size.1] });
     if mesh {
         let mut files = serde_json::Map::new();
-        for side in sides {
-            files.insert(side.name().into(), serde_json::json!(mesh_asset(side)?));
+        for (_, side) in &hands {
+            files.insert(side.name().into(), serde_json::json!(mesh_asset(*side)?));
         }
-        spec["mesh"] = serde_json::json!({ "files": files });
+        // One mesh per hand, by its name, posed by the frame's bones.hands[name].
+        let by_hand: serde_json::Map<String, serde_json::Value> = hands.iter().map(|(n, s)| (n.clone(), serde_json::json!(s.name()))).collect();
+        spec["mesh"] = serde_json::json!({ "files": files, "hands": by_hand });
     }
     Ok(spec)
 }
@@ -259,7 +262,7 @@ fn run() -> Result<()> {
                 for h in &solved.hands {
                     let Some(b) = h.bones.iter().find(|b| b.name == "hand") else { continue };
                     let (p, m) = (b.frame.translation, b.frame.matrix3);
-                    f.pose["hands"][h.side.name()]["place"] = serde_json::json!({
+                    f.pose["hands"][&*h.name]["place"] = serde_json::json!({
                         "wrist": [r(p.x), r(p.y), r(p.z)],
                         "palm_facing": [r(m.z_axis.x), r(m.z_axis.y), r(m.z_axis.z)],
                         "fingers_toward": [r(m.y_axis.x), r(m.y_axis.y), r(m.y_axis.z)],
@@ -380,10 +383,12 @@ fn run() -> Result<()> {
             let mut g = solved.geometry();
             if mesh {
                 let mut files = serde_json::Map::new();
+                let mut by_hand = serde_json::Map::new();
                 for h in &solved.hands {
                     files.insert(h.side.name().into(), serde_json::json!(mesh_asset(h.side)?));
+                    by_hand.insert(h.name.to_string(), serde_json::json!(h.side.name()));
                 }
-                g["mesh"] = serde_json::json!({ "bones": solved.bones(), "files": files });
+                g["mesh"] = serde_json::json!({ "bones": solved.bones(), "files": files, "hands": by_hand });
             }
             // A clean transparent image for comparing renderers (tools/golden).
             if std::env::var_os("HANDKIT_GOLDEN").is_some() {

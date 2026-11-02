@@ -12,14 +12,15 @@
 use glam::{DQuat, DVec3, EulerRot};
 use serde_json::{Value, json};
 
+use crate::collide;
 use crate::params::PARAMS;
-use crate::pose::{self, Side};
-use crate::rig::FOREARM;
+use crate::pose::{self, HandId, Side};
+use crate::rig::{Digit, FOREARM, HandGeom, Seg};
 
-const SIDES: [(Side, &str); 2] = [(Side::Right, "right"), (Side::Left, "left")];
 const DIGITS: [&str; 5] = ["thumb", "index", "middle", "ring", "pinky"];
-/// Key fields that are about timing, not the pose. All but `t` can also go on a hand.
-const TIMING: [&str; 7] = ["t", "move", "ease", "spring", "cascade", "anticipate", "pass"];
+/// Key fields that are about timing (and collisions), not the pose. All but `t` can also go on
+/// a hand.
+const TIMING: [&str; 8] = ["t", "move", "ease", "spring", "cascade", "anticipate", "pass", "collide"];
 
 #[derive(Clone, Copy, Debug)]
 struct Spring {
@@ -183,23 +184,27 @@ struct HandKey {
     rot: DQuat,
 }
 
+/// Per hand, in the clip's hand order (`Clip::hands`).
 #[derive(Clone, Debug)]
 struct Key {
     t: f64,
-    hands: [Option<HandKey>; 2],
+    hands: Vec<Option<HandKey>>,
     goals: Vec<Value>,
     camera: Option<Value>,
     /// The step into this key, per joint group (see `group_of`), per hand.
-    steps: [Vec<Step>; 2],
+    steps: Vec<Vec<Step>>,
     /// The step for each hand's placement.
-    place_steps: [Step; 2],
+    place_steps: Vec<Step>,
     /// The step for the camera.
     cam_step: Step,
     /// Per hand: the hand moves through this key without stopping.
-    pass: [bool; 2],
+    pass: Vec<bool>,
     cam_pass: bool,
     /// The hands this key writes (a hand it leaves out moves on between its own keys).
-    named: [bool; 2],
+    named: Vec<bool>,
+    /// Per hand: whether it collides with other hands during the move into this key and while
+    /// it holds it.
+    collide: Vec<bool>,
 }
 
 impl Key {
@@ -209,7 +214,7 @@ impl Key {
 
     /// When the move into this key begins (for goals).
     fn begin(&self) -> f64 {
-        (0..2).filter(|si| self.named[*si]).map(|si| self.place_steps[si].begin()).fold(self.cam_step.begin().min(self.t), f64::min)
+        (0..self.named.len()).filter(|si| self.named[*si]).map(|si| self.place_steps[si].begin()).fold(self.cam_step.begin().min(self.t), f64::min)
     }
 }
 
@@ -278,12 +283,19 @@ pub struct Clip {
     pub size: Option<Value>,
     /// How to draw the hands (`look::Look`), copied into every sampled pose.
     pub look: Option<Value>,
+    /// Per person: { "ana": { "look": {..} } }, copied into every sampled pose.
+    pub people: Option<Value>,
     keys: Vec<Key>,
     idle: f64,
     seed: u64,
     follow: f64,
-    /// The hands in the clip.
-    present: [bool; 2],
+    /// The hands in the clip (all in the first key): the default person's right and left, then
+    /// other people's hands in the order the first key lists them.
+    ids: Vec<HandId>,
+    /// Each hand's channel of the idle noise (the default hands keep the ones they always had).
+    chan: Vec<usize>,
+    /// How far collisions with the other hands push each hand, over time.
+    track: collide::Track,
 }
 
 /// A sampled frame: the pose and the goals held at that time.
@@ -328,8 +340,8 @@ impl Clip {
     pub fn from_value(v: &Value) -> Result<Clip, String> {
         let obj = v.as_object().ok_or("a clip is a JSON object")?;
         for k in obj.keys() {
-            if !["version", "name", "description", "duration", "fps", "camera", "idle", "follow", "keys", "size", "look"].contains(&k.as_str()) {
-                return Err(format!("unknown clip field \"{k}\" (fields: version, name, description, duration, fps, size, camera, look, idle, follow, keys)"));
+            if !["version", "name", "description", "duration", "fps", "camera", "idle", "follow", "keys", "size", "look", "people", "collide"].contains(&k.as_str()) {
+                return Err(format!("unknown clip field \"{k}\" (fields: version, name, description, duration, fps, size, camera, look, people, idle, follow, collide, keys)"));
             }
         }
         if let Some(ver) = num(v, "version")? {
@@ -350,6 +362,15 @@ impl Clip {
         if let Some(l) = &look {
             crate::look::Look::from_value(l)?;
         }
+        let people = v.get("people").cloned();
+        if let Some(p) = &people {
+            pose::check_people(p)?;
+        }
+        let collide_default = match v.get("collide") {
+            None => true,
+            Some(Value::Bool(b)) => *b,
+            Some(_) => return Err("\"collide\" is true (hands do not pass through each other; the default) or false".into()),
+        };
         if let Some(s) = &size {
             let ok = s.as_array().is_some_and(|a| a.len() == 2 && a.iter().all(|x| x.as_f64().is_some_and(|x| x > 0.0)));
             if !ok {
@@ -366,9 +387,9 @@ impl Clip {
         let mut camera = v.get("camera").cloned();
         // The camera as of the key being read, for screen placements.
         let mut cam_now = camera.clone();
-        let mut present = [false; 2];
+        let mut ids: Vec<HandId> = Vec::new();
         // When each hand's last own key was.
-        let mut last_t = [0.0; 2];
+        let mut last_t: Vec<f64> = Vec::new();
         for (i, raw) in raw_keys.iter().enumerate() {
             let at = |e: String| format!("keys[{i}]: {e}");
             let t = num(raw, "t").map_err(at)?.ok_or_else(|| at("needs \"t\" (seconds)".into()))?;
@@ -382,21 +403,26 @@ impl Clip {
                 pose_part.as_object_mut().ok_or_else(|| at("a key is a JSON object".into()))?.remove(k);
             }
             // A hand's own timing fields, over the key's.
-            let mut hand_timing = [json!({}), json!({})];
-            for (si, (_, name)) in SIDES.iter().enumerate() {
-                for k in TIMING {
-                    if let Some(x) = raw.get(k) {
-                        hand_timing[si][k] = x.clone();
-                    }
+            let mut key_timing = json!({});
+            for k in TIMING {
+                if let Some(x) = raw.get(k) {
+                    key_timing[k] = x.clone();
                 }
-                let Some(h) = pose_part.get_mut("hands").and_then(|h| h.get_mut(*name)).and_then(Value::as_object_mut) else { continue };
-                if h.contains_key("t") {
-                    return Err(at(format!("hands.{name}: t belongs to the key; a hand can have its own move, ease, spring, cascade, anticipate and pass")));
-                }
-                for k in &TIMING[1..] {
-                    if let Some(x) = h.remove(*k) {
-                        hand_timing[si][*k] = x;
+            }
+            let mut own_timing: Vec<(String, Value)> = Vec::new();
+            if let Some(hs) = pose_part.get_mut("hands").and_then(Value::as_object_mut) {
+                for (name, h) in hs.iter_mut() {
+                    let Some(h) = h.as_object_mut() else { continue };
+                    if h.contains_key("t") {
+                        return Err(at(format!("hands.{name}: t belongs to the key; a hand can have its own move, ease, spring, cascade, anticipate, pass and collide")));
                     }
+                    let mut tm = key_timing.clone();
+                    for k in &TIMING[1..] {
+                        if let Some(x) = h.remove(*k) {
+                            tm[*k] = x;
+                        }
+                    }
+                    own_timing.push((name.clone(), tm));
                 }
             }
             let mut merged = merge_key(prev.as_ref(), pose_part).map_err(at)?;
@@ -421,25 +447,20 @@ impl Clip {
             let solved = crate::solve_value(&solved_raw).map_err(at)?;
             let version = solved.pose.version;
             if i == 0 {
-                for (si, (side, _)) in SIDES.iter().enumerate() {
-                    present[si] = solved.hands.iter().any(|h| h.side == *side);
-                }
-                if !present.iter().any(|x| *x) {
+                ids = solved.hands.iter().map(|h| h.id.clone()).collect();
+                if ids.is_empty() {
                     return Err(at("the first key has no hands".into()));
                 }
+                last_t = vec![0.0; ids.len()];
             }
-            let mut hands: [Option<HandKey>; 2] = [None, None];
-            for (si, (side, name)) in SIDES.iter().enumerate() {
-                let Some(g) = solved.hands.iter().find(|h| h.side == *side) else {
-                    if present[si] {
-                        return Err(at(format!("the {name} hand is missing (a hand in the first key stays in every key)")));
-                    }
-                    continue;
+            let n = ids.len();
+            let mut hands: Vec<Option<HandKey>> = vec![None; n];
+            for (si, id) in ids.iter().enumerate() {
+                let name = id.name();
+                let Some(g) = solved.hands.iter().find(|h| h.id == *id) else {
+                    return Err(at(format!("the {name} hand is missing (a hand in the first key stays in every key)")));
                 };
-                if !present[si] {
-                    return Err(at(format!("the {name} hand is not in the first key; every hand must start in keys[0]")));
-                }
-                let hand = &resolved["hands"][*name];
+                let hand = &resolved["hands"][&name];
                 let values = PARAMS
                     .iter()
                     .map(|p| match get_path(hand, p.key).and_then(Value::as_f64) {
@@ -458,10 +479,13 @@ impl Clip {
                 let wrist = g.world.transform_point3(DVec3::new(0.0, FOREARM, 0.0));
                 hands[si] = Some(HandKey { values, wrist, rot });
             }
+            if let Some(g) = solved.hands.iter().find(|h| !ids.contains(&h.id)) {
+                return Err(at(format!("the {} hand is not in the first key; every hand must start in keys[0]", g.name)));
+            }
             // The next key starts from this one, with every placement written out.
             let mut next = resolved.clone();
-            for (si, (_, name)) in SIDES.iter().enumerate() {
-                if let (Some(h), Some(obj)) = (&hands[si], next["hands"].get_mut(*name).and_then(Value::as_object_mut)) {
+            for (si, id) in ids.iter().enumerate() {
+                if let (Some(h), Some(obj)) = (&hands[si], next["hands"].get_mut(id.name()).and_then(Value::as_object_mut)) {
                     for k in ["place", "elbow", "forearm_rotation_deg", "mirror"] {
                         obj.remove(k);
                     }
@@ -487,16 +511,25 @@ impl Clip {
             // over the key's; its default move runs from that hand's last own key).
             let gap = keys.last().map(|p| t - p.t).unwrap_or(0.0);
             let cam = timing(raw, t, gap).map_err(at)?;
-            let mut named = [false; 2];
-            for (si, (_, name)) in SIDES.iter().enumerate() {
+            let mut named = vec![false; n];
+            for (si, id) in ids.iter().enumerate() {
+                let name = id.name();
                 let in_goals = raw.get("goals").is_some_and(|g| g.to_string().contains(&format!("\"{name}.")));
-                named[si] = present[si] && (i == 0 || raw.get("from").is_some() || in_goals || raw.get("hands").and_then(|h| h.get(*name)).is_some());
+                named[si] = i == 0 || raw.get("from").is_some() || in_goals || raw.get("hands").and_then(|h| h.get(&name)).is_some();
             }
-            let mut steps: [Vec<Step>; 2] = [Vec::new(), Vec::new()];
-            let mut place_steps = [cam.base; 2];
-            let mut pass = [false; 2];
-            for si in 0..2 {
-                let tm = timing(&hand_timing[si], t, if named[si] { t - last_t[si] } else { gap }).map_err(|e| at(format!("hands.{}: {e}", SIDES[si].1)))?;
+            let mut steps: Vec<Vec<Step>> = vec![Vec::new(); n];
+            let mut place_steps = vec![cam.base; n];
+            let mut pass = vec![false; n];
+            let mut collide = vec![collide_default; n];
+            for si in 0..n {
+                let name = ids[si].name();
+                let fields = own_timing.iter().find(|(k, _)| *k == name).map(|(_, tm)| tm).unwrap_or(&key_timing);
+                collide[si] = match fields.get("collide") {
+                    None => collide_default,
+                    Some(Value::Bool(b)) => *b,
+                    Some(_) => return Err(at(format!("hands.{name}: collide is true or false"))),
+                };
+                let tm = timing(fields, t, if named[si] { t - last_t[si] } else { gap }).map_err(|e| at(format!("hands.{name}: {e}")))?;
                 if named[si] {
                     last_t[si] = t;
                 }
@@ -540,11 +573,11 @@ impl Clip {
             }
             let mut cam_step = cam.base;
             cam_step.spring = cam.spring.scaled(0.8);
-            keys.push(Key { t, hands, goals, camera: key_camera, steps, place_steps, cam_step, pass, cam_pass: cam.pass, named });
+            keys.push(Key { t, hands, goals, camera: key_camera, steps, place_steps, cam_step, pass, cam_pass: cam.pass, named, collide });
         }
         // A pass key is a waypoint: its move runs on past it while the hand's next key starts
         // early, so the hand flows through it (near the key's pose) without slowing to a stop.
-        for si in 0..2 {
+        for si in 0..ids.len() {
             for i in 1..keys.len() {
                 if !keys[i].pass[si] {
                     continue;
@@ -570,7 +603,30 @@ impl Clip {
         }
         let last = keys.last().unwrap().t;
         let duration = num(v, "duration")?.unwrap_or(last + 0.5);
-        Ok(Clip { duration, fps, camera, size, look, keys, idle, seed, follow, present })
+        // The default hands keep the idle noise they always had; other hands get their own.
+        let chan = ids
+            .iter()
+            .scan(2, |next, id| {
+                Some(match (id.is_default(), id.side) {
+                    (true, Side::Right) => 0,
+                    (true, Side::Left) => 1,
+                    _ => {
+                        *next += 1;
+                        *next - 1
+                    }
+                })
+            })
+            .collect();
+        let mut clip = Clip { duration, fps, camera, size, look, people, keys, idle, seed, follow, ids, chan, track: collide::Track::none() };
+        if clip.ids.len() > 1 && clip.keys.iter().any(|k| k.collide.iter().filter(|c| **c).count() > 1) {
+            clip.track = clip.collisions()?;
+        }
+        Ok(clip)
+    }
+
+    /// The clip's hands, in the order of `sample`'s pose and `track`.
+    pub fn hands(&self) -> &[HandId] {
+        &self.ids
     }
 
     pub fn frames(&self) -> usize {
@@ -630,7 +686,7 @@ impl Clip {
         let idx = |k: &str| PARAMS.iter().position(|p| p.key == k).unwrap();
         let (twist, dev, flex) = (values[idx("twist")], values[idx("wrist_dev")], values[idx("wrist_flex")]);
         let mut local = DQuat::from_rotation_y(twist.to_radians()) * DQuat::from_rotation_z(-dev.to_radians()) * DQuat::from_rotation_x(flex.to_radians());
-        if si == 1 {
+        if self.ids[si].side == Side::Left {
             // The left hand is built mirrored in x: M R M keeps x rotations and flips y and z.
             local = DQuat::from_xyzw(local.x, -local.y, -local.z, local.w);
         }
@@ -666,41 +722,124 @@ impl Clip {
         25.0 * (deg / 25.0).tanh()
     }
 
+    /// A hand as a pose file's hand: every joint value and the placement.
+    fn hand_value(values: &[f64], wrist: DVec3, rot: DQuat) -> Value {
+        let mut hand = json!({});
+        for (j, p) in PARAMS.iter().enumerate() {
+            set_path(&mut hand, p.key, json!(r6(values[j])));
+        }
+        hand["place"] = place_json(wrist, rot);
+        hand
+    }
+
+    /// Hand `si` at `t` with idle movement and joint limits, and with follow-through when
+    /// `follow` (before collisions and goals).
+    fn posed(&self, si: usize, t: f64, follow: bool) -> (Vec<f64>, DVec3, DQuat) {
+        let ch = self.chan[si];
+        let (mut values, mut wrist, rot) = self.base(si, t).unwrap();
+        let drag = if follow { self.follow_through(si, t) } else { 0.0 };
+        for (j, p) in PARAMS.iter().enumerate() {
+            let (digit, _) = group_of(p.key);
+            let k = match (digit, p.key.split_once('.').map(|x| x.1)) {
+                (Some(0), Some("mcp_flex")) => 0.3,
+                (Some(d), Some("mcp_flex")) if d > 0 => 1.0,
+                (Some(d), Some("pip_flex")) if d > 0 => 0.6,
+                (Some(d), Some("dip_flex")) if d > 0 => 0.4,
+                _ => 0.0,
+            };
+            if k != 0.0 {
+                // Curled fingers are held, not loose.
+                let curl = (values[j] / 90.0).clamp(0.0, 1.0);
+                values[j] += k * drag * (1.0 - 0.7 * curl);
+            }
+            values[j] += self.idle * idle(self.seed, ch, j, p.key, t);
+            values[j] = soft_clamp(values[j], p.min, p.max);
+        }
+        for (a, axis) in [(0, DVec3::X), (1, DVec3::Y), (2, DVec3::Z)] {
+            wrist += axis * self.idle * 0.0012 * noise(self.seed, ch * 100 + 90 + a, t, 0.2);
+        }
+        (values, wrist, rot)
+    }
+
+    /// Every hand at `t` before collisions and goals, and its wrist: the motion the collisions
+    /// push. Follow-through (slow to compute) only for hands near another.
+    fn free_hands(&self, t: f64) -> Result<(Vec<HandGeom>, Vec<DVec3>), String> {
+        let build = |si: usize, follow: bool| -> Result<(HandGeom, DVec3), String> {
+            let (values, wrist, rot) = self.posed(si, t, follow);
+            let hp: pose::HandPose = serde_json::from_value(Self::hand_value(&values, wrist, rot)).map_err(|e| e.to_string())?;
+            Ok((crate::rig::build_hand(&self.ids[si], &hp, Some(1), None)?, wrist))
+        };
+        let (mut geoms, mut wrists): (Vec<HandGeom>, Vec<DVec3>) = (0..self.ids.len()).map(|si| build(si, false)).collect::<Result<Vec<_>, _>>()?.into_iter().unzip();
+        if self.follow != 0.0 {
+            let boxes: Vec<_> = geoms.iter().map(collide::bounds).collect();
+            for si in 0..geoms.len() {
+                let near = (0..geoms.len()).any(|o| o != si && collide::boxes_near(boxes[si], boxes[o], 0.04));
+                if near {
+                    (geoms[si], wrists[si]) = build(si, true)?;
+                }
+            }
+        }
+        Ok((geoms, wrists))
+    }
+
+    /// Whether hand `si` collides at `t`: the setting of its latest key whose move has begun.
+    fn collides_at(&self, si: usize, t: f64) -> bool {
+        let k = (1..self.keys.len()).rev().find(|k| self.keys[*k].named[si] && self.keys[*k].place_steps[si].begin() <= t).unwrap_or(0);
+        self.keys[k].collide[si]
+    }
+
+    /// The parts of two hands that the goals held at `t` join (every part any of their goals
+    /// names, on each hand): those may touch and overlap.
+    pub fn joined_parts(&self, t: f64, hands: &[HandGeom]) -> Vec<collide::Exempt> {
+        let (held, new, dropped) = self.goals_at(t);
+        let goals = held.iter().chain(new.iter().chain(&dropped).filter(|g| g.1 > 0.0).map(|g| &g.0));
+        let mut out: Vec<collide::Exempt> = Vec::new();
+        for g in goals {
+            let Some([a, b]) = g.get("touch").and_then(Value::as_array).and_then(|n| Some([n.first()?.as_str()?, n.get(1)?.as_str()?])) else { continue };
+            let (Some((ia, ra)), Some((ib, rb))) = (pose::split_hand(a), pose::split_hand(b)) else { continue };
+            let (Some(mut ha), Some(mut hb)) = (self.ids.iter().position(|h| *h == ia), self.ids.iter().position(|h| *h == ib)) else { continue };
+            if ha == hb {
+                continue;
+            }
+            let (mut ma, mut mb) = (parts_named(&hands[ha], ra), parts_named(&hands[hb], rb));
+            if ha > hb {
+                (ha, hb, ma, mb) = (hb, ha, mb, ma);
+            }
+            match out.iter_mut().find(|e| (e.a, e.b) == (ha, hb)) {
+                Some(collide::Exempt { parts: Some((xa, xb)), .. }) => {
+                    xa.iter_mut().zip(&ma).for_each(|(x, m)| *x |= *m);
+                    xb.iter_mut().zip(&mb).for_each(|(x, m)| *x |= *m);
+                }
+                _ => out.push(collide::Exempt { a: ha, b: hb, parts: Some((ma, mb)) }),
+            }
+        }
+        out
+    }
+
+    /// Runs the collisions between the hands over the whole clip (see `collide`).
+    fn collisions(&self) -> Result<collide::Track, String> {
+        let first = self.keys.iter().flat_map(|k| k.place_steps.iter().map(|s| s.begin())).fold(0.0_f64, f64::min);
+        let last = self.keys.last().unwrap().t.max(self.duration);
+        collide::simulate(first - 0.25, last + 1.0, |t| {
+            let (hands, wrists) = self.free_hands(t)?;
+            let on = (0..self.ids.len()).map(|si| self.collides_at(si, t)).collect();
+            let exempt = self.joined_parts(t, &hands);
+            Ok(collide::Moment { hands, wrists, on, exempt })
+        })
+    }
+
+    /// How far collisions push each hand at `t` (meters, in the clip's hand order).
+    pub fn pushes(&self, t: f64) -> Vec<DVec3> {
+        (0..self.ids.len()).map(|si| self.track.at(si, t)).collect()
+    }
+
     /// The pose and active goals at `t` seconds.
     pub fn sample(&self, t: f64) -> Result<Frame, String> {
         let mut hands = serde_json::Map::new();
-        for (si, (_, name)) in SIDES.iter().enumerate() {
-            if !self.present[si] {
-                continue;
-            }
-            let (mut values, mut wrist, rot) = self.base(si, t).unwrap();
-            let drag = self.follow_through(si, t);
-            for (j, p) in PARAMS.iter().enumerate() {
-                let (digit, _) = group_of(p.key);
-                let k = match (digit, p.key.split_once('.').map(|x| x.1)) {
-                    (Some(0), Some("mcp_flex")) => 0.3,
-                    (Some(d), Some("mcp_flex")) if d > 0 => 1.0,
-                    (Some(d), Some("pip_flex")) if d > 0 => 0.6,
-                    (Some(d), Some("dip_flex")) if d > 0 => 0.4,
-                    _ => 0.0,
-                };
-                if k != 0.0 {
-                    // Curled fingers are held, not loose.
-                    let curl = (values[j] / 90.0).clamp(0.0, 1.0);
-                    values[j] += k * drag * (1.0 - 0.7 * curl);
-                }
-                values[j] += self.idle * idle(self.seed, si, j, p.key, t);
-                values[j] = soft_clamp(values[j], p.min, p.max);
-            }
-            for (a, axis) in [(0, DVec3::X), (1, DVec3::Y), (2, DVec3::Z)] {
-                wrist += axis * self.idle * 0.0012 * noise(self.seed, si * 100 + 90 + a, t, 0.2);
-            }
-            let mut hand = json!({});
-            for (j, p) in PARAMS.iter().enumerate() {
-                set_path(&mut hand, p.key, json!(r6(values[j])));
-            }
-            hand["place"] = place_json(wrist, rot);
-            hands.insert((*name).into(), hand);
+        for (si, id) in self.ids.iter().enumerate() {
+            let (values, mut wrist, rot) = self.posed(si, t, true);
+            wrist += self.track.at(si, t);
+            hands.insert(id.name(), Self::hand_value(&values, wrist, rot));
         }
         let mut pose = json!({ "version": 1, "hands": Value::Object(hands) });
         if let Some(c) = self.camera_at(t) {
@@ -712,6 +851,9 @@ impl Clip {
         if let Some(l) = &self.look {
             pose["look"] = l.clone();
         }
+        if let Some(p) = &self.people {
+            pose["people"] = p.clone();
+        }
 
         // Goals: held through a transition when both keys have them, ramped in near a key's
         // arrival when new, ramped out at a transition's start when dropped.
@@ -720,7 +862,8 @@ impl Clip {
         // a goal joins them (overlaps between hands are handled below).
         let joined = held.iter().chain(new.iter().chain(&dropped).map(|g| &g.0)).any(|g| {
             let names: Vec<&str> = g.get("touch").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).collect();
-            names.iter().any(|n| n.starts_with("right.")) && names.iter().any(|n| n.starts_with("left."))
+            let hands: Vec<String> = names.iter().map(|n| pose::hand_of(n)).collect();
+            hands.windows(2).any(|w| w[0] != w[1])
         });
         let solve = |pose: &Value, goals: &[Value], own_hand: bool| -> Result<Value, String> {
             if goals.is_empty() {
@@ -754,12 +897,12 @@ impl Clip {
         out["version"] = json!(1);
         let solved = crate::solve_value(&out)?;
         let report = crate::query::analyze(&solved.pose, &solved.hands)?;
-        let side_of = |label: &str| label.split('.').next().unwrap_or("").to_string();
+        let side_of = |label: &str| pose::hand_of(label);
         let mut vary: Vec<String> = Vec::new();
         for p in report.contacts.iter().chain(&report.penetrations).filter(|p| p.gap_mm < -0.9 && side_of(&p.a) == side_of(&p.b)) {
             for label in [&p.a, &p.b] {
-                let mut parts = label.split('.');
-                let (side, part) = (parts.next().unwrap_or(""), parts.next().unwrap_or(""));
+                let Some((id, rest)) = pose::split_hand(label) else { continue };
+                let (side, part) = (id.name(), rest.split('.').next().unwrap_or(""));
                 if DIGITS.contains(&part) {
                     let pat = format!("{side}.{part}.*");
                     if !vary.contains(&pat) {
@@ -878,6 +1021,21 @@ fn place_json(wrist: DVec3, rot: DQuat) -> Value {
         "elbow": [r6(elbow.x), r6(elbow.y), r6(elbow.z)],
         "forearm_rotation_deg": [r6(x.to_degrees()), r6(y.to_degrees()), r6(z.to_degrees())],
     })
+}
+
+/// The capsules of `hand` a site or segment name (after the hand) belongs to: its whole digit,
+/// the forearm, or for a palm site the palm.
+fn parts_named(hand: &HandGeom, rest: &str) -> Vec<bool> {
+    let part = rest.split('.').next().unwrap_or("");
+    let digit = Digit::ALL.into_iter().find(|d| d.name() == part);
+    hand.capsules
+        .iter()
+        .map(|c| match (digit, part) {
+            (Some(d), _) => c.digit == Some(d),
+            (None, "forearm") => c.seg == Seg::Arm,
+            _ => c.part == "palm" || (c.digit == Some(Digit::Thumb) && c.seg == Seg::Metacarpal),
+        })
+        .collect()
 }
 
 /// Smoothstep on [0, 1].

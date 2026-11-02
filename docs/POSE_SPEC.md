@@ -1,6 +1,6 @@
 # Handkit pose spec (version 1)
 
-You pose one or two hands, each with a forearm, by writing a JSON pose file of joint angles.
+You pose hands, each with a forearm (one person's right and left, or any number of people's), by writing a JSON pose file of joint angles.
 Angles are degrees, positions meters; anything left out is 0. Unknown keys are errors.
 
 ## Workflow
@@ -45,7 +45,7 @@ Angles are degrees, positions meters; anything left out is 0. Unknown keys are e
 ```
 
 `goals`, `checks`, `probes`, `camera`, `look` (how renderers draw the hands, see Looks) and
-`size` (the frame's [width, height], for placing hands with `place.screen`) are optional; `solve` needs goals. Leave out a hand to show only one. Goals (touch, aim, vary) are explained under "Goals" below.
+`size` (the frame's [width, height], for placing hands with `place.screen`) are optional; `solve` needs goals. Leave out a hand to show only one; `"ana.right"`, `"ben.left"` and so on add more people's hands (see "Hands and people" below). Goals (touch, aim, vary) are explained under "Goals" below.
 
 ## Clips
 
@@ -56,6 +56,7 @@ Clips: motion as keyed poses. A clip file:
   { "version": 1, "fps": 30, "duration": 9.0, "size": [1920, 1080],
     "camera": { "position": [..], "target": [..], "fov": 35 },
     "keys": [ { "t": 0, "hands": {..}, "goals": [..] }, { "t": 1.2, "move": 0.4, ... }, ... ] }
+Any number of hands (see Hands and people in `handkit explain`), with "people" as in a pose.
 duration defaults to the last key + 0.5 s; size (the video's, for the framing check, `sheet`
 and screen placements) to 16:9. A key's place.screen uses the clip's camera as of that key.
 
@@ -94,10 +95,14 @@ through the move between them, every frame, so a pinch stays closed while the ha
 A goal only in the later key closes as the hand arrives; one only in the earlier key lets go
 as the move starts. A hand's fingers never pass through each other or its palm: where a move
 would, they slide past. A goal with only "vary" (no touch or aim) does the same in a pose
-file: it keeps the parts it varies from passing through anything. Mid-move the two hands are
-not pushed apart (frame by frame, a finger passing through the other hand would flip from one
-side of it to the other) unless a held goal joins them: route a crossing yourself (a lifted
-waypoint, fingers opened first); `check` reports each overlap with the keys either side.
+file: it keeps the parts it varies from passing through anything. Hands do not pass through
+each other either: where two hands' moves would cross, the faster-moving one is pushed aside
+(the slower barely moves; at equal speed the later-listed hand gives way), smoothly, and eases
+back onto its keyed path once clear, on the side the keys put it (above stays above). Parts a
+held goal joins (a touch between two hands) are not pushed apart. "collide": false turns
+this off: clip-wide at the top, on a key (from its start on), or on one hand of a key. `check`
+reports any overlap left with the keys either side; a deep keyed overlap is pushed far, so
+route a big crossing yourself (a lifted waypoint, fingers opened first).
 
 Commands: `handkit check clip.json` (held goals, penetrations, joint speeds, pops, fingertips
 leaving the camera's view, elbows in view; fix everything it reports; penetrations and pops
@@ -154,7 +159,8 @@ Looks: how renderers draw the hands. A pose or a clip may carry a top-level "loo
   subsurface   0 to 1: how much scattered light realistic mixes in (default 0.5).
 The fframes player takes the same as flags over the file's look: --look toon,skin=tan,outline=4,
 --look-json '{..}', --motion-blur 4, and --looks "realistic;toon;arcane" --look-every 2 to
-cycle through looks (a demo). In Rust, handkit_fframes::look::Styler renders any look.
+cycle through looks (a demo). Each person's "look" (see "people") sets their skin and
+nail colours; the style is the file's. In Rust, handkit_fframes::look::Styler renders any look.
 ```
 
 ## Reference
@@ -194,6 +200,13 @@ Placement, per hand, one of:
       mirrored rest pose.
   A hand written as { "mirror": "right", ... } copies the right hand's joint values and takes the
   mirror image of its placement across the plane x = 0; any keys given override the copy.
+
+Hands and people: "hands" holds right and left (one person) and, for more people,
+<person>.right and <person>.left (person: lowercase letters, digits and _), e.g. "ana.right".
+The name is the prefix everywhere a hand is named: sites (ana.right.index.tip), goals and vary
+patterns (ana.left.*), checks, mirror ("mirror": "ana.right" on ana.left), `bones`. Every hand
+is placed in the same world. A top-level "people": { "ana": { "look": { "skin": "brown" } } }
+gives a person their own look (over the file's look); right and left belong to no person.
 
 Chains: wrist = twist (about the forearm) -> wrist_dev -> wrist_flex. Fingers: knuckle spread
 (rest fan + mcp_abd) -> mcp_roll -> mcp_flex -> pip_flex -> dip_flex. Thumb: base at (0.020, 0.018, 0.008)

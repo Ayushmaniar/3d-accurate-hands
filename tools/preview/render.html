@@ -46,13 +46,17 @@ function nail(n) {
   return mesh;
 }
 
+// The meshes to load: one per hand ({ hand name: side }), or one per side for older specs.
+const meshHands = (mesh) => Object.entries(mesh.hands ?? Object.fromEntries(Object.keys(mesh.files).map((s) => [s, s])));
+const handBones = (bones, hand) => bones.hands?.[hand] ?? bones;
+
 // With `geom.mesh`, draws the skinned hand meshes posed by `geom.mesh.bones` instead of capsules.
 async function addMeshes(scene, mesh) {
   const loader = new GLTFLoader();
-  for (const side of Object.keys(mesh.files)) {
+  for (const [hand, side] of meshHands(mesh)) {
     const gltf = await loader.loadAsync(`/asset/${side}.glb`);
     gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE); o.frustumCulled = false; } });
-    handRig(gltf.scene)(mesh.bones);
+    handRig(gltf.scene)(handBones(mesh.bones, hand));
     scene.add(gltf.scene);
   }
 }
@@ -151,10 +155,11 @@ window.setupFrames = async (spec) => {
   const appliers = [];
   if (spec.mesh) {
     const loader = new GLTFLoader();
-    for (const side of Object.keys(spec.mesh.files)) {
+    for (const [hand, side] of meshHands(spec.mesh)) {
       const gltf = await loader.loadAsync(`/asset/${side}.glb`);
       gltf.scene.traverse((o) => { if (o.isMesh) { o.material = skinMaterial(THREE); o.frustumCulled = false; } });
-      appliers.push(handRig(gltf.scene));
+      const apply = handRig(gltf.scene);
+      appliers.push((bones) => apply(handBones(bones, hand)));
       scene.add(gltf.scene);
     }
   }

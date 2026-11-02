@@ -8,8 +8,9 @@ fn solved(pose: &str) -> Result<handkit_core::Solved, JsError> {
 }
 
 /// Joint transforms and corrective shape weights for a pose file:
-/// `{"joints": {"index_pip_R": {"t": [..], "r": [x, y, z, w]}}, "morph": {"skin_R": [..]}}`.
-/// Apply them with `handRig(gltf.scene)` from `@handkit/three`.
+/// `{"joints": {"index_pip_R": {"t": [..], "r": [x, y, z, w]}}, "morph": {"skin_R": [..]},
+/// "hands": {"ana.right": {"joints": .., "morph": ..}}}`. Apply them with `handRig(gltf.scene)`
+/// from `@handkit/three` (one mesh per hand: `handBones(bones, name)`).
 #[wasm_bindgen]
 pub fn bones(pose: &str) -> Result<String, JsError> {
     Ok(solved(pose)?.bones().to_string())
@@ -56,6 +57,12 @@ impl Clip {
     #[wasm_bindgen(getter)]
     pub fn fps(&self) -> f64 {
         self.0.fps
+    }
+
+    /// The clip's hands by name, as JSON: `["right", "left", "ana.right", ...]`.
+    #[wasm_bindgen(getter)]
+    pub fn hands(&self) -> String {
+        serde_json::to_string(&self.0.hands().iter().map(|h| h.name()).collect::<Vec<_>>()).unwrap()
     }
 
     /// The pose file at `t` seconds, as JSON text.
