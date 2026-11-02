@@ -65,3 +65,7 @@ showcase/**/work/*.png
 launch/**/.hyperframes/
 launch/film/public/assets
 launch/film/public/vendor
+
+# Scratch solves and renders of the symbol checks and the viper.
+showcase/symbols/out/
+showcase/hand-viper/v3/out/
