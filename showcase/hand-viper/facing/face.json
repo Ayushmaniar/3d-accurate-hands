@@ -1,0 +1,134 @@
+{
+ "version": 1,
+ "hands": {
+  "right": {
+   "place": {
+    "wrist": [
+     -0.0041,
+     0.0024,
+     -0.0272
+    ],
+    "palm_facing": [
+     0.1261,
+     -0.0588,
+     0.9903
+    ],
+    "fingers_toward": [
+     0.4226,
+     0.9063,
+     0.0
+    ]
+   },
+   "twist": 0,
+   "wrist_flex": -10.8,
+   "wrist_dev": 4.3,
+   "palm_cup": 0,
+   "thumb": {
+    "cmc_flex": 17.7,
+    "cmc_abd": -4.2,
+    "cmc_rot": 0.8,
+    "mcp_flex": -8.6,
+    "ip_flex": 57.7
+   },
+   "index": {
+    "mcp_abd": 25.0,
+    "mcp_roll": 20.0,
+    "mcp_flex": -21.5,
+    "pip_flex": 110.0,
+    "dip_flex": 15.8
+   },
+   "middle": {
+    "mcp_abd": 6.1,
+    "mcp_roll": -8.1,
+    "mcp_flex": 29.8,
+    "pip_flex": 105,
+    "dip_flex": 70
+   },
+   "ring": {
+    "mcp_abd": 20.0,
+    "mcp_roll": -6.7,
+    "mcp_flex": 20.0,
+    "pip_flex": 105,
+    "dip_flex": 70
+   },
+   "pinky": {
+    "mcp_abd": 35.0,
+    "mcp_roll": -10.0,
+    "mcp_flex": 21.0,
+    "pip_flex": 100,
+    "dip_flex": 70
+   }
+  },
+  "left": {
+   "place": {
+    "wrist": [
+     0.0065,
+     -0.0026,
+     0.0157
+    ],
+    "palm_facing": [
+     0.1261,
+     -0.0588,
+     -0.9903
+    ],
+    "fingers_toward": [
+     0.4226,
+     0.9063,
+     0.0
+    ]
+   },
+   "twist": 0,
+   "wrist_flex": -10.8,
+   "wrist_dev": 4.3,
+   "palm_cup": 0,
+   "thumb": {
+    "cmc_flex": 10.3,
+    "cmc_abd": -6.1,
+    "cmc_rot": 43.5,
+    "mcp_flex": 6.9,
+    "ip_flex": 49.6
+   },
+   "index": {
+    "mcp_abd": 25.0,
+    "mcp_roll": 17.5,
+    "mcp_flex": -30.0,
+    "pip_flex": 98.8,
+    "dip_flex": 51.2
+   },
+   "middle": {
+    "mcp_abd": 12.7,
+    "mcp_roll": -2.5,
+    "mcp_flex": 25.9,
+    "pip_flex": 105,
+    "dip_flex": 70
+   },
+   "ring": {
+    "mcp_abd": 8.7,
+    "mcp_roll": -8.1,
+    "mcp_flex": 5.5,
+    "pip_flex": 100,
+    "dip_flex": 70
+   },
+   "pinky": {
+    "mcp_abd": 27.7,
+    "mcp_roll": -1.6,
+    "mcp_flex": 2.7,
+    "pip_flex": 105,
+    "dip_flex": 70
+   }
+  }
+ },
+ "camera": {
+  "position": [
+   0.27,
+   0.085,
+   0.3
+  ],
+  "target": [
+   0.06,
+   0.07,
+   0.0
+  ],
+  "fov": 30
+ }
+}
