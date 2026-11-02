@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "name": "demo_basics",
+  "description": "One right hand: fist, open with a cascade, point, an OK pinch held while the hand turns.",
+  "fps": 30,
+  "camera": { "position": [0.05, 0.15, 0.55], "target": [0.1, 0.06, 0.0], "fov": 35 },
+  "keys": [
+    { "t": 0, "hands": { "right": { "from": "fist", "place": { "wrist": [0.1, -0.02, 0], "palm_facing": [0, 0, 1], "fingers_toward": [0, 1, 0] } } } },
+    { "t": 1.2, "move": 0.5, "hands": { "right": { "from": "spread_palm" } } },
+    { "t": 2.2, "move": 0.35, "ease": "snappy", "hands": { "right": { "from": "point" } } },
+    { "t": 3.2, "move": 0.5, "hands": { "right": { "from": "ok" } } },
+    { "t": 4.6, "move": 1.0, "hands": { "right": { "from": "ok", "place": { "wrist": [0.12, 0.0, 0.02], "palm_facing": [0.7, 0, 0.7], "fingers_toward": [-0.2, 1, 0] } } } }
+  ],
+  "duration": 5.2
+}

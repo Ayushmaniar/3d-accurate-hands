@@ -37,6 +37,34 @@ pub fn gesture(name: &str) -> Result<String, JsError> {
     Ok(handkit_core::pose::to_text(&v))
 }
 
+/// A `look` (an object or a bare style name, see `handkit explain looks`) checked and with
+/// every default filled in: `{"style": "toon", "skin": [r, g, b], "nail": [r, g, b],
+/// "nail_given": false, "outline": 3, "motion_blur": 1, "shutter": 180, "halftone": 8,
+/// "misregister": 3, "texture": 1, "subsurface": 0.35}` (colours sRGB bytes). `"null"` is the
+/// default look. `HandkitLook` in `@handkit/three` draws it.
+#[wasm_bindgen]
+pub fn look(value: &str) -> Result<String, JsError> {
+    let v: serde_json::Value = serde_json::from_str(value).map_err(|e| JsError::new(&e.to_string()))?;
+    let l = if v.is_null() { handkit_core::look::Look::default() } else { handkit_core::look::Look::from_value(&v).map_err(|e| JsError::new(&e))? };
+    Ok(look_json(&l).to_string())
+}
+
+fn look_json(l: &handkit_core::look::Look) -> serde_json::Value {
+    serde_json::json!({
+        "style": l.style.name(),
+        "skin": l.skin,
+        "nail": l.nail_color(),
+        "nail_given": l.nail.is_some(),
+        "outline": l.outline,
+        "motion_blur": l.motion_blur,
+        "shutter": l.shutter,
+        "halftone": l.halftone.unwrap_or(8.0),
+        "misregister": l.misregister.unwrap_or(3.0),
+        "texture": l.texture.unwrap_or(1.0),
+        "subsurface": l.subsurface.unwrap_or(0.35),
+    })
+}
+
 /// A clip (keyed poses over time), parsed and solved once; sample it per frame.
 #[wasm_bindgen]
 pub struct Clip(handkit_core::clip::Clip);
@@ -58,6 +86,28 @@ impl Clip {
         self.0.fps
     }
 
+    /// The clip's camera (`{"position", "target", "fov"}`) as JSON text, `null` without one.
+    #[wasm_bindgen(getter)]
+    pub fn camera(&self) -> String {
+        self.0.camera.as_ref().map_or("null".into(), |c| c.to_string())
+    }
+
+    /// The clip's `look` with defaults filled in (see `look`), JSON text.
+    #[wasm_bindgen(getter)]
+    pub fn look(&self) -> Result<String, JsError> {
+        let l = match &self.0.look {
+            Some(v) => handkit_core::look::Look::from_value(v).map_err(|e| JsError::new(&e))?,
+            None => handkit_core::look::Look::default(),
+        };
+        Ok(look_json(&l).to_string())
+    }
+
+    /// The clip's `size` (`[width, height]`) as JSON text, `null` when it gives none (16:9).
+    #[wasm_bindgen(getter)]
+    pub fn size(&self) -> String {
+        self.0.size.as_ref().map_or("null".into(), |s| s.to_string())
+    }
+
     /// The pose file at `t` seconds, as JSON text.
     pub fn sample(&self, t: f64) -> Result<String, JsError> {
         Ok(self.0.sample(t).map_err(|e| JsError::new(&e))?.pose.to_string())
@@ -68,5 +118,35 @@ impl Clip {
         let f = self.0.sample(t).map_err(|e| JsError::new(&e))?;
         let solved = handkit_core::solve_value(&f.pose).map_err(|e| JsError::new(&e))?;
         Ok(solved.bones().to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn json(text: String) -> serde_json::Value {
+        serde_json::from_str(&text).unwrap()
+    }
+
+    #[test]
+    fn looks_get_their_defaults() {
+        let l = json(look("\"toon\"").ok().unwrap());
+        assert_eq!(l["style"], "toon");
+        assert_eq!(l["outline"], 3.0);
+        assert_eq!(l["skin"], serde_json::json!([0xd8, 0xa6, 0x8a]));
+        assert_eq!(l["nail_given"], false);
+        let l = json(look(r##"{"style": "spiderverse", "skin": "dark", "nail": "#ffffff"}"##).ok().unwrap());
+        assert_eq!((l["halftone"].as_f64(), l["misregister"].as_f64()), (Some(8.0), Some(3.0)));
+        assert_eq!(l["nail"], serde_json::json!([255, 255, 255]));
+        let l = json(look("null").ok().unwrap());
+        assert_eq!((l["style"].as_str(), l["subsurface"].as_f64()), (Some("realistic"), Some(0.35)));
+    }
+
+    #[test]
+    fn clips_give_camera_and_look() {
+        let clip = Clip::new(include_str!("../../../clips/demo_basics.json")).ok().unwrap();
+        assert_eq!(json(clip.camera())["fov"], 35);
+        assert_eq!(json(clip.look().ok().unwrap())["style"], "realistic");
     }
 }

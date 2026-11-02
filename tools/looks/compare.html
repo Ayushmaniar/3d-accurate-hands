@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="importmap">{ "imports": { "three": "/tools/looks/node_modules/three/build/three.module.js", "three/addons/": "/tools/looks/node_modules/three/examples/jsm/" } }</script>
+<style>html, body { margin: 0; background: #1b1d22; }</style>
+</head>
+<body>
+<script type="module">
+// Renders a pose in each look with @handkit/three (compare.mjs drives it).
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { handRig } from '/packages/handkit-three/index.js';
+import { init, bones } from '/packages/handkit-three/core.js';
+import { HandkitLook } from '/packages/handkit-three/look.js';
+
+const BACKDROP = { realistic: '#76787b', toon: '#f3eee2', spiderverse: '#fbf8f0', arcane: '#161a24', clay: '#bdb8b2' };
+let state = null;
+
+window.setup = async (poseText, size) => {
+  await init();
+  const pose = JSON.parse(poseText);
+  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(1);
+  renderer.setSize(size, size);
+  document.body.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  const loader = new GLTFLoader();
+  const sides = Object.keys(pose.hands);
+  const gltfs = [];
+  for (const side of sides) {
+    const gltf = await loader.loadAsync(`/assets/hand_${side === 'right' ? 'R' : 'L'}.glb`);
+    scene.add(gltf.scene);
+    gltfs.push(gltf);
+  }
+  const b = JSON.parse(bones(poseText));
+  gltfs.forEach((g) => handRig(g.scene)(b));
+  const c = pose.camera ?? { position: [0, 0.1, 0.45], target: [0, 0.09, 0], fov: 35 };
+  const camera = new THREE.PerspectiveCamera(c.fov ?? 35, 1, 0.01, 50);
+  camera.position.set(...c.position);
+  camera.lookAt(new THREE.Vector3(...c.target));
+  state = { renderer, scene, camera, gltfs, looks: {} };
+};
+
+/** One style: a PNG data URL on the style's backdrop, the ms of the first frame (textures baked,
+ * shaders compiled) and the mean of the next ten (each read back, so the GPU work is counted). */
+window.renderStyle = async (style) => {
+  const { renderer, scene, camera, gltfs } = state;
+  const gl = renderer.getContext();
+  const px = new Uint8Array(4);
+  const sync = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  const t0 = performance.now();
+  const look = new HandkitLook(renderer, { style, skin: 'medium' });
+  for (const g of gltfs) await look.dress(g);
+  look.setBackdrop(BACKDROP[style]);
+  look.render(scene, camera);
+  sync();
+  const first = performance.now() - t0;
+  const t1 = performance.now();
+  for (let i = 0; i < 10; i++) { look.render(scene, camera); sync(); }
+  const second = (performance.now() - t1) / 10;
+  const url = renderer.domElement.toDataURL('image/png');
+  look.dispose();
+  return { url, first, second };
+};
+
+/** The comparison sheet: a row per engine, a column per style, cells halved. */
+window.sheet = async (cells, size, title) => {
+  const styles = Object.keys(cells);
+  const half = size / 2, label = 150, head = 44;
+  const canvas = document.createElement('canvas');
+  canvas.width = label + half * styles.length;
+  canvas.height = head + half * 2;
+  const g = canvas.getContext('2d');
+  g.fillStyle = '#1b1d22'; g.fillRect(0, 0, canvas.width, canvas.height);
+  g.fillStyle = '#e8e8e8'; g.font = '500 22px system-ui, sans-serif'; g.textAlign = 'center';
+  const load = (src) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = src; });
+  for (const [col, s] of styles.entries()) {
+    g.fillText(s, label + half * (col + 0.5), 30);
+    for (const [row, key] of ['fframes', 'three'].entries()) {
+      const img = await load(cells[s][key]);
+      g.drawImage(img, label + half * col, head + half * row, half, half);
+    }
+  }
+  g.textAlign = 'left';
+  g.fillText('fframes', 18, head + half * 0.5);
+  g.fillText('three.js', 18, head + half * 1.5);
+  if (title) { g.font = '400 15px system-ui, sans-serif'; g.fillStyle = '#9aa0a8'; g.fillText(title, 18, 30); }
+  return canvas.toDataURL('image/png');
+};
+window.ready = true;
+</script>
+</body>
+</html>

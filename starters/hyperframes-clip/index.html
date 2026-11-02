@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[{"id": "look", "type": "string", "label": "Look (style name or look JSON; empty: the clip&#39;s own)", "default": ""}, {"id": "background", "type": "string", "label": "Backdrop colour", "default": "#2b2e33"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Handkit clip</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #2b2e33; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+      #backdrop { position: absolute; inset: 0; background: #2b2e33; }
+      #hands { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./node_modules/three/build/three.module.js",
+          "three/addons/": "./node_modules/three/examples/jsm/",
+          "@handkit/three": "./node_modules/@handkit/three/index.js",
+          "@handkit/three/": "./node_modules/@handkit/three/"
+        }
+      }
+    </script>
+    <script>
+      // Hold the render until the core, the hands and the look are ready (see buildReady in the
+      // three.js adapter notes): the module below resolves it.
+      window.__hf = window.__hf || {};
+      window.__hf.buildReady = window.__hf.buildReady || {};
+      window.__hf.buildReady["handkit-hands"] = new Promise((resolve, reject) => { window.__handkitBuilt = { resolve, reject }; });
+    </script>
+  </head>
+  <body>
+    <!-- data-duration is the clip's duration (clip.json "duration"). -->
+    <div id="root" data-composition-id="main" data-no-timeline data-start="0" data-duration="5.2" data-width="1920" data-height="1080">
+      <div id="backdrop"></div>
+      <canvas id="hands" width="1920" height="1080"></canvas>
+    </div>
+    <script type="module">
+      // A Handkit clip driven by the HyperFrames timeline. Seek-safe: every frame poses the hands
+      // from clip.bones(t) for the time HyperFrames asks for (`hf-seek`), never from the frame before.
+      import * as THREE from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      import { handRig } from "@handkit/three";
+      import { init, Clip } from "@handkit/three/core.js";
+      import { HandkitLook } from "@handkit/three/look.js";
+
+      const W = 1920, H = 1080;
+      const vars = window.__hyperframes?.getVariables?.() ?? {};
+      const lookVar = (vars.look ?? "").trim();
+      const look = lookVar === "" ? null : lookVar.startsWith("{") ? JSON.parse(lookVar) : lookVar;
+      document.getElementById("backdrop").style.background = vars.background || "#2b2e33";
+
+      const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("hands"), alpha: true, antialias: false, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(1);
+      renderer.setSize(W, H, false);
+      const scene = new THREE.Scene();
+      let state = null;
+      let wanted = window.__hfThreeTime || 0;
+
+      async function build() {
+        await init();
+        const text = await (await fetch("./clip.json")).text();
+        const clip = new Clip(text);
+        // Every hand of a clip is in its first key.
+        const sides = Object.keys(JSON.parse(text).keys[0].hands);
+        const loader = new GLTFLoader();
+        const gltfs = await Promise.all(sides.map((s) => loader.loadAsync(`./assets/hand_${s === "left" ? "L" : "R"}.glb`)));
+        gltfs.forEach((g) => scene.add(g.scene));
+        const styled = new HandkitLook(renderer, look ?? JSON.parse(clip.look));
+        for (const g of gltfs) await styled.dress(g);
+        const c = JSON.parse(clip.camera) ?? { position: [0, 0.1, 0.6], target: [0, 0.05, 0], fov: 35 };
+        const camera = new THREE.PerspectiveCamera(c.fov ?? 35, W / H, 0.01, 50);
+        camera.position.set(...c.position);
+        camera.lookAt(new THREE.Vector3(...c.target));
+        state = { clip, rigs: gltfs.map((g) => handRig(g.scene)), look: styled, camera };
+      }
+
+      function renderAt(time) {
+        wanted = time;
+        if (!state) return;
+        const { clip, rigs, look: styled, camera } = state;
+        const pose = (dt) => {
+          const t = Math.min(Math.max(time + dt / clip.fps, 0), clip.duration);
+          const bones = JSON.parse(clip.bones(t));
+          rigs.forEach((apply) => apply(bones));
+        };
+        pose(0);
+        styled.render(scene, camera, styled.look.motion_blur > 1 ? pose : null);
+      }
+
+      window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+      build().then(
+        () => { renderAt(window.__hfThreeTime ?? wanted); window.__handkitBuilt.resolve(); },
+        (e) => { console.error(e); window.__handkitBuilt.reject(e); },
+      );
+    </script>
+  </body>
+</html>

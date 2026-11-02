@@ -13,8 +13,9 @@ Design doc: https://claude.ai/artifact/MxBq9Ef5StLhakD7BpCRBa
 - `crates/handkit-mesh/`: the procedural hand: a signed distance field built from the rig, meshed, skinned to the rig's 17 joints, with 14 corrective shapes for bent joints, UVs and baked skin maps, written as glTF.
 - `crates/handkit-fframes/`: hands in fframes 3D scenes (`HandModel`, `Hand::pose`).
 - `clips/`: example clips (motion: keyed poses over time; `handkit explain clips`).
-- `starters/fframes-clip/`: an fframes video that plays a clip; copy it for a video.
-- `crates/handkit-wasm/` and `packages/handkit-three/`: the core as WebAssembly (`core.js`) and the three.js adapter (`handRig`).
+- `starters/fframes-clip/`, `starters/remotion-clip/`, `starters/hyperframes-clip/`: a video that plays a clip in fframes, Remotion or HyperFrames; copy one for a video.
+- `crates/handkit-wasm/` and `packages/handkit-three/`: the core as WebAssembly (`core.js`), the three.js adapter (`handRig`) and the looks in three.js (`look.js`).
+- `tools/looks/`: renders a pose in every look in fframes and three.js side by side (`docs/m5-looks-threejs.png`).
 - `tools/preview/`: the headless three.js renderer behind `handkit render`.
 - `tools/skin/`: the skin detail tiles (`prepare_tiles.py`) and the skin review sheet (`sheet.py`).
 - `tools/golden/`: renders poses with fframes and three.js and compares them (the M3 gate).
@@ -76,6 +77,28 @@ handRig(gltf.scene)(JSON.parse(bones(poseText)));
 ```
 
 `sh packages/handkit-three/build-wasm.sh` rebuilds the WebAssembly (needs the `wasm32-unknown-unknown` target and `wasm-bindgen-cli` 0.2.130).
+
+Looks in three.js: `HandkitLook` draws the five looks as fframes does (WebGL2, three 0.170 or later). It bakes each hand's look textures once on the GPU in its UV atlas, with the same functions as fframes (the skin tone's colour map from the mask map, crease lines from the cavity channel, arcane's brush strokes, clay's lumps and fingerprints), then renders the look's passes and post-process: lit with the studio, soft shadows and screen-space subsurface scattering (realistic, clay), or normals and data passes shaded into cel bands, ink, creases, halftone and misregistered plates (toon, spiderverse, arcane).
+
+```js
+import { init, Clip } from '@handkit/three/core.js';
+import { HandkitLook } from '@handkit/three/look.js';
+await init();
+const look = new HandkitLook(renderer, { style: 'arcane', skin: 'tan' });   // or clip.look
+await look.dress(gltf);                    // each hand, the GLTFLoader result
+look.render(scene, camera);                // instead of renderer.render; transparent around the hands
+look.render(scene, camera, (dt) => pose(t + dt / fps));   // with the look's motion_blur
+```
+
+`docs/m5-looks-threejs.png` puts the two engines' renders of the same poses in rows: the stylized looks agree to about one level in 255 (the same strokes, dots and lines), realistic and clay to about two, after calibrating the studio light (three lights diffuse from a prefiltered map, fframes analytically). A 1080p frame takes 4 ms (lit) to 12 ms (stylized) on the GPU, against 65 to 100 ms on the CPU in fframes; the first frame of a look bakes its textures and compiles its shaders (0.3 to 3 s). `sh tools/looks/ff_cells.sh pose.json dir` and `node tools/looks/compare.mjs pose.json dir sheet.png` (after `npm install` in `tools/looks`) redo the comparison; `python tools/looks/diff.py dir` measures it.
+
+### Remotion
+
+`starters/remotion-clip/`: `<HandkitClip clip={clip} look={look} />` for `@remotion/three` samples the clip at `useCurrentFrame() / fps`, poses the hands and draws them in the look. `npm install && npm run assets`, then `npx remotion render src/index.jsx HandkitDemo out/demo.mp4 --gl=angle` renders `clips/demo_basics.json` (5.2 s at 1080p in about 24 s).
+
+### HyperFrames
+
+`starters/hyperframes-clip/`: an HTML composition whose canvas poses the hands from `clip.bones(t)` on every `hf-seek` (seek-safe: no state between frames) and draws them in the look; the `look` variable picks one (`--variables '{"look":"toon"}'`). `npm install && npm run assets`, then `npx hyperframes@0.8.179 render --output out/demo.mp4` (5.2 s at 1080p in about 17 s).
 
 ### Golden gate
 
