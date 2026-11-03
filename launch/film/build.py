@@ -468,7 +468,6 @@ for i, t in enumerate(land):
 a5_js += f'tl.to("#a5-cap",{{opacity:0,y:-20,duration:0.22,ease:"power2.in"}},{L(T["ily"]) - 0.32:.4f});'
 a5_js += f'tl.fromTo("#a5-t",{{opacity:0,x:{SLIDE},y:24,filter:"blur(6px)"}},{{opacity:1,x:{SLIDE},y:0,filter:"blur(0px)",duration:0.4,ease:"expo.out"}},{L(T["ily"]) - 0.1:.4f});'
 scenes.append(scene("a5", S, a5_dur, a5_body, a5_js, a5_css))
-cue(T["brk"], "drop", "downlifter/air_fall", -16)
 cue(T["brk"] + REVEAL, "whoosh", "swish/blade", -18)
 for i, t in enumerate(land):
     cue(t, "tick", ["pro_tap/glass", "pro_tap/soft"][i % 2], -15)
