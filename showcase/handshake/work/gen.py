@@ -1,11 +1,8 @@
 import json, copy, sys
-sys.path.insert(0,'work')
 import os
-os.chdir('work')
-from corr import correct
-os.chdir('..')
 hs=json.load(open('work/hs3_sol.json'))['hands']
-fb=json.load(open('work/fb_opt.json'))['hands']
+# The library's fist_bump grip, solved between the two sizes of hand (fb_grip_sol.json).
+fb=json.load(open('work/fb_grip_sol.json'))['hands']
 def hand(src, place=None):
     h={k:v for k,v in copy.deepcopy(src).items() if k!='place'}
     if place: h['place']=place
@@ -18,6 +15,10 @@ openthumb={'from':'open_palm','thumb':{'cmc_flex':-25,'cmc_abd':40,'cmc_rot':0,'
 dREST=P([-0.31,-0.08,0.04],[0.2,0.3,-1],[1,-0.6,0],[-1,0.1,0.3])
 kREST=P([0.27,-0.11,-0.07],[-0.2,0.3,1],[-1,-0.5,0],[1,-0.05,-0.3])
 dFB=fb['dad.right']['place']; kFB=fb['kid.right']['place']
+# The grip touches at the collision capsules; the skin over the knuckles sits inside them, so the
+# fists come TOUCH closer for the skin to meet, and PRESS more on the hit.
+TOUCH=float(os.environ.get('TOUCH','0.009')); PRESS=0.003
+def closed(pl,side,d): return shift(pl,[side*d/2,0,0])
 keys=[]
 keys.append({'t':0,'hands':{'dad.right':{'from':'relaxed','place':dREST},'kid.right':{'from':'relaxed','place':kREST}}})
 # approach
@@ -42,23 +43,15 @@ keys.append({'t':3.7,'hands':{
   'dad.right':hand(fb['dad.right'],shift(dFB,[-0.065,0.02,0])),
   'kid.right':hand(fb['kid.right'],shift(kFB,[0.05,0.015,0]))}})
 # bump
-keys.append({'t':4.1,'move':0.22,'ease':'smooth','hands':{
-  'dad.right':{'place':dFB},'kid.right':{'place':kFB}}})
+keys.append({'t':4.1,'move':0.2,'ease':'snappy','hands':{
+  'dad.right':{'place':closed(dFB,1,TOUCH+PRESS)},'kid.right':{'place':closed(kFB,-1,TOUCH+PRESS)}}})
+keys.append({'t':4.22,'move':0.12,'ease':'smooth','hands':{
+  'dad.right':{'place':closed(dFB,1,TOUCH)},'kid.right':{'place':closed(kFB,-1,TOUCH)}}})
 keys.append({'t':4.4,'hands':{'dad.right':{},'kid.right':{}}})
 # recoil
 keys.append({'t':4.75,'ease':'smooth','hands':{
   'dad.right':{'place':shift(dFB,[-0.07,0.015,0])},'kid.right':{'place':shift(kFB,[0.06,0.012,0])}}})
 keys.append({'t':5.5,'hands':{'dad.right':{'from':'relaxed','place':dREST},'kid.right':{'from':'relaxed','place':kREST}}})
-os.chdir('work')
-cache={}
-shape=json.load(open('hs3_sol.json'))['hands']['kid.right']
-for k in keys:
-    kh=k['hands'].get('kid.right',{})
-    if 'place' in kh:
-        key=json.dumps(kh['place'],sort_keys=True)
-        if key not in cache: cache[key]=correct(shape, kh['place'])
-        kh['place']=cache[key]
-os.chdir('..')
 clip={'version':1,'name':'handshake_fistbump','description':'An adult and a child shake hands, let go, then fist-bump.',
  'fps':30,'duration':6.0,'size':[1920,1080],
  'camera':{'position':[0.0,0.14,0.6],'target':[0.0,-0.015,0.0],'fov':28},
