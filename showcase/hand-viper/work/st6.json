@@ -1,0 +1,206 @@
+{
+ "version": 1,
+ "hands": {
+  "right": {
+   "place": {
+    "wrist": [
+     -0.023,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     1,
+     0.25,
+     0
+    ],
+    "fingers_toward": [
+     -0.25,
+     1,
+     0
+    ],
+    "forearm_toward": [
+     -0.5,
+     -0.7,
+     -0.5
+    ]
+   },
+   "thumb": {
+    "cmc_flex": 2.6,
+    "cmc_abd": 15,
+    "cmc_rot": -10.7,
+    "mcp_flex": 15,
+    "ip_flex": 25
+   },
+   "index": {
+    "mcp_abd": 11.0,
+    "mcp_flex": 34.4,
+    "pip_flex": 48.2,
+    "mcp_roll": -3.0,
+    "dip_flex": 32.2
+   },
+   "middle": {
+    "mcp_abd": -9.7,
+    "mcp_flex": 79.1,
+    "pip_flex": 13.3,
+    "mcp_roll": -0.1,
+    "dip_flex": 7.9
+   },
+   "ring": {
+    "mcp_abd": -10.3,
+    "mcp_flex": 95.0,
+    "pip_flex": 19.2,
+    "mcp_roll": 8.8,
+    "dip_flex": 24.1
+   },
+   "pinky": {
+    "mcp_abd": 4,
+    "mcp_flex": 45,
+    "pip_flex": 45
+   }
+  },
+  "left": {
+   "place": {
+    "wrist": [
+     0.023,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     -1,
+     0.25,
+     0
+    ],
+    "fingers_toward": [
+     0.25,
+     1,
+     0
+    ],
+    "forearm_toward": [
+     0.5,
+     -0.7,
+     -0.5
+    ]
+   },
+   "thumb": {
+    "cmc_flex": 5.6,
+    "cmc_abd": 15,
+    "cmc_rot": -10.6,
+    "mcp_flex": 15,
+    "ip_flex": 25
+   },
+   "index": {
+    "mcp_abd": 12.0,
+    "mcp_flex": 36.0,
+    "pip_flex": 49.6,
+    "mcp_roll": 0.1,
+    "dip_flex": 33.1
+   },
+   "middle": {
+    "mcp_abd": 6.5,
+    "mcp_flex": 91.5,
+    "pip_flex": 26.8,
+    "mcp_roll": 3.7,
+    "dip_flex": 15.5
+   },
+   "ring": {
+    "mcp_abd": -8.2,
+    "mcp_flex": 83.9,
+    "pip_flex": 12.0,
+    "mcp_roll": 0.0,
+    "dip_flex": 12.9
+   },
+   "pinky": {
+    "mcp_abd": 4,
+    "mcp_flex": 45,
+    "pip_flex": 45
+   }
+  }
+ },
+ "goals": [
+  {
+   "touch": [
+    "right.ring.middle",
+    "left.ring.middle"
+   ],
+   "vary": [
+    "right.ring.*",
+    "left.ring.*"
+   ]
+  },
+  {
+   "touch": [
+    "right.middle.middle",
+    "left.middle.middle"
+   ],
+   "vary": [
+    "right.middle.*",
+    "left.middle.*"
+   ]
+  },
+  {
+   "touch": [
+    "right.index.tip",
+    "left.index.tip"
+   ],
+   "vary": [
+    "right.index.*",
+    "left.index.*"
+   ]
+  },
+  {
+   "touch": [
+    "right.thumb.tip",
+    "left.thumb.tip"
+   ],
+   "vary": [
+    "right.thumb.*",
+    "left.thumb.*"
+   ]
+  },
+  {
+   "touch": [
+    "right.thumb.nail",
+    "right.index.pad"
+   ],
+   "gap_mm": 14,
+   "vary": [
+    "right.thumb.*"
+   ]
+  },
+  {
+   "touch": [
+    "left.thumb.nail",
+    "left.index.pad"
+   ],
+   "gap_mm": 14,
+   "vary": [
+    "left.thumb.*"
+   ]
+  },
+  {
+   "vary": [
+    "right.ring.*",
+    "left.ring.*",
+    "right.pinky.*",
+    "left.pinky.*"
+   ]
+  }
+ ],
+ "camera": {
+  "position": [
+   0.0,
+   0.25,
+   -0.4
+  ],
+  "target": [
+   0,
+   0.11,
+   0
+  ],
+  "fov": 30
+ },
+ "size": [
+  1920,
+  1080
+ ]
+}

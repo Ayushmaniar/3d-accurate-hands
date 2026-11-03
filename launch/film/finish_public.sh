@@ -1,8 +1,8 @@
 #!/bin/bash
 # mux the rendered picture with the mix, make the phone copy, verify
 set -e
-export PATH="/c/Users/Rajat/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
-F="/c/Users/Rajat/Documents/3D Accurate Hands/launch/film"; HK="/c/Users/Rajat/Documents/3D Accurate Hands"
+export PATH="$HOME/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
+F="$(git rev-parse --show-toplevel)/launch/film"; HK="$(git rev-parse --show-toplevel)"
 SRC="${1:-$F/out/render_public.mp4}"
 cd "$F"
 # The music is mono (MusicGen): widen the mix a little, then bring it back to about -14.5 LUFS

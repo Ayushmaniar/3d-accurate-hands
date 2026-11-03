@@ -1,6 +1,7 @@
 {
   "name": "@handkit/three",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "Pose Handkit hand meshes in three.js and draw them in the Handkit looks",
   "type": "module",
   "main": "index.js",

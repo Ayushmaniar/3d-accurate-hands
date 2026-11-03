@@ -1,6 +1,6 @@
 #!/bin/bash
 # pair.sh video.mp4 outprefix t1 t2 ... : ref (top) vs video (bottom), 4 pairs per image
-export PATH="/c/Users/Rajat/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
+export PATH="$HOME/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
 R="../../../Reference videos to Animate/clean/hands-burrows-roberts/bench_144-156.mp4"
 V=$1; O=$2; shift 2; mkdir -p tmp/pp; rm -f tmp/pp/*.png; i=0
 for t in "$@"; do

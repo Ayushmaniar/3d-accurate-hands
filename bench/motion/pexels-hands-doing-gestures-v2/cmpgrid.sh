@@ -1,6 +1,6 @@
 #!/bin/bash
 # usage: cmpgrid.sh out.png t1 t2 ... (pairs ref over ours, 4 per row)
-export PATH="/c/Users/Rajat/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
+export PATH="$HOME/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
 REF="../../../Reference videos to Animate/clean/pexels-hands-doing-gestures/seg01.mp4"
 OUT=$1; shift
 mkdir -p cg; rm -f cg/*.png

@@ -1,10 +1,36 @@
-# 3D Accurate Hands (working name: Handkit)
+# Handkit
 
-An anatomically constrained, agent-drivable 3D hand and forearm rig for code-made video. One Rust core runs natively in fframes and as WebAssembly in HyperFrames and Remotion. AI agents pose it in joint angles, check it with numbers and small renders, and animate it with natural, deterministic motion.
+**Real 3D hands, animated with code.** Handkit is an open-source toolkit for making hand animation with your coding agent: an anatomically constrained hand and forearm with 29 joint angles per hand, a CLI, and a skill that teaches agents to use it. You describe a gesture, the agent writes it as JSON joint angles, Handkit checks it (no fingers through fingers, no impossible joints) and renders it. No footage, no diffusion, no mocap.
 
-Design doc: https://claude.ai/artifact/MxBq9Ef5StLhakD7BpCRBa
+The same frames come out every time. One Rust core runs natively in [fframes](https://github.com/dmtrKovalenko/fframes) and as WebAssembly in three.js, Remotion and HyperFrames.
 
 ![The hand in five looks and five skin tones](docs/m5-looks.png)
+
+## Install
+
+**With Claude Code**, run this inside it (version 2.1.275 or later):
+
+```
+/plugin install handkit --marketplace Ayushmaniar/3d-accurate-hands
+```
+
+Then just ask: *"Make a 5 second clip of a hand waving, then a thumbs up."* The skill sets Handkit up the first time it runs.
+
+**With any other coding agent**, paste this:
+
+> Clone https://github.com/Ayushmaniar/3d-accurate-hands, build it with `cargo build --release -p handkit-cli`, read `plugin/skills/handkit/SKILL.md`, and follow it to make a 5 second clip of a hand waving.
+
+**By hand** you need git, [Rust](https://rustup.rs) and, to render video, FFmpeg:
+
+```bash
+git clone https://github.com/Ayushmaniar/3d-accurate-hands
+cd 3d-accurate-hands
+cargo build --release -p handkit-cli
+./target/release/handkit gestures          # the gesture library
+./target/release/handkit explain           # the whole pose format
+```
+
+Handkit is [MIT licensed](LICENSE); see [THIRD_PARTY.md](THIRD_PARTY.md) for the parts that are not ours.
 
 ## Layout
 

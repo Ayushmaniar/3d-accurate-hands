@@ -1,0 +1,15 @@
+{
+  "name": "handkit",
+  "owner": { "name": "Ayush Maniar" },
+  "metadata": {
+    "description": "Anatomically accurate 3D hands for code-made video, driven by your coding agent."
+  },
+  "plugins": [
+    {
+      "name": "handkit",
+      "source": "./plugin",
+      "description": "Animate anatomically accurate 3D hands and forearms for code-made video in fframes, Remotion, HyperFrames or three.js.",
+      "license": "MIT"
+    }
+  ]
+}

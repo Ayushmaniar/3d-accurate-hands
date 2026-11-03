@@ -1,5 +1,5 @@
 set -e
-cd "/c/Users/Rajat/Documents/3D Accurate Hands/showcase/scroll-stopper"
+cd "$(git rev-parse --show-toplevel)/showcase/scroll-stopper"
 P=../../starters/fframes-clip/target/release/fframes-clip.exe
 python - <<'PY' > jobs.txt
 import json

@@ -3,7 +3,7 @@
 # Every Handkit-made clip in launch/film/assets/v is rebuilt from its source clip JSON with the
 # current binaries, then cut into the asset at the exact frame offset the film was built with.
 set -euo pipefail
-export PATH="/c/Users/Rajat/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
+export PATH="$HOME/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
 H="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"          # the Handkit repo root
 P="$H/starters/fframes-clip/target/release/fframes-clip.exe"        # landscape player (1920x1080)
 HK="$H/target/release/handkit.exe"
