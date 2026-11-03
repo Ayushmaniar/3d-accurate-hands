@@ -127,6 +127,9 @@ def caret_js(sel, t0, t1):
 scenes = []
 
 # =========================== ACT 1: B&W film 0 -> 12.1 ==================================
+# The hook is on the first frame (it is also the thumbnail, and reads muted): the film and Handkit
+# side by side, "ONE OF THESE IS CODE." The headline gives way to "Which one?" on the wipe beat so
+# people study the hands, the split beat answers it, and NO CAMERA. lands on the impact.
 S = 0.0
 a1_end = T["nocam_out"] + 0.0667
 L = lambda t: t - S
@@ -135,63 +138,50 @@ if PUBLIC:   # 16:9 gate and split panels: the Pexels frame is never cropped
     gx, gy, gw, gh, sw, sh, sy, A1R, A1H, sl = 160, 90, 1600, 900, 900, 506, 287, "a1p_ref", "a1p_hk", "video"
 else:
     gx, gy, gw, gh, sw, sh, sy, A1R, A1H, sl = 240, 0, 1440, 1080, 900, 675, 202, "a1_ref", "a1_hk", "film"
-weave, flick, scr = "", "", ""
+weave, flick = "", ""
 nframes = int(T["nocam"] * FPS)
 for i in range(nframes + 1):
     t = i / FPS
-    weave += f'tl.set(["#a1-gate","#a1-split"],{{x:{rng.uniform(-2.2, 2.2):.2f},y:{rng.uniform(-1.6, 1.6):.2f}}},{t:.4f});'
-    # projector flicker: start-up burst, then a light shimmer
-    base = 1.0 if t < 0.12 else (max(0.0, 0.85 - (t - 0.12) * 1.6) if t < 0.65 else 0.0)
-    o = min(1.0, base + rng.uniform(0.0, 0.10) + (0.18 if rng.random() < 0.035 else 0))
+    weave += f'tl.set("#a1-split",{{x:{rng.uniform(-2.2, 2.2):.2f},y:{rng.uniform(-1.6, 1.6):.2f}}},{t:.4f});'
+    # a light projector shimmer; frame one is never dark
+    o = min(0.22, rng.uniform(0.0, 0.10) + (0.12 if rng.random() < 0.035 else 0))
     flick += f'tl.set("#a1-flick",{{opacity:{o:.3f}}},{t:.4f});'
-    if rng.random() < 0.16:
-        scr += f'tl.set("#a1-scr",{{x:{rng.uniform(60, gw - 60):.0f},opacity:{rng.uniform(0.12, 0.35):.2f}}},{t:.4f});'
-    else:
-        scr += f'tl.set("#a1-scr",{{opacity:0}},{t:.4f});'
 
 a1_body = f"""
 {clip("a1-bg", 0, T["a2"], cls="full", style="background:#000;")}
-<div id="a1-gate" class="wrap" style="left:{gx}px;top:{gy}px;width:{gw}px;height:{gh}px;border-radius:30px;">
-  {video("a1-ref", A1R, 0, T["split"], 0)}
-  <div id="a1-hkw" class="wrap" style="left:0;top:0;width:{gw}px;height:{gh}px;">
-    {video("a1-hk", A1H, T["wipe"], T["split"] - T["wipe"], T["wipe"])}
-  </div>
-  <div id="a1-line" style="position:absolute;left:0;top:0;width:4px;height:{gh}px;background:{INK};opacity:0;"></div>
-  <div id="a1-scr" style="position:absolute;left:0;top:0;width:2px;height:{gh}px;background:#fff;opacity:0;"></div>
-  <div class="full" style="width:{gw}px;height:{gh}px;box-shadow:inset 0 0 160px 40px rgba(0,0,0,.85);border-radius:30px;"></div>
-  {clip("a1-l1", 0.6, T["split"] - 0.6, f'<span>{sl}</span>', cls="lbl", style="left:44px;bottom:40px;")}
-  {clip("a1-l2", T["wipe"], T["split"] - T["wipe"], '<i></i><span>Handkit</span>', cls="lbl", style="right:44px;bottom:40px;")}
-</div>
 <div id="a1-split" class="full">
   <div id="a1-fl" class="wrap" style="left:40px;top:{sy}px;width:{sw}px;height:{sh}px;border-radius:22px;">
-    {video("a1-ref2", A1R, T["split"], T["nocam"] - T["split"], T["split"])}
+    {video("a1-ref2", A1R, 0, T["nocam"], 0)}
     <div class="full" style="width:{sw}px;height:{sh}px;box-shadow:inset 0 0 110px 30px rgba(0,0,0,.8);"></div>
     {clip("a1-l3", T["split"], T["nocam"] - T["split"], f'<span>{sl}</span>', cls="lbl", style="left:30px;bottom:26px;")}
   </div>
   <div id="a1-fr" class="wrap" style="left:980px;top:{sy}px;width:{sw}px;height:{sh}px;border-radius:22px;">
-    {video("a1-hk2", A1H, T["split"], T["nocam"] - T["split"], T["split"])}
+    {video("a1-hk2", A1H, 0, T["nocam"], 0)}
     <div class="full" style="width:{sw}px;height:{sh}px;box-shadow:inset 0 0 110px 30px rgba(0,0,0,.8);"></div>
     {clip("a1-l4", T["split"], T["nocam"] - T["split"], '<i></i><span>Handkit</span>', cls="lbl", style="left:30px;bottom:26px;")}
   </div>
 </div>
 {clip("a1-flick", 0, T["nocam"], cls="full", style="background:#000;")}
+{clip("a1-hook", 0, T["wipe"], '<div id="a1-h" class="big" style="font-size:190px;text-align:center;text-shadow:0 8px 60px rgba(0,0,0,.75);">ONE OF THESE<br>IS CODE<span class="acc">.</span></div>', cls="full", style="display:flex;align-items:center;justify-content:center;")}
+{clip("a1-which", T["wipe"], T["split"] - T["wipe"], '<div id="a1-q" class="big" style="font-size:104px;">Which one<span class="acc">?</span></div>', cls="full", style="display:flex;justify-content:center;align-items:flex-start;padding-top:62px;box-sizing:border-box;")}
+{clip("a1-this", T["split"], T["nocam"] - T["split"], f'<div id="a1-a" class="big" style="position:absolute;left:980px;width:{sw}px;top:62px;font-size:104px;text-align:center;">This one<span class="acc">.</span></div>', cls="full")}
 {clip("a1-word", T["nocam"], a1_end - T["nocam"], '<div id="a1-w" class="big" style="font-size:236px;">NO CAMERA.</div>', cls="full", style="display:flex;align-items:center;justify-content:center;")}
 """
-a1_js = weave + flick + scr + f"""
-tl.fromTo("#a1-hkw",{{clipPath:"inset(0px 0px 0px {gw}px)"}},{{clipPath:"inset(0px 0px 0px {gw // 2}px)",duration:0.55,ease:"expo.inOut"}},{T["wipe"]:.4f});
-tl.fromTo("#a1-line",{{x:{gw},opacity:1}},{{x:{gw // 2 - 2},opacity:1,duration:0.55,ease:"expo.inOut"}},{T["wipe"]:.4f});
-tl.set("#a1-line",{{opacity:0}},{T["split"]:.4f});
-tl.fromTo("#a1-fl",{{x:240,scale:1.06}},{{x:0,scale:1,duration:0.5,ease:"expo.out"}},{T["split"]:.4f});
-tl.fromTo("#a1-fr",{{x:-240,scale:1.06}},{{x:0,scale:1,duration:0.5,ease:"expo.out"}},{T["split"]:.4f});
+a1_js = weave + flick + f"""
+tl.to("#a1-h",{{opacity:0,y:-30,filter:"blur(8px)",duration:0.16,ease:"power3.in"}},{T["wipe"] - 0.16:.4f});
+tl.fromTo("#a1-q",{{opacity:0,y:20}},{{opacity:1,y:0,duration:0.3,ease:"expo.out"}},{T["wipe"]:.4f});
+tl.fromTo("#a1-a",{{opacity:0,y:20}},{{opacity:1,y:0,duration:0.3,ease:"expo.out"}},{T["split"]:.4f});
+tl.fromTo("#a1-fr",{{boxShadow:"0 0 0 0px {ACC}"}},{{boxShadow:"0 0 0 4px {ACC}",duration:0.3,ease:"expo.out"}},{T["split"]:.4f});
 tl.fromTo("#a1-w",{{scale:1.32,opacity:0,filter:"blur(14px)"}},{{scale:1,opacity:1,filter:"blur(0px)",duration:0.13,ease:"power4.out"}},{T["nocam"]:.4f});
 tl.to("#a1-w",{{opacity:0,y:-40,filter:"blur(10px)",duration:0.16,ease:"power3.in"}},{T["nocam_out"] - 0.13:.4f});
 """
-# split frames hidden until the split
-a1_js += f'tl.set("#a1-split",{{opacity:0}},0);tl.set("#a1-split",{{opacity:1}},{T["split"]:.4f});tl.set("#a1-split",{{opacity:0}},{T["nocam"]:.4f});tl.set("#a1-gate",{{opacity:1}},0);tl.set("#a1-gate",{{opacity:0}},{T["split"]:.4f});'
+tl_hide = f'tl.set("#a1-split",{{opacity:0}},{T["nocam"]:.4f});'
+a1_js += tl_hide
 scenes.append(scene("a1", 0, a1_end, a1_body, a1_js))
 
 # SFX act 1
 cue(0.0, "projector", "loop", -24, until=T["nocam"])
+cue(0.0, "hit", "cut_hit/punch", -14)
 cue(T["wipe"], "whoosh", "swipe/paper", -16)
 cue(T["split"], "whoosh", "swish/soft", -15)
 cue(T["nocam"], "impact", "impact/deep", -6)

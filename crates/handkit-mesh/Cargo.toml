@@ -2,6 +2,7 @@
 name = "handkit-mesh"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
 description = "The procedural Handkit hand: a skinned mesh generated from the rig, written as glTF."
 
 [dependencies]

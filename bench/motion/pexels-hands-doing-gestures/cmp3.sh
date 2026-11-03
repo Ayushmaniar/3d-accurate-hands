@@ -1,10 +1,10 @@
 #!/bin/bash
 # usage: cmp3.sh out.png t1 t2 ...  -> one row per time: reference | render | 50% overlay
-export PATH="/c/Users/Rajat/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
-D="/c/Users/Rajat/Documents/3D Accurate Hands/bench/motion/pexels-hands-doing-gestures"
-R="/c/Users/Rajat/Documents/3D Accurate Hands/Reference videos to Animate/clean/pexels-hands-doing-gestures/seg01.mp4"
-F="/c/Users/Rajat/Documents/3D Accurate Hands/starters/fframes-clip/target/release/fframes-clip.exe"
-A="/c/Users/Rajat/Documents/3D Accurate Hands/assets"
+export PATH="$HOME/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin:$PATH"
+D="$(git rev-parse --show-toplevel)/bench/motion/pexels-hands-doing-gestures"
+R="$(git rev-parse --show-toplevel)/Reference videos to Animate/clean/pexels-hands-doing-gestures/seg01.mp4"
+F="$(git rev-parse --show-toplevel)/starters/fframes-clip/target/release/fframes-clip.exe"
+A="$(git rev-parse --show-toplevel)/assets"
 BG="${BG:-#5d5c60}"
 out=$1; shift
 cd "$D"; rm -rf cmpf; mkdir -p cmpf

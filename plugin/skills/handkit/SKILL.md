@@ -11,6 +11,16 @@ and an engine draws them. Everything is deterministic: the same clip gives the s
 
 `HANDKIT` below is the Handkit folder (the repo root). Run commands from it.
 
+**First use:** if there is no Handkit folder yet, set it up (needs git, Rust and FFmpeg; the first
+build takes a few minutes, so run it in the background):
+
+```bash
+HANDKIT=${HANDKIT:-$HOME/.handkit}
+[ -d "$HANDKIT" ] || git clone --depth 1 https://github.com/Ayushmaniar/3d-accurate-hands "$HANDKIT"
+cd "$HANDKIT" && cargo build --release -p handkit-cli
+(cd starters/fframes-clip && cargo build --release)    # only to render video with fframes
+```
+
 ```bash
 H=$HANDKIT/target/release/handkit          # the CLI (cargo build --release once)
 P=$HANDKIT/starters/fframes-clip/target/release/fframes-clip   # the video player

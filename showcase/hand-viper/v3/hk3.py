@@ -14,8 +14,8 @@ A = os.path.join(ROOT, 'assets')
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, 'out')
 os.makedirs(OUT, exist_ok=True)
-FF = '/c/Users/Rajat/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin'
-os.environ['PATH'] = FF.replace('/c/', 'C:/') + os.pathsep + os.environ['PATH']
+FF = os.path.expanduser('~/tools/ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin')
+os.environ['PATH'] = FF + os.pathsep + os.environ['PATH']
 
 BG, SPOT = '#1b1d22', '0.5,0.45,0.42,#3a3f48'
 SIDE = {'position': [0.02, 0.07, 0.42], 'target': [0.02, -0.005, 0.0], 'fov': 30}

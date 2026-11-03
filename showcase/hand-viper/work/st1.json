@@ -1,0 +1,184 @@
+{
+ "version": 1,
+ "hands": {
+  "right": {
+   "place": {
+    "wrist": [
+     -0.024,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     1,
+     -0.1,
+     0
+    ],
+    "fingers_toward": [
+     0.1,
+     1,
+     0
+    ],
+    "forearm_toward": [
+     -0.5,
+     -0.7,
+     -0.5
+    ]
+   },
+   "thumb": {
+    "cmc_flex": 6,
+    "cmc_abd": -10,
+    "cmc_rot": -5,
+    "mcp_flex": -2,
+    "ip_flex": -4
+   },
+   "index": {
+    "mcp_abd": -2,
+    "mcp_flex": 0,
+    "pip_flex": 4
+   },
+   "middle": {
+    "mcp_abd": 0,
+    "mcp_flex": 0,
+    "pip_flex": 4
+   },
+   "ring": {
+    "mcp_abd": 1,
+    "mcp_flex": 0,
+    "pip_flex": 4
+   },
+   "pinky": {
+    "mcp_abd": 2,
+    "mcp_flex": 0,
+    "pip_flex": 4
+   }
+  },
+  "left": {
+   "place": {
+    "wrist": [
+     0.024,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     -1,
+     -0.1,
+     0
+    ],
+    "fingers_toward": [
+     -0.1,
+     1,
+     0
+    ],
+    "forearm_toward": [
+     0.5,
+     -0.7,
+     -0.5
+    ]
+   },
+   "thumb": {
+    "cmc_flex": 6,
+    "cmc_abd": -10,
+    "cmc_rot": -5,
+    "mcp_flex": -2,
+    "ip_flex": -4
+   },
+   "index": {
+    "mcp_abd": -2,
+    "mcp_flex": 0,
+    "pip_flex": 4
+   },
+   "middle": {
+    "mcp_abd": 0,
+    "mcp_flex": 0,
+    "pip_flex": 4
+   },
+   "ring": {
+    "mcp_abd": 1,
+    "mcp_flex": 0,
+    "pip_flex": 4
+   },
+   "pinky": {
+    "mcp_abd": 2,
+    "mcp_flex": 0,
+    "pip_flex": 4
+   }
+  }
+ },
+ "goals": [
+  {
+   "touch": [
+    "right.thumb.distal",
+    "left.thumb.distal"
+   ],
+   "vary": [
+    "right.thumb.*",
+    "left.thumb.*"
+   ]
+  },
+  {
+   "touch": [
+    "right.index.distal",
+    "left.index.distal"
+   ],
+   "vary": [
+    "right.index.mcp_flex",
+    "left.index.mcp_flex",
+    "right.index.pip_flex",
+    "left.index.pip_flex"
+   ]
+  },
+  {
+   "touch": [
+    "right.middle.distal",
+    "left.middle.distal"
+   ],
+   "vary": [
+    "right.middle.mcp_flex",
+    "left.middle.mcp_flex",
+    "right.middle.pip_flex",
+    "left.middle.pip_flex"
+   ]
+  },
+  {
+   "touch": [
+    "right.ring.distal",
+    "left.ring.distal"
+   ],
+   "vary": [
+    "right.ring.mcp_flex",
+    "left.ring.mcp_flex",
+    "right.ring.pip_flex",
+    "left.ring.pip_flex"
+   ]
+  },
+  {
+   "touch": [
+    "right.pinky.distal",
+    "left.pinky.distal"
+   ],
+   "vary": [
+    "right.pinky.mcp_flex",
+    "left.pinky.mcp_flex",
+    "right.pinky.pip_flex",
+    "left.pinky.pip_flex"
+   ]
+  }
+ ],
+ "camera": {
+  "position": [
+   0.0,
+   0.25,
+   -0.4
+  ],
+  "target": [
+   0,
+   0.11,
+   0
+  ],
+  "fov": 30
+ },
+ "size": [
+  1920,
+  1080
+ ]
+}

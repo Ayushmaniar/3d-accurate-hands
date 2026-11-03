@@ -1,0 +1,168 @@
+{
+ "version": 1,
+ "hands": {
+  "right": {
+   "place": {
+    "wrist": [
+     -0.03,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     1,
+     0.35,
+     0
+    ],
+    "fingers_toward": [
+     -0.35,
+     1,
+     0
+    ],
+    "forearm_toward": [
+     -0.5,
+     -0.7,
+     -0.5
+    ]
+   },
+   "thumb": {
+    "cmc_flex": 0,
+    "cmc_abd": 5,
+    "cmc_rot": 0,
+    "mcp_flex": 0,
+    "ip_flex": 0
+   },
+   "index": {
+    "mcp_abd": 5,
+    "mcp_flex": 5,
+    "pip_flex": 8
+   },
+   "middle": {
+    "mcp_abd": -4,
+    "mcp_flex": 62,
+    "pip_flex": 30
+   },
+   "ring": {
+    "mcp_abd": -6.9,
+    "mcp_flex": 69.4,
+    "pip_flex": 24.9,
+    "mcp_roll": 4.9,
+    "dip_flex": 16.6
+   },
+   "pinky": {
+    "mcp_abd": 8,
+    "mcp_flex": 35,
+    "pip_flex": 30
+   }
+  },
+  "left": {
+   "place": {
+    "wrist": [
+     0.03,
+     0.0,
+     0.0
+    ],
+    "palm_facing": [
+     -1,
+     0.35,
+     0
+    ],
+    "fingers_toward": [
+     0.35,
+     1,
+     0
+    ],
+    "forearm_toward": [
+     0.5,
+     -0.7,
+     -0.5
+    ]
+   },
+   "thumb": {
+    "cmc_flex": 0,
+    "cmc_abd": 5,
+    "cmc_rot": 0,
+    "mcp_flex": 0,
+    "ip_flex": 0
+   },
+   "index": {
+    "mcp_abd": 5,
+    "mcp_flex": 5,
+    "pip_flex": 8
+   },
+   "middle": {
+    "mcp_abd": 6,
+    "mcp_flex": 62,
+    "pip_flex": 30
+   },
+   "ring": {
+    "mcp_abd": 12.9,
+    "mcp_flex": 67.6,
+    "pip_flex": 24.2,
+    "mcp_roll": -4.8,
+    "dip_flex": 16.1
+   },
+   "pinky": {
+    "mcp_abd": 8,
+    "mcp_flex": 35,
+    "pip_flex": 30
+   }
+  }
+ },
+ "goals": [
+  {
+   "touch": [
+    "right.ring.middle",
+    "left.ring.middle"
+   ],
+   "vary": [
+    "right.ring.*",
+    "left.ring.*"
+   ]
+  },
+  {
+   "touch": [
+    "right.middle.middle",
+    "left.middle.middle"
+   ],
+   "vary": [
+    "right.middle.*",
+    "left.middle.*"
+   ]
+  },
+  {
+   "touch": [
+    "right.middle.proximal",
+    "left.ring.middle"
+   ],
+   "vary": [
+    "right.middle.*"
+   ]
+  },
+  {
+   "touch": [
+    "left.middle.proximal",
+    "right.ring.middle"
+   ],
+   "vary": [
+    "left.middle.*"
+   ]
+  }
+ ],
+ "camera": {
+  "position": [
+   0.0,
+   0.25,
+   -0.4
+  ],
+  "target": [
+   0,
+   0.11,
+   0
+  ],
+  "fov": 30
+ },
+ "size": [
+  1920,
+  1080
+ ]
+}
