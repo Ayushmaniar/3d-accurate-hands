@@ -127,10 +127,9 @@ def caret_js(sel, t0, t1):
 scenes = []
 
 # =========================== ACT 1: B&W film 0 -> 12.1 ==================================
-# The hook is on the first frame (it is also the thumbnail, and reads muted): "AI CAN'T DRAW HANDS."
-# over the film and its recreation, then "So we wrote them in code." on the wipe beat. The split beat
-# labels the two honestly, and NO CAMERA. lands on the impact. The film never asks viewers to tell
-# them apart: the right side is plainly CG, and the claim is that it is code, not that it is real.
+# The hook is on the first frame (it is also the thumbnail, and reads muted). The copy talks like a
+# person and owns what the hands are: the right side is plainly CG, and the film never pretends
+# otherwise. It stays true however good video models get, so no claims about what AI can't do.
 S = 0.0
 a1_end = T["nocam_out"] + 0.0667
 L = lambda t: t - S
@@ -163,10 +162,10 @@ a1_body = f"""
   </div>
 </div>
 {clip("a1-flick", 0, T["nocam"], cls="full", style="background:#000;")}
-{clip("a1-hook", 0, T["wipe"], '<div id="a1-h" class="big" style="font-size:190px;text-align:center;text-shadow:0 8px 60px rgba(0,0,0,.75);">AI CAN&rsquo;T<br>DRAW HANDS<span class="acc">.</span></div>', cls="full", style="display:flex;align-items:center;justify-content:center;")}
-{clip("a1-which", T["wipe"], T["split"] - T["wipe"], '<div id="a1-q" class="big" style="font-size:104px;">So we wrote them in code<span class="acc">.</span></div>', cls="full", style="display:flex;justify-content:center;align-items:flex-start;padding-top:62px;box-sizing:border-box;")}
-{clip("a1-this", T["split"], T["nocam"] - T["split"], f'<div id="a1-a"><div class="big" style="position:absolute;left:40px;width:{sw}px;top:62px;font-size:92px;text-align:center;">The {sl}<span class="acc">.</span></div><div class="big" style="position:absolute;left:980px;width:{sw}px;top:62px;font-size:92px;text-align:center;">Rebuilt in code<span class="acc">.</span></div></div>', cls="full")}
-{clip("a1-word", T["nocam"], a1_end - T["nocam"], '<div id="a1-w" class="big" style="font-size:236px;">NO CAMERA.</div>', cls="full", style="display:flex;align-items:center;justify-content:center;")}
+{clip("a1-hook", 0, T["wipe"], '<div id="a1-h" class="big" style="font-size:190px;text-align:center;text-shadow:0 8px 60px rgba(0,0,0,.75);">HANDS ARE HARD<br>TO ANIMATE<span class="acc">.</span></div>', cls="full", style="display:flex;align-items:center;justify-content:center;")}
+{clip("a1-which", T["wipe"], T["split"] - T["wipe"], '<div id="a1-q" class="big" style="font-size:104px;">So we turned them into 29 numbers<span class="acc">.</span></div>', cls="full", style="display:flex;justify-content:center;align-items:flex-start;padding-top:62px;box-sizing:border-box;")}
+{clip("a1-this", T["split"], T["nocam"] - T["split"], f'<div id="a1-a"><div class="big" style="position:absolute;left:40px;width:{sw}px;top:62px;font-size:92px;text-align:center;">The real thing<span class="acc">.</span></div><div class="big" style="position:absolute;left:980px;width:{sw}px;top:62px;font-size:92px;text-align:center;">Our attempt<span class="acc">.</span></div></div>', cls="full")}
+{clip("a1-word", T["nocam"], a1_end - T["nocam"], '<div id="a1-w" class="big" style="font-size:176px;">NOT BAD FOR MATHS<span class="acc">.</span></div>', cls="full", style="display:flex;align-items:center;justify-content:center;")}
 """
 a1_js = weave + flick + f"""
 tl.to("#a1-h",{{opacity:0,y:-30,filter:"blur(8px)",duration:0.16,ease:"power3.in"}},{T["wipe"] - 0.16:.4f});
