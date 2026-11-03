@@ -380,33 +380,105 @@ for k, sid in zip(["d9", "d10", "d11"], ["swish/blade", "swish/cane", "swipe/vel
 
 # =========================== ACT 5: sign language 43.07 -> 51.85 ========================
 # sign.mp4 (showcase/sign-handkit/film.json): H A N D K I T land on the clip's 0.5 .. 6.5 s, a letter a
-# second, each held still; I-LOVE-YOU lands at the caption's time and holds through the silence
+# second, each held still; I-LOVE-YOU lands at the caption's time and holds through the silence.
+# After the first letter the picture slides right and shows how it is made: on the left the rig's
+# own source (crates/handkit-core/src/rig.rs) and all 29 joint values of the frame, on the hand its
+# skeleton. Values and joints are the clip's own (showcase/sign-handkit/joints.py), frame by frame.
 S = T["brk"]
 L = lambda t: t - S
 a5_dur = T["hit"] - S
 LETTERS = "HANDKIT"
 land = [S + 0.5 + i for i in range(len(LETTERS))]
 cap = "".join(f'<span id="a5-c{i}" style="display:inline-block;opacity:0;">{c}</span>' for i, c in enumerate(LETTERS))
+with open(os.path.join(ROOT, "..", "..", "showcase", "sign-handkit", "joints.json")) as f:
+    JOINTS = json.load(f)
+PANEL, SLIDE = 860, 430     # the code panel's width, and how far the hand and its caption slide
+REVEAL = 1.0                # local time the panel comes in, after the first letter has landed
+JOINT_KEYS = dict(thumb=[["cmc_flex", "cmc_abd"], ["cmc_rot", "mcp_flex", "ip_flex"]])
+JOINT_KEYS.update({d: [["mcp_abd", "mcp_roll"], ["mcp_flex", "pip_flex", "dip_flex"]] for d in ("index", "middle", "ring", "pinky")})
+JOINT_KEYS["wrist"] = [["twist", "wrist_flex"], ["wrist_dev", "palm_cup"]]
+
+
+def value_rows():
+    """the frame's pose as JSON, a span for every joint value (draw() fills them in)"""
+    out = ['<div>"right": {</div>']
+    items = list(JOINT_KEYS.items())
+    for n, (digit, rows) in enumerate(items):
+        out.append(f'<div>&nbsp;&nbsp;"{digit}": {{</div>')
+        for r, row in enumerate(rows):
+            pairs = ", ".join(f'<i>"{k}":</i> <b id="a5-v-{digit}-{k}"></b>' for k in row)
+            end = ("," if r < len(rows) - 1 else " }" + ("," if n < len(items) - 1 else ""))
+            out.append(f'<div>&nbsp;&nbsp;&nbsp;&nbsp;{pairs}{end}</div>')
+    return "".join(out) + "<div>}</div>"
+
+
+RIG = ["m = m * rz(-f.fan + abd_sign * abd) * ry(roll);", "for i in 0..3 {", "    m = m * rx(flex[i]);",
+       "    let next = m * tr(0.0, f.len[i] * k, 0.0);", "}"]
+rig_html = "".join("<div>" + line.replace(" ", "&nbsp;") + "</div>" for line in RIG)
+a5_css = """
+#a5-panel{position:absolute;left:0;top:0;width:%dpx;height:1080px;background:#0B0B0D;box-sizing:border-box;padding:60px 0 0 44px;overflow:hidden;
+ font-family:Consolas,'Cascadia Mono',monospace;font-size:22px;line-height:30px;color:rgba(244,242,238,.9);white-space:nowrap;}
+#a5-panel .file{color:%s;margin-bottom:10px;}
+#a5-panel .rig{margin-bottom:34px;}
+#a5-panel i{font-style:normal;color:rgba(244,242,238,.5);}
+#a5-panel b{font-weight:400;display:inline-block;width:5ch;text-align:right;}
+#a5-panel .on{color:%s;}
+""" % (PANEL, ACC, ACC)
 a5_body = f"""
 <div class="full" style="background:#000;"></div>
-<div id="a5-sw" class="full">{video("a5-sign", "sign", 0, a5_dur, 0.0)}</div>
+<div id="a5-slide" class="full">
+  <div id="a5-sw" class="full">{video("a5-sign", "sign", 0, a5_dur, 0.0)}
+    <svg id="a5-bones" class="full" viewBox="0 0 1920 1080" style="opacity:0;"></svg>
+  </div>
+</div>
 <div class="full" style="background:linear-gradient(to bottom,rgba(0,0,0,0) 62%,rgba(0,0,0,.72) 100%);"></div>
 <div class="full" style="display:flex;align-items:flex-end;justify-content:center;padding-bottom:86px;box-sizing:border-box;">
   <div id="a5-cap" class="big" style="font-size:132px;letter-spacing:0.14em;margin-right:-0.14em;">{cap}</div>
 </div>
+<div id="a5-panel">
+  <div class="file">rig.rs</div>
+  <div class="rig">{rig_html}</div>
+  <div class="file">sign.json&nbsp;&nbsp;<i id="a5-frame"></i></div>
+  {value_rows()}
+</div>
 {clip("a5-ily", L(T["ily"]) - 0.1, T["hit"] - T["ily"] + 0.1, '<div id="a5-t" class="big" style="font-size:112px;letter-spacing:-0.035em;">I love you<span class="acc">.</span></div>', cls="full", style="display:flex;align-items:flex-end;justify-content:center;padding-bottom:96px;box-sizing:border-box;")}
 """
+# The frame's joints and values, set from the timeline's own time: a tweened setter runs on every
+# seek, so the numbers and the skeleton always belong to the frame shown.
 a5_js = f"""
+const J = {json.dumps(JOINTS, separators=(",", ":"))};
+const NS = "http://www.w3.org/2000/svg", svg = document.getElementById("a5-bones");
+const lines = J.bones.map(() => {{ const l = document.createElementNS(NS, "line"); l.setAttribute("stroke", "{ACC}"); l.setAttribute("stroke-width", "3.5"); l.setAttribute("stroke-linecap", "round"); svg.appendChild(l); return l; }});
+const dots = J.names.map(() => {{ const c = document.createElementNS(NS, "circle"); c.setAttribute("r", "7"); c.setAttribute("fill", "#0B0B0D"); c.setAttribute("stroke", "#F4F2EE"); c.setAttribute("stroke-width", "2.5"); svg.appendChild(c); return c; }});
+const cells = [];
+for (const d in J.values[0]) for (const k in J.values[0][d]) {{ const e = document.getElementById("a5-v-" + d + "-" + k); if (e) cells.push([e, d, k]); }}
+const frameLabel = document.getElementById("a5-frame");
+function draw(x) {{
+  const f = Math.min(J.xy.length - 1, Math.round(x)), p = J.xy[f], now = J.values[f], last = J.values[Math.max(0, f - 1)];
+  J.bones.forEach((b, i) => {{ const l = lines[i]; l.setAttribute("x1", p[b[0] * 2]); l.setAttribute("y1", p[b[0] * 2 + 1]); l.setAttribute("x2", p[b[1] * 2]); l.setAttribute("y2", p[b[1] * 2 + 1]); }});
+  dots.forEach((c, i) => {{ c.setAttribute("cx", p[i * 2]); c.setAttribute("cy", p[i * 2 + 1]); }});
+  cells.forEach(([e, d, k]) => {{ e.textContent = now[d][k].toFixed(1); e.classList.toggle("on", Math.abs(now[d][k] - last[d][k]) > 0.25); }});
+  frameLabel.textContent = "frame " + String(f).padStart(3, "0") + " · 29 joint angles";
+}}
+let frameNow = 0;
+const clock = {{ get f() {{ return frameNow; }}, set f(v) {{ frameNow = v; draw(v); }} }};
+draw(0);
 tl.fromTo("#a5-sw",{{scale:1.08,opacity:0}},{{scale:1.0,opacity:1,duration:0.7,ease:"power2.out"}},0);
+tl.fromTo(clock,{{f:0}},{{f:{len(JOINTS["xy"]) - 1},duration:{(len(JOINTS["xy"]) - 1) / FPS:.4f},ease:"none"}},0);
+tl.fromTo("#a5-panel",{{x:-{PANEL}}},{{x:0,duration:0.6,ease:"expo.inOut"}},{REVEAL});
+tl.fromTo("#a5-slide",{{x:0}},{{x:{SLIDE},duration:0.6,ease:"expo.inOut"}},{REVEAL});
+tl.fromTo("#a5-cap",{{x:0}},{{x:{SLIDE},duration:0.6,ease:"expo.inOut"}},{REVEAL});
+tl.fromTo("#a5-bones",{{opacity:0}},{{opacity:1,duration:0.35,ease:"power1.out"}},{REVEAL + 0.5});
 """
 for i, t in enumerate(land):
     a5_js += f'tl.fromTo("#a5-c{i}",{{opacity:0,y:26,color:"{ACC}"}},{{opacity:1,y:0,duration:0.18,ease:"expo.out"}},{L(t) - 2 / FPS:.4f});'
     if i:
         a5_js += f'tl.to("#a5-c{i - 1}",{{color:"{INK}",duration:0.15}},{L(t) - 2 / FPS:.4f});'
 a5_js += f'tl.to("#a5-cap",{{opacity:0,y:-20,duration:0.22,ease:"power2.in"}},{L(T["ily"]) - 0.32:.4f});'
-a5_js += f'tl.fromTo("#a5-t",{{opacity:0,y:24,filter:"blur(6px)"}},{{opacity:1,y:0,filter:"blur(0px)",duration:0.4,ease:"expo.out"}},{L(T["ily"]) - 0.1:.4f});'
-scenes.append(scene("a5", S, a5_dur, a5_body, a5_js))
+a5_js += f'tl.fromTo("#a5-t",{{opacity:0,x:{SLIDE},y:24,filter:"blur(6px)"}},{{opacity:1,x:{SLIDE},y:0,filter:"blur(0px)",duration:0.4,ease:"expo.out"}},{L(T["ily"]) - 0.1:.4f});'
+scenes.append(scene("a5", S, a5_dur, a5_body, a5_js, a5_css))
 cue(T["brk"], "drop", "downlifter/air_fall", -16)
+cue(T["brk"] + REVEAL, "whoosh", "swish/blade", -18)
 for i, t in enumerate(land):
     cue(t, "tick", ["pro_tap/glass", "pro_tap/soft"][i % 2], -15)
 cue(T["ily"], "tick", "fit/land.light/finger_phone", -18)
